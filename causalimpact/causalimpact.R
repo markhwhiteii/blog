@@ -1,5 +1,5 @@
 # prep
-x <- c("rvest", "dplyr", "lubridate", "stringr", "tidyr", "lme4", "lmerTest" "CausalImpact")
+x <- c("rvest", "dplyr", "lubridate", "stringr", "CausalImpact")
 purrr::walk(x, library, character.only = TRUE)
 
 # fetch, clean data
