@@ -1,2 +1,2 @@
 # blog
-Code for blog posts at markhw.com.
+Code for blog posts at www.markhw.com/blog.
