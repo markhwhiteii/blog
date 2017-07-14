@@ -1,0 +1,106 @@
+---
+output: html_document
+---
+```{r include=FALSE}
+# prep
+x <- c("rvest", "dplyr", "lubridate", "stringr", "CausalImpact", "knitr")
+purrr::walk(x, library, character.only = TRUE)
+
+# fetch, clean data
+url1 <- "http://www.basketball-reference.com/teams/MEM/2013_games.html" # griz 12-13
+url2 <- "http://www.basketball-reference.com/teams/TOR/2014_games.html" # raps 13-14
+
+griz <- read_html(url1) %>% 
+  html_table() %>% 
+  `[[`(1) %>% # don't want playoffs
+  `[`(,c("Date", "Tm", "Opp")) %>% #select() didn't work because duplicate col names
+  filter(Date!="Date") %>% # b-r dupes headers
+  mutate(
+    Date=mdy(str_replace(Date, "^.{0,5}", "")), # getting rid of weekday
+    Tm=as.numeric(Tm),
+    Opp=as.numeric(Opp),
+    PtDiff=Tm-Opp,
+    Result=factor(ifelse(PtDiff > 0, "Win", "Lose")),
+    GayTrade=factor(ifelse(Date < "2013-01-30", "Before", "After")) # date gay was traded
+  )
+
+raps <- read_html(url2) %>% 
+  html_table() %>% 
+  `[[`(1) %>%
+  `[`(,c("Date", "Tm", "Opp")) %>%
+  filter(Date!="Date") %>%
+  mutate(
+    Date=mdy(str_replace(Date, "^.{0,5}", "")),
+    Tm=as.numeric(Tm),
+    Opp=as.numeric(Opp),
+    PtDiff=Tm-Opp,
+    Result=factor(ifelse(PtDiff > 0, "Win", "Lose")),
+    GayTrade=factor(ifelse(Date < "2013-12-09", "Before", "After")) # date gay was traded
+  )
+
+# causal impact
+set.seed(1839)
+grizmodel <- CausalImpact(
+  griz$PtDiff, 
+  c(min(which(griz$GayTrade=="Before")), max(which(griz$GayTrade=="Before"))), 
+  c(min(which(griz$GayTrade=="After")), max(which(griz$GayTrade=="After"))),
+  model.args=list(niter=5000)
+)
+
+rapsmodel <- CausalImpact(
+  raps$PtDiff, 
+  c(min(which(raps$GayTrade=="Before")), max(which(raps$GayTrade=="Before"))), 
+  c(min(which(raps$GayTrade=="After")), max(which(raps$GayTrade=="After"))),
+  model.args=list(niter=5000)
+)
+```
+
+### Introduction
+
+I have been meaning to learn more about time-series and Bayesian methods; I'm pumped for a Bayesian class that I'll be in this coming semester. RStudio blogged about the `CausalImpact` package [back in April](https://rviews.rstudio.com/2017/05/30/april-new-package-picks/)—a Bayesian time-series package from folks at Google—and I've been meaning to play around with it ever since. There's [a great talk posted on YouTube](https://www.youtube.com/watch?v=GTgZfCltMm8) that is a very intuitive description of thinking about causal impact in terms of counterfactuals and the `CausalImpact` package itself. I decided I would use it to put some common wisdom to the test: Do NBA teams get better after getting rid of Rudy Gay? I remember a lot of chatter on podcasts and on NBA Twitter after he was traded from both the Grizzlies and the Raptors.  
+
+### Method
+
+I went back to the well and scraped Basketball-Reference using the `rvest` package. Looking at the teams that traded Gay mid-season, I fetched all the data from the "Schedule & Results" page and from that I calculated a point differential for every game: Positive numbers meant the team with Rudy Gay won the game by that many points, while negative numbers meant they lost by that many points. I ran the `CausalImpact` model with no covariates or anything: I just looked at point differential over time. I did this separately for the Grizzlies 2012-2013 season and the Raptors 2013-2014 season (both teams traded Rudy mid-season). The pre-treatment sections are before the team traded Gay; the post-treatment sections are after the team traded Gay.  
+
+[Code for scraping, analyses, and plotting can be accessed over at GitHub](https://github.com/markhwhiteii/blog/tree/master/causalimpact).  
+
+### Results
+
+The package is pretty nice. The output is easy to read and interpret, and they even include little write-ups for you if you specify `summary(model, "report")`, where `model` is the name of the model you fit with the `CausalImpact` function. Let's take a look at the Grizzlies first.  
+
+```{r echo=FALSE}
+grizsummary <- data.frame(Actual=c(4.4, 167.0), Prediction=c(3.6, 135.8), 
+                          Difference=c(0.82, 31.22), DLB=c(-5.0, -190), DUB=c(6.6, 252.5),
+                          row.names=c("Average", "Cumulative"))
+kable(grizsummary, col.names=c("Actual", "Predicted", "Difference", "95% LB", "95% UB"))
+```
+
+The table shows the average and cumulative point differentials. On average, the Grizzlies scored 4.4 points more than their opponent per game after Rudy Gay was traded. Based on what the model learned from when Gay was on the team, we would have predicted this to be 3.6. Their total point differential was 167 after Rudy Gay was traded, when we would have expected about 136. The table also shows the differences: 0.82 and 31.22 points for average and cumulative, respectively. The lower bound and upper bound at a 95% confidence interval fell on far opposite sides of zero, suggesting that the difference is not likely to be different from zero. The posterior probability here of a causal effect (i.e., the probability that this increase was due to Gay leaving the team) is 61%—not a very compelling number. The report generated from the package is rather frequentist—it uses classical null hypothesis significance testing language, saying the model "would generally not be considered statistically significant" with a *p*-value of 0.387. Interesting.  
+
+What I really dig about this package are the plots it gives you. This package is based on the idea that it models a counterfactual: What would the team have done *had Rudy Gay not been traded*? It then compares this predicted counterfactual to what actually happened. Let's look at the plots:  
+
+```{r echo=FALSE, warning=FALSE}
+plot(grizmodel) + ggplot2::theme_light()
+```
+
+The top figure shows a horizontal dotted line, which is what is predicted given what we know about the team *before* Gay was traded. I haven't specified any seasonal trends or other predictors, so this line is flat. The black line is what is actually happened. The vertical dotted line is where Rudy Gay was traded. The middle figure shows the *difference* between predicted and observed. We can see that there is no reliable difference between the two after the Gay trade. Lastly, the bottom figure shows the cumulative difference (that is, adding up all of the differences between observed and predicted over time). Again, this is hovering around zero, showing us that there was really no difference in the Grizzlies point differential that actually occurred and what we predicted *would have happened* had Gay *not* been traded (i.e., the counterfactual). What about the Raptors?  
+
+The Raptors unloaded Gay to the Kings the very next season. Let's take a look at the same table and plot for the Raptors and trading Rudy:  
+
+```{r echo=FALSE}
+rapssummary <- data.frame(Actual=c(4.4, 279.0), Prediction=c(-0.37, -23.22), 
+                          Difference=c(4.8, 302.2), DLB=c(-0.88, -55.59), DUB=c(10, 657),
+                          row.names=c("Average", "Cumulative"))
+kable(rapssummary, col.names=c("Actual", "Predicted", "Difference", "95% LB", "95% UB"))
+```
+
+```{r echo=FALSE, warning=FALSE}
+plot(rapsmodel) + ggplot2::theme_light()
+```
+
+The posterior probability of a causal effect here was 95.33%—something that is much more likely than the Grizzlies example. The effect was more than five times bigger than it was for Memphis: There was a difference of 4.8 points per game (or 302 cumulatively) between what we observed and what we would have expected *had the Raptors never traded Gay*. Given that this effect was one (at the time, above average) player *leaving* a team is pretty interesting. I'm sure any team would be happy with getting almost 5 whole points better per game after getting rid of a big salary.  
+
+### Conclusion
+
+It looks like trading Rudy Gay likely had no effect on the Grizzlies, but it does seem that getting rid of him had a positive effect on the Raptors. The `CausalImpact` package is very user-friendly, and there are many [good materials](https://cran.r-project.org/web/packages/CausalImpact/vignettes/CausalImpact.html) out there for understanding and interpreting the model and what's going on underneath the hood. Most of the examples I have seen are simulated data or data which are easily interpretable, so it was good practice seeing what a real, noisy dataset actually looks like.  
