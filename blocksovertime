@@ -1,0 +1,84 @@
+---
+output: html_document
+---
+```{r setup, include=FALSE}
+library(knitr)
+library(tidyverse)
+blk_year_ss <- read_csv("blk_year_ss.csv")
+dat <- read_csv("data89to16wallnba.csv") %>% 
+  filter(mptot >= 500) %>% 
+  mutate(player=as.factor(player))
+```
+## Introduction
+I have always been ambivalent on how I feel about blocking shots. On one hand, they are really cool. Seeing someone send a shot into the fifth row or [watching Anthony Davis](https://www.cbssports.com/nba/news/video-pelicans-anthony-davis-gets-crossed-up-still-blocks-shot/) recover and get hand on a shot just in time is fun. Perhaps the [most important play](https://www.youtube.com/watch?v=-zd62MxKXp8) of LeBron's entire career was a block. At the same time, blocks mean more shooting fouls, and blocks don't often result in a defensive rebound.  
+
+My interest in blocks continues in this post: I will be looking at the relationship between blocks and defensive rating, both measured at the player level. Both are per 100 possessions statistics: How many blocks did they have in 100 possessions? How many points did they allow in 100 possessions (see the [Basketball-Reference glossary](https://www.basketball-reference.com/about/glossary.html))?  
+
+My primary interest here is looking at the relationship over time. Are blocks more central to the quality of a defense now than they used to be? The quality of defense will be measured by defensive rating—the number of points a player is estimated to have allowed per 100 possessions. For this reason, a better defensive rating is a *smaller number*.    
+
+There is some reason for why blocks might be more important now than they used to be. In the 2001-2002 NBA season, [the NBA changed a bunch of rules, many relating to defense](http://www.nba.com/analysis/rules_history.html). There were two rules in particular that changed how people could play defense (quoting from the link above): "Illegal defense guidelines will be eliminated in their entirety," and "A new defensive three-second rule will prohibit a defensive player from remaining in the lane for more than three consecutive seconds without closely guarding an offensive player." This meant that people could start playing zone defense, as long as the defense didn't park guys in the paint for longer than three seconds. This also means blocking shots became a skill that took self-control: You had to be able to slide into place when necessary to block shots—you couldn't just stand there in the paint and wait for guys to swat.  
+
+Other rules made it more likely that guys were going to be able to drive past backcourt players and reach the paint: "No contact with either hands or forearms by defenders except in the frontcourt below the free throw line extended in which case the defender may use his forearm only." So, have blocks grown more important for a defense over time?  
+
+## Analysis Details
+I looked at every NBA player in every season from 1989 to 2016, but players were only included if they played more than 499 minutes in a season. If you are interested in getting this data, you can see my code for scraping Basketball-Reference—along with the rest of this code for this blog post—over at GitHub.  
+
+I fit a Bayesian multilevel model to look at this, using the `brms` package, which interfaces with Stan from R. I predicted a player's defensive rating from how many blocks they had per 100 possessions, what season it was, and the interaction between the two (which tests the idea that the relationship has changed over time). I also allowed the intercept and relationship between blocks and defensive rating to vary by player. I made the first year in the data, 1989, the intercept (e.g., subtracted 1989 from the year variable) and specified some pretty standard, weakly-informative priors, as well:  
+
+```{r model, eval=FALSE}
+brm(drtg ~ blkp100*year + (1+blkp100|player),
+    prior=c(set_prior("normal(0,5)", class="b"),
+            set_prior("student_t(3,0,10)", class="sd"),
+            set_prior("lkj(2)", class="cor")),
+    data=dat, warmup=1000, iter=2000, chains=4)
+```
+
+## Results
+The probability that the relationship between blocks and defensive rating depends on year, given the data (and the priors), is greater than 0.9999. So what does this look like? Let's look at the relationship at 1989, 1998, 2007, and 2016:  
+```{r slopes, echo=FALSE}
+table <- blk_year_ss %>% 
+  filter(year %in% c(1989, 1998, 2007, 2016)) %>% 
+  select(year, beta1)
+
+kable(table, digits=2, col.names=c("Year", "Slope"))
+```
+  
+Our model says that, in 1989, for each block someone had in 100 possessions, they allowed about 1.04 fewer points per 100 possessions. In 2016? This estimate more than doubled: For every block someone had in 100 possessions, they allowed about 2.36 fewer points per 100 possessions! Here is what these slopes look like graphically:  
+
+```{r plot, echo=FALSE}
+ggplot(blk_year_ss[blk_year_ss$year %in% c(1989, 1998, 2007, 2016),]) +
+  scale_x_continuous(name="Blocks Per 100 Possessions", limits=c(0,9)) + 
+  scale_y_continuous(name="Defensive Rating", limits=c(85,120)) +
+  geom_abline(aes(intercept=beta0, slope=beta1, linetype=factor(beta1))) +
+  scale_linetype(name="Year", labels=c("2016", "2007", "1998", "1989")) +
+  theme_minimal() +
+  theme(text=element_text(size=16))
+```
+  
+However, the model *assumes* a _linear change_ in the relationship between blocks and defensive rating per year. What if there was an "elbow" (i.e., drop-off) in this curve in 2002, when the rules changed? That is, maybe there was a relatively stable relationship between blocks and defensive rating until 2002, when it quickly became stronger. To investigate this, I correlated blocks per 100 possessions and defensive rating in each year separately. Then, I graphed those correlations by year. (Note: Some might argue a piecewise latent growth curve model is the appropriate test here; for brevity and simplicity's sake, I chose to take a more descriptive approach here).    
+
+```{r next-plot, echo=FALSE}
+cors <- data.frame(year=rep(NA, length(1989:2016)),
+                   corr=rep(NA, length(1989:2016)))
+
+for (i in unique(dat$year)) {
+  cors$year[which(i==unique(dat$year))] <- i
+  cors$corr[which(i==unique(dat$year))] <- cor.test(~drtg+blkp100, filter(dat, year==i))$estimate
+}
+
+cors$rules <- factor(ifelse(cors$year>2001.5, "after", "before"))
+
+ggplot(cors, aes(x=year, y=corr)) +
+  geom_point() +
+  theme_minimal() +
+  geom_vline(xintercept=2001.5, linetype="dotted") +
+  geom_smooth(aes(group=rules), method="lm", se=FALSE) +
+  labs(x="Year", y="Correlation Between Blocks and Defensive Rating") +
+  annotate("text", x=2004, y=-.4125, label="Rule Change")
+```
+  
+It is hard to tell specifically *where* the elbow is occuring, but it does look like there is less importance of blocks before the rule change (i.e., the correlation was getting closer to zero), whereas *after* the rule change, the correlation was getting stronger (e.g., getting more and more negative).  
+
+## Conclusion
+It looks like blocks are not only cool, but especially relevant for players to perform well defensively in recent years. A consequence of the rule changes in 2001-2002 is that blocks are more important now for individual defensive performance than they were in the past.  
+  
