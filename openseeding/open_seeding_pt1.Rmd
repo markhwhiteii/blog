@@ -89,7 +89,7 @@ results <- results %>%
 
 This is the first post in a series of short posts on why the NBA should adopt open seeding in the playoffs: Instead of taking the top 8 teams in each conference, the top 16 teams in the NBA should make the playoffs.  
 
-The first thing I wanted to do was diagnose the problem. I looked at every year from 1984 (when the NBA adopted the 16-team playoff structure) through 2017. For each year, I tallied the number of teams making the playoffs who had a smaller win percentage than a team in the other conference. These data come from Basketball-Reference.com, and the code for scraping, cleaning, and visualizing these data can be found over at [GitHub]().  
+The first thing I wanted to do was diagnose the problem. I looked at every year from 1984 (when the NBA adopted the 16-team playoff structure) through 2017. For each year, I tallied the number of teams making the playoffs who had a smaller win percentage than a team in the other conference. These data come from Basketball-Reference.com, and the code for scraping, cleaning, and visualizing these data can be found over at [GitHub](https://github.com/markhwhiteii/blog/tree/master/openseeding).  
 
 The following figure shows this tally per year, and the years are grouped by color based on the conference who had a team with the worse record. The years between dashed vertical lines represent the years in which division winners were guaranteed a top three or four seed.  
 
