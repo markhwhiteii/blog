@@ -1,0 +1,114 @@
+---
+output: html_document
+---
+```{r setup, include=FALSE}
+# loading packages
+library(tidyverse)
+library(rvest)
+
+# initializing results
+results <- data.frame(
+  year=NA, 
+  western_worse=NA, 
+  eastern_worse=NA, 
+  total_worse=NA
+)
+
+years <- 1984:2017
+
+for (i in years) {
+  # get link
+  link <- paste0("https://www.basketball-reference.com/leagues/NBA_", i, ".html")
+  
+  # get all tables
+  all_tables <- link %>% 
+    read_html() %>% 
+    html_table()
+  
+  # get eastern conference records
+  eastern_recs <- all_tables[[1]] %>% 
+    select(`W/L%`) %>% 
+    pull() %>% 
+    .[grepl("[0-9]", .)] %>% 
+    as.numeric()
+  
+  # did the team make the playoffs?
+  eastern_playoffs <- all_tables[[1]][[1]] %>% 
+    .[!grepl("Division", ., fixed=TRUE)] %>% 
+    grepl("[*]", .)
+  
+  # get western conference records
+  western_recs <- all_tables[[2]] %>% 
+    select(`W/L%`) %>% 
+    pull() %>% 
+    .[grepl("[0-9]", .)] %>% 
+    as.numeric()
+  
+  # did the team make the playoffs?
+  western_playoffs <- all_tables[[2]][[1]] %>% 
+    .[!grepl("Division", ., fixed=TRUE)] %>%
+    grepl("[*]", .)
+  
+  # playoff team records
+  w_p <- western_recs[western_playoffs]
+  e_p <- eastern_recs[eastern_playoffs]
+  
+  # lottery team records
+  w_l <- western_recs[!western_playoffs]
+  e_l <- eastern_recs[!eastern_playoffs]
+  
+  # how many western playoff teams had records worse than eastern lottery records?
+  w_p_worse <- sum(sapply(w_p, function(x) sum(x < e_l))>0)
+  
+  # how many eastern playoff teams had records worse than western lottery records?
+  e_p_worse <- sum(sapply(e_p, function(x) sum(x < w_l))>0)
+  
+  # how many for that year total?
+  p_tot_worse <- w_p_worse + e_p_worse
+  
+  # update data frame
+  results[which(years==i), 1] <- i
+  results[which(years==i), 2] <- w_p_worse
+  results[which(years==i), 3] <- e_p_worse
+  results[which(years==i), 4] <- p_tot_worse
+  
+  # progress
+  print(i)
+}
+
+# coding worse conference
+results <- results %>% 
+  mutate(
+    conf_worse=factor(case_when(
+      western_worse > 0 ~ "Western Worse",
+      eastern_worse > 0 ~ "Eastern Worse",
+      total_worse == 0 ~ "Even"
+    ), levels=c("Eastern Worse", "Western Worse", "Even"))
+  )
+```
+
+This is the first post in a series of short posts on why the NBA should adopt open seeding in the playoffs: Instead of taking the top 8 teams in each conference, the top 16 teams in the NBA should make the playoffs.  
+
+The first thing I wanted to do was diagnose the problem. I looked at every year from 1984 (when the NBA adopted the 16-team playoff structure) through 2017. For each year, I tallied the number of teams making the playoffs who had a smaller win percentage than a team in the other conference. These data come from Basketball-Reference.com, and the code for scraping, cleaning, and visualizing these data can be found over at [GitHub]().  
+
+The following figure shows this tally per year, and the years are grouped by color based on the conference who had a team with the worse record. The years between dashed vertical lines represent the years in which division winners were guaranteed a top three or four seed.  
+
+```{r figure, echo=FALSE}
+ggplot(results, aes(x=year, y=total_worse, color=conf_worse)) +
+  geom_point(size=3) +
+  theme_minimal() +
+  labs(x=NULL, y=NULL, 
+       subtitle="Number of Playoff Teams with Win % Worse \nThan a Lottery Team in Other Conference, by Year") +
+  theme(text=element_text(size=18), legend.position="bottom") +
+  scale_color_discrete(name=NULL) +
+  geom_vline(xintercept=c(2004.5, 2015.5), linetype=2, size=.4)
+```
+
+This analysis spans 34 seasons. Of these 34 seasons:  
+- There were 10 seasons where the 16 teams with the best records were the 16 in the playoffs (although not seeded as such, since the playoff bracket is split by conference).   
+- Of the 24 (71%) seasons where at least one team with a worse win percentage than a lottery team in the other conference made the playoffs, the offending conference was the East 16 times, while the West 8 times.  
+- The worst year was 2008, where *more than half of the playoff teams* in the Eastern Conference had a worse record than the 9th-place Golden State Warriors, who went .585. Actually, the 10th-place Portland Trail Blazers went .500, placing them ahead of the 7th- and 8th-seeded Eastern Conference teams, and the 11th-place Sacramento Kings had a better record than the 8th-seeded Eastern Conference Atlanta Hawks (a team that only won 37 games).  
+
+I have heard the argument that we should *not* worry about unbalanced conferences in any one year, because "Sometimes the East is better, sometimes the West is better—it balances out in the long-run!" While my analyses don't control for strength of schedule in each conference, it simply isn't true that the conference imbalance evens out over time. I'm looking at the past 34 seasons, and the East was worse *twice* as often as the West (at least in terms of worse teams making the playoffs).  
+
+That argument also doesn't make sense to me because championships are not decided over multiple-years. They are an award given out at the end of every season. So even if it balanced out between conferences over time, this would not matter, because every year some below-average team is making the playoffs. And from these data, we can see that 71% of the seasons in the last 34 years have resulted in at least one team making the playoffs that had a worse record than a lottery team in the opposite conference.  
