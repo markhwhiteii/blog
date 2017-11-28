@@ -1,0 +1,224 @@
+---
+title: "Using Beta Regression to Better Model Norms in Political Psychology"
+author: "Mark H. White II | markhwhiteii@gmail.com"
+date: "2017-11-28"
+output: pdf_document
+---
+
+Louis, Mavor, & Terry (2003) note how typical correlational studies of ideology, politics, and prejudice often underestimate or overlook the role of norms. Their basic argument is that researchers analyze *variance* in common statistical procedures. However, strong norms lead to *invariance*—people doing the same thing (or, in our case, responding to survey items in the same way). Norms can lead to skewed distributions: floor effects (strong norm in disagreement with a survey item), ceiling effects (strong norm for agreement), and/or strongly leptokurtic distributions (strong norm for answering the midpoint). Simply reporting a correlation may misrepresent the results to readers, as I will show here.  
+
+A few years later, Smithson & Verkuilen (2006) discussed dealing with these issues using beta regression. The beta distribution is bounded at 0 and 1, so beta regression has often been used for dealing with proportions, rates, etc. However, they note that many (if not most) of the instruments used in psychology (and other fields that rely on self-reports on Likert scales) are inherently bounded between two values. For instance, a typical 1 (*Strongly Disagree*) to 7 (*Strongly Agree*) scale has bounds at 1 and 7. Typical ordinary least squares regression assumes that values can go outside of this 1 to 7 range. Most of the time this is fine, but when there are strong non-normalities like ceiling and floor effects in the distribution of a response variable, it can be helpful to use a flexible model that can handle those irregularities.  
+
+I want to focus on the extra insights we learn from using beta regression, so I will pay particularly close attention in this post to Louis et al.'s focus on norms. Smithson & Verkuilen mention this paper in passing, but I want to more fully dive into an example here.  
+
+First, I will introduce beta regression. Second, I will introduce data and show what ordinary least squares might tell us—and how this could be misleading. Third, I will demonstrate how to use beta regression on these data in a frequentist paradigm. Lastly, I'll show how to model these data in a Bayesian paradigm using Stan, focusing on what beta regression can tell us about norms.  
+
+## Beta Regression
+### The Beta Distribution
+The beta distribution can take many shapes. For example, here is Figure 1 from Cribari-Neto & Zeileis (2010):  
+
+```{r echo=FALSE, out.width='100%'}
+knitr::include_graphics("figure1_cnz.jpg")
+```
+
+The beta distribution has two parameters that determine its shape. One of the parameters pulls the density toward zero, and the other pulls it toward one. Let's call them $p$ and $q$. Ferrari & Cribari-Neto (2004) showed a different parameterization of the beta density. In particular, they set a parameter called $\mu$ to be equal to $p \over (p + q)$. This is the expected value (in this case, the mean) of the variable we are modeling—let's call that variable $y$. This is known as the "location parameter," because it tells us where we expect the location of the variable to be.  
+
+They set another parameter called $\phi$ to be equal to $p + q$. The variance of $y$ is defined as $\mu (1 + \mu) \over (1 + \phi)$. There are two important things to note here. First, $\phi$ is on the bottom of this equation. That means that the *larger* that $\phi$ gets, the *smaller* the variance of $y$ is. For this reason, it is known as the "precision parameter." Second, $\mu$ is included in this equation. This will mean that, when we get to beta regression, the model will be naturally *hetero*skedastic. That is, the variance will depend on the mean. Contrast this against ordinary least squares regression, where we assume homogeneity of variance.  
+
+Note that the beta density can then be "reparameterized" in terms of $\mu$ and $\phi$ by doing some algebra on the equations above and solving for $p$ and $q$: $p = \mu\phi$ and $q = \phi - \mu\phi$. We will see in the Stan code how this is helpful for us.  
+
+### The Beta Regression Model
+The goal of beta regression is then to predict parameters $\mu$ and $\phi$ from some predictors we have. For this case, let's just say we have one predictor named $x$. We can write the equations (for now) just like in ordinary least squares regression: $\mu_i = \beta_0 + \beta_1X_i$ and $\phi_i = \beta_2 + \beta_3X_i$.  
+
+However, there are two issues issue with these equations. First, $\mu$ has to be between 0 and 1, since it is assumed to be a beta-distributed outcome variable in beta regression. Just using that equation above doesn't restrict $\mu$ to that range. What we can do, though, is apply a link function that smushes $\mu$ into that range. Many can be used, but I will use the logit (i.e., log-odds) link function. Thus, we have: $\mu_i = {\exp(\beta_0 + \beta_1X_i) \over 1 + \exp(\beta_0 + \beta_1X_i)}$. (This should look familiar to those who know logistic regression, since it also uses the logit link function). Second, $\phi$ has to be greater than zero since a variance cannot be negative. To do this, we can use the log link function. Thus, we have: $\phi_i = \exp(\beta_2 + \beta_3X_i)$.  
+
+This creates two "submodels," using the terminology of Smithson & Verkuilen. The first, for $mu$, is the "location submodel." Predictors in this model tell us about where the expected values of $y$ are (i.e., the location) for given predictor values (in this case, just $x$). The second, for $phi$, is the "dispersion submodel." Predictors in this model tell us about what the variance of the dependent variable is (i.e., the dispersion) for given predictor values.  
+
+## The Current Data: Conservatism and Social Dominance Orientation
+So why does all of this matter? Let's revisit Louis, Mavor, & Terry (2003) real quick. They examine the bivariate relationship between right-wing authoritarianism and how much people agree with the item "The White race is the best race." The bounded nature of 7-point scales comes out here. 72% of the sample selected "1, *Strongly Disagree*" on this item. However, what often gets reported is just the correlation: $r = .34$, $p < .001$. We learn that right-wing authoritarianism predicts prejudice, but that's about it. What are we missing when this is all we see in the results section?  
+
+Louis et al. note that, for 72% of the sample, a correlation could not even be calculated. This was because there was no variance in the scores: Everyone adhered to the egalitarian norm that it is not OK to openly say the White race is the best race. For the rest of the sample, the correlation was $.19$. The authors worry about two things: First, that researchers could decide to exclude items like this, because they aren't normally distributed; and second, researchers only report the correlation, and readers interpret it symmetrically. A "symmetric" interpretation is that people at *both* the high and low ends of the authoritarianism spectrum are driving the relationship, when we know that is not the case. I argue that beta regression can better describe relationships like these.  
+
+The rest of this post is aimed to be both (a) an example of when beta regression is useful and (b) how to do it using R and Stan.  
+
+The data analyzed here are taken from 175 participants from MTurk. The data come from Study 1 of White & Crandall (2017). The independent variable is a combination of two variables: identifying as conservative and Republican. The dependent variable is social dominance orientation, or how much people willingly endorse hierarchy and inequality in society (example item: "Inferior groups should stay in their place"). In the context of the study—which was about racist incidents on college campuses—people could see this as being about racial groups. There is a highly-replicated positive relationship between right-wing political identification (RWID) and social dominance orientation (SDO). What else can we learn about this relationship from these data?  
+
+## The Ordinary Least Squares Approach
+First, let's prepare the data and look at its structure:  
+
+```{r warning = FALSE, message = FALSE}
+library(ggplot2)
+library(betareg)
+library(rstan)
+library(bayesplot)
+dat <- read.csv("betareg_politics.csv")
+str(dat)
+```
+
+There are two variables, both $z$-scored. What is the correlation between the two?  
+
+```{r}
+cor(dat)[[2]]
+```
+
+So, we have replicated past research. RWID predicts SDO, $r = .50$, $p < .001$. But what else is going on? Let's take a look at a visual of the linear relationship:  
+
+```{r}
+ggplot(dat, aes(x = rw_pol_id, y = sdo)) +
+  geom_jitter() +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_light() +
+  labs(x = "Right-Wing Political Identification", 
+       y = "Social Dominance Orientation")
+```
+
+There's a linear relationship, but look at all of those values hitting the floor of SDO. What does the density of this variable look like?  
+
+```{r}
+ggplot(dat, aes(x = sdo)) +
+  geom_density(fill = "blue", alpha = .6) +
+  theme_light() +
+  labs(x = "Social Dominance Orientation",
+       y = "Density")
+```
+
+There you have it: A huge floor effect. Let's move on to beta regression to see if it can tell us something different.  
+
+## The Frequentist Beta Regression Approach
+With beta regression, or dependent variable has to be *between* 0 and 1. Thankfully, Smithson & Verkuilen (2006) show a way to transform our variable so that the highest value is *just* below 1 and the lowest value is *just* above 0. Here is a function that implements the transformation:  
+
+```{r}
+beta_normalize <- function(x) {
+  x_ <- ((x - min(x)) / (max(x) - min(x)))
+  (x_ * (length(x_) - 1) + 0.5) / length(x_)
+}
+dat$sdo <- beta_normalize(dat$sdo)
+range(dat$sdo)
+```
+
+Perfect. Beta regression is implemented easily using the `betareg` package. In a `lm` or `glm`, you would specify `y ~ x` (i.e., your dependent variable is predicted by your independent variable). The only change here is that there is a bar in the formula: `|`. Whatever comes before the bar are variables predicting the $\mu$ part (i.e., location); whatever comes after are variables predicting the $\phi$ part (i.e., dispersion). These variables can be all the same, all different, or anywhere in between. I will use RWID to predict SDO in both submodels:  
+
+```{r}
+mod1 <- betareg(sdo ~ rw_pol_id | rw_pol_id, 
+                data = dat, link = "logit", 
+                link.phi = "log")
+```
+
+Note that I specify the link functions that I mentioned above. The results:  
+
+```{r}
+summary(mod1)
+```
+
+First, let's look at the `mean model with logit link`. This is what is predicting the location ($\mu$). We can see that, replicating the zero-order correlation above, the more someone identifies as conservative and Republican, the more they endorse inequality, dominance, and hierarchy in society.  
+
+What I think is really cool is the second part, the `precision model with log link`. This tells about $\phi$. We can see that precision of SDO decreases as RWID increases. In other words, the variance of SDO increases as RWID increases. Before I turn to interpretation, let's take a look at how to do this in a Bayesian framework, using Stan. I like it because it requires us to be a little bit more explicit and hands-on in running the model. Plus, Bayesian inferences are more intuitive.  
+
+## The Bayesian Beta Regression Approach
+I am interfacing with Stan using `rstan`. I define my model:  
+
+```{r}
+stan_code <- "
+data {
+  int n;
+  vector[n] x; 
+  vector<lower=0, upper=1>[n] y;
+}
+parameters {
+  vector[4] coef;
+}
+transformed parameters {
+  vector<lower=0, upper=1>[n] mu;
+  vector<lower=0>[n] phi;
+  vector[n] p;
+  vector[n] q;
+  for (i in 1:n) {
+    mu[i] = inv_logit(coef[1] + coef[2] * x[i]); 
+    phi[i] = exp(coef[3] + coef[4] * x[i]);
+    p[i] = mu[i] * phi[i];
+    q[i] =  phi[i] - mu[i] * phi[i];
+  }
+}
+model {
+  y ~ beta(p, q);
+  coef ~ normal(0, 2);
+}
+"
+```
+
+In the first block, I read in the data: my total number of participants $n$ as well as my independent $x$ and dependent $y$ variables. In the second, I tell Stan that I am going to be estimating four coefficients (called `coef`)—these are two intercepts and two slopes (for both the location and precision submodels). Then, I tell Stan that I will be defining `mu` and `phi`. As you can see, these are predicted by intercepts (`coef[1]` and `coef[3]`) and the slopes of `x` (`coef[2]` and `coef[4]`). I use the logit and log link functions by calling `inv_logit` and `exp`, respectively. I also tell Stan that I'm going to define `p` and `q`, which are the shape parameters for the beta density. Note that I use the equations for $p$ and $q$ that I defined above—I'm simply taking the equations from the papers and plopping them in here.  
+
+Lastly, I define my model. I tell Stan that `y` is distributed `beta` with the shape parameters `p` and `q`. I then set somewhat informative priors on my coefficients. Before the fact, I think that my coefficients probably lie in a normal distribution with a mean of 0 and a standard deviation of 2.  
+
+Let's run this model:  
+
+```{r warning = FALSE, message = FALSE, results = FALSE}
+stan_dat <- list(n = nrow(dat), x = dat$rw_pol_id, y = dat$sdo)
+set.seed(1839)
+mod2 <- stan(model_code = stan_code, data = stan_dat, 
+             iter = 1000, chains = 4, cores = 2)
+```
+
+And look at the results:  
+
+```{r}
+round(summary(mod2)$summary[1:4, ], 2)
+```
+
+`coef[2]` agrees with the frequentist estimates using `betareg`: RWID positively predicts SDO. The coefficient here is $.71$, while it was $.72$ using `betareg`. However, we get an intuitive inference: It is 95% probable that our estimate lies somewhere between $0.51$ and $0.89$. `coef[4]` tells the same story, too: RWID predicts greater variance in SDO.  
+
+But if we want to think Bayesian, we don't want to just look at the point estimates. Let's look at the entire *distribution* of the posterior for these coefficients:  
+
+```{r warning = FALSE, message = FALSE}
+draws <- as.matrix(mod2)
+draws <- draws[, c("coef[2]", "coef[4]")]
+colnames(draws) <- c("mu", "phi")
+mcmc_hist(draws, facet_args = list(labeller = label_parsed)) +
+  ggtitle("Posterior densities for slope coefficients",
+          "SDO regressed on RWID") +
+  theme_light()
+```
+
+This shows histograms for draws from the posterior distributions for the slope coefficients predicting $\mu$ and $\phi$ from RWID, respectively (that is, `coef[2]` and `coef[4]`). Note that neither of these distributions cross zero, so we can infer that it is greater than 99% probable that `coef[2]` is larger than zero and 99% probable that `coef[4]` is smaller than zero.  
+
+Now, let's look at the prediction line for the $\mu$, the expected value of SDO (i.e., $E(SDO)$):  
+
+```{r}
+mod2_summary <- summary(mod2)$summary
+mus <- mod2_summary[grepl("mu", rownames(mod2_summary)), "mean"]
+ggplot() +
+  geom_jitter(aes(x = dat$rw_pol_id, y = dat$sdo)) +
+  geom_line(aes(x = dat$rw_pol_id, y = mus)) +
+  theme_light() +
+  labs(x = "Right-Wing Political ID", y = "E(SDO)")
+```
+
+It has a slight bend to it, showing the trend isn't quite linear. Again, what I think is really cool is that we can also plot how the *variance* of SDO increases as RWID increases. I solve for the variance using the equation for $Var(Y)$ above:  
+
+```{r}
+phis <- mod2_summary[grepl("phi", rownames(mod2_summary)), "mean"]
+vars <- (mus * (1 - mus)) / (phis + 1)
+ggplot() +
+  geom_line(aes(x = dat$rw_pol_id, y = vars)) +
+  theme_light() +
+  labs(x = "Right-Wing Political ID", y = "Var(SDO)")
+```
+
+## What It Means For Norms
+Norms produce invariance. It is not seen as OK to admit that some groups are inferior to others, that those groups should just stay in their place, and that equality should *not* be a big priority in society. Therefore, the participants displayed a floor effect: About half of the sample responded to the *entire* scale by answering all "1, *Strongly Disagree*" (or "7, *Strongly Agree*," if the items were reverse-scored).  
+
+In typical personality psychology studies, this normativity in responding is either ignored or items are thrown out because they aren't normally-distributed. But using beta regression, we can actually quantify this change in variance by looking at the dispersion submodel and the $\phi$ parameter. It isn't just that "conservatives endorse social inequality more," it is also a *normative* phenomenon: Since (a) norms produce invariance, and (b) there is greater variance with increasing conservatism, it appears that (c) as conservatism increases, people do not adhere to the norms about forbidding what is socially acceptable to express. People at the low end of RWID stuck to the norm, producing invariance around the floor; people at high end of RWID did not stick to the norm and displayed more variance.  
+
+Louis, Mavor, & Terry (2003) lamented that there is "no conventional analysis of invariance" (p. 192), and they gave no concrete suggestions for how else to analyze data to better get at the issues they were raising. I hope that this demonstration shows that beta regression, introduced the year after their paper was published, can address the problems they pointed out.  
+
+## References
+
+Cribari-Neto, F. & Zeileis, A. (2010). Beta regression in R. *Journal of Statistical Software, 34*.  
+
+Ferrari, S. L. P. & Cribari-Neto, F. (2004). Beta regression for modelling rates and proportions. *Journal of Applied Statistics, 31*.  
+
+Louis, W. R., Mavor, K. I., & Terry, D. J. (2003). Reflections on the statistical analysis of personality and norms in war, peace, and prejudice: Are deviant minorities the problem? *Analyses of Social Issues and Public Policy, 3*.  
+
+Smithson, M. & Verkuilen, J. (2006). A better lemon squeezer? Maximum-likelihood regression with beta-distributed dependent variables. *Psychological Methods, 11*.  
+
+White, M. H., II., & Crandall, C. S. (2017). Freedom of racist speech: Ego and expressive threats. *Journal of Personality and Social Psychology, 113*.  
