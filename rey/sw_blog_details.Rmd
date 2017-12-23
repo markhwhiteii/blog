@@ -1,0 +1,88 @@
+---
+title: "\"Force is *Too* Strong,\" Analysis Details"
+output: pdf_document
+---
+
+## Sample
+
+The sample was 62% male, 78% White, and ages ranged from 19 to 73 ($M = 33.22$).  
+
+## Items
+
+### Attitudes Toward Rey
+
+- Rey learned to use the Force too quickly.  
+
+- Rey's strength in the Force at the end of the movie was not realistic or believable, given what I know about the Star Wars Universe.  
+
+- Rey figuring out how to use the Force on her own does not make any sense, because other Jedi had to have training.  
+
+- At the end of the movie, it was unrealistic that Anakin and Luke Skywalker's old lightsaber went to Rey instead of Kylo Ren, who had training under a powerful Sith.  
+
+- Rey is unrealistically good at everything: She can fix machines, pilot a ship well, learns the Force quickly, and is naturally good with a lightsaber.  
+
+### Benevolent Sexism
+
+- Every man ought to have a woman whom he adores.  
+
+- Women should be cherished and protected by men.  
+
+- Many women have a quality of purty that few men possess.  
+
+- Women, compared to men, tend to have a superior moral sensibility.  
+
+- Men should be willing to sacrifice their own well being in order to provide financially for the women in their lives.  
+
+### Hostile Sexism
+
+- Many women are actually seeking special favors, such as hiring policies that favor them over men, under the guise of asking for "equality."  
+
+- Most women interpret innocent remarks or acts as being sexist.  
+
+- Women exaggerate problems they have at work.  
+
+- When women lose to men in a fair competition, they typically complain about being discriminated against.  
+
+- Feminists are making unreasonable demands of men.  
+
+### Other
+
+- How much do you consider yourself a Star Wars fan? (1, Not at all to 5, Very much)    
+
+- How would you describe your political outlook? (0, Liberal to 100, Conservative)  
+
+## Regression Table
+
+Attitudes toward Rey, Benevolent sexism, hostile sexism, fandom, and conservatism were $z$-scored before analyses. Gender was coded male (1) or not male (0), race was coded White (1) or non-White (0), and age was measured in years. Attitudes toward Rey was regressed on all of the other variables in a Bayesian linear regression model (using Stan). Priors for all of the regression coefficients (including the intercept) were set to $\text{Normal}(0, 1)$, while the prior for the error was set to $\text{Cauchy}(0, 5)$, constraining it to be non-negative (i.e., half-Cauchy). Sampling was done with 4 chains, 2000 iterations, 1000 being burn-in iterations.  
+
+The regression table is below, based off of drawing samples from the posterior. "Mean" is the average of the posterior for each regression coefficient, 2.5% and 97.5% were percentiles of the posterior that represent the lower- and upper-bounds for 95% credible intervals, and the last column is the probability that the absolute value of the mean of the posterior for each regression coefficient is greater than zero.  
+
+```{r echo = FALSE, message = FALSE, warning = FALSE, results = FALSE}
+library(tidyverse)
+library(ggthemes)
+library(rstanarm)
+dat1 <- read_csv("sw_blog.csv")
+set.seed(1839)
+mod1 <- stan_glm(rey ~ ., data = dat1,
+                 prior = normal(0, 1),
+                 prior_intercept = normal(0, 1),
+                 prior_aux = cauchy(0, 5))
+mod1_summary <- as.data.frame(round(summary(mod1)[1:8, c(1, 4, 8)], 3))
+mod1_draws <- as.data.frame(mod1)[, -9]
+mod1_summary$prob <- NA
+for (i in rownames(mod1_summary)) {
+  if (sign(mod1_summary[i, "mean"]) == 1) {
+    mod1_summary[i, "prob"] <- round(mean(mod1_draws[, i] > 0), 3)
+  } else {
+    mod1_summary[i, "prob"] <- round(mean(mod1_draws[, i] < 0), 3)
+  }
+}
+```
+```{r echo = FALSE}
+row.names(mod1_summary) <- c("(Intercept)", "Benevolent Sexism", "Hostile Sexism",
+                             "Fandom", "Male", "White", "Age", "Conservatism")
+colnames(mod1_summary) <- c("Mean", "2.5%", "97.5%", "p(|$M_b$| > 0)")
+mod1_summary[1, 4] <- "0.700"
+mod1_summary[3, 4] <- "> 0.999"
+knitr::kable(mod1_summary, align = "r", digits = 3)
+```
