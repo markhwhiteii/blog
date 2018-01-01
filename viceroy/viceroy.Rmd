@@ -1,0 +1,51 @@
+---
+output: html_document
+---
+
+Mac DeMarco released his first album, *2*, on October 16th, 2012. The fifth track is called "Ode to Viceroy," which is a song about the Viceroy brand cigarette. He's gained in popularity with his subsequent releaes, *Salad Days* and *This Old Dog*, and his affection for cigarettes had turned into [somewhat of a meme.](https://www.spin.com/2017/05/listens-to-mac-demarco-once-meme/)  
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/6bfTTeZOrs4" frameborder="0" gesture="media" allow="encrypted-media" allowfullscreen></iframe>
+
+What has the effect of "Ode to Viceroy" been on the popularity of the Viceroy brand itself?  
+
+I looked at this question by analyzing frequency of Google searches (accessed via the [gtrendsR R package](https://cran.rstudio.com/web/packages/gtrendsR/index.html)) using the [CausalImpact R package.](https://google.github.io/CausalImpact/CausalImpact.html).  
+
+I pulled the frequency of Google searches for a number of cigarette brands. I went looking around Wikipedia and found that Viceroy is owned by the R. J. Reynolds Tobacco Company. This sentence was on that company's Wikipedia page: "Brands still manufactured but no longer receiving significant marketing support include Barclay, Belair, Capri, Carlton, GPC, Lucky Strike, Misty, Monarch, More, Now, Tareyton, Vantage, and Viceroy."  
+
+I took each of these brand names and attached "cigarettes" to the end of the query (e.g., "GPC cigarettes"). I didn't use "More," due to the majority of "More cigarettes" was probably *not* in reference to the More brand. I pulled monthly search numbers for each of these brands from Google Trends. I set the date range to be four years before *2* came out (October 16th, 2008) and after it came out (October 16th, 2016).  
+
+The CausalImpact package employs Bayesian structural time-series models in a *counterfactual* framework to estimate the effect of an intervention. In this case, the "intervention" is Mac DeMarco releasing *2*. Basically, the model asks the question: "What would have data looked like, if no intervention had taken place?" In the present case, the model uses information I gave it from Google Trends about the handful of cigarette brands, and then it estimates search trends for Viceroy *if *2* had never been released*. It then compares this "synthetic" data against what we actually observed. The difference is the estimated causal impact of Mac DeMarco on the popularity of Viceroy cigarettes. (I highly suggest [reading the paper](https://research.google.com/pubs/pub41854.html), written by some folks at Google, introducing this method.)  
+
+When doing these analyses, we assume two crucial things: First, that none of the other brands were affected by Mac DeMarco releasing *2*; and Second, that the relationships between the other brands and Viceroy remained the same after the album's release as before the release.  
+
+Google Trends norms their data and scales it in a way that isn't readily interpretable. Any trend that you get, the highest amount of searches is set to the value 100. Every other amount is scaled to that: If you observe a 50 for one month, that means it is 50% the value of the number of searches observed at the max in that time period. Keep this in mind when looking at the results.  
+
+You can see the trend below. The black line is what we actually observed for the amount of Google queries for "Viceroy cigarettes." The dashed vertical line represents when Mac released *2*. The dashed blue line is what we estimate would have been the trend if Mac hadn't ever released his album, and the lighter blue area above and below this line represents our uncertainty in this dashed blue line. Specifically, there is 95% probability that the dashed blue line is somewhere in that light blue range.  
+
+```{r warning = FALSE, message = FALSE, echo = FALSE}
+library(tidyverse)
+dat <- read_csv("viceroy.csv")
+datwide <- read_csv("viceroy_wide.csv")
+
+set.seed(1839)
+results <- CausalImpact::CausalImpact(
+  data = datwide, 
+  pre.period = c(min(which(unique(dat$date) < "2012-10-16")),
+                 max(which(unique(dat$date) < "2012-10-16"))),
+  post.period = c(min(which(unique(dat$date) > "2012-10-16")),
+                  max(which(unique(dat$date) > "2012-10-16"))),
+  model.args = list(niter = 5000)
+)
+
+plot(results, "original") +
+  theme(text = element_text(size = 14)) +
+  xlab("Month")
+```
+
+
+We can see that what we actually observed goes outside of this blue range about a year after Mac released his album. According to the model, there is greater than a 99.97% probability that Mac DeMarco had a positive effect on people searching for "Viceroy cigarettes" on Google. On average, the difference between what we actually observed and the estimated trend if Mac didn't release *2* was 31, and there's a 95% probability that this difference is between 27 and 35. This number is a little hard to interpret (given how the data are normed and scaled), but one could say that the estimated causal impact—on the average month—is about 31% of whatever the highest observed number of monthly search queries were for "Viceroy cigarettes."  
+
+In one song on his debut album, Mac DeMarco was able to get people more interested in Viceroy cigarettes. I'm interested in how this affected sales—I'd bet there is at least some relationship between Google searches and sales.  
+
+Code for all data collection and analyses is available on my [GitHub.](https://github.com/markhwhiteii/blog/tree/master/viceroy)  
+  
