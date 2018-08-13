@@ -1,0 +1,198 @@
+---
+title: How Big Should the Control Group Be in a Randomized Field Experiment?
+output: html_document
+---
+
+```{r echo = FALSE, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(mgcv)
+library(splines)
+library(segmented)
+dat <- read_csv("power_curve_results3.csv")
+```
+
+Research involves tradeoffs. Basic social science—aimed at scientific discovery and theoretical advances—is dealing with a "replication crisis," and much of the debate between scholars stems from the valuing of costs and benefits differently. Some believe false positives are more dangerous to scientific advancement than are false negatives, while others feel the opposite. This debate centers around tradeoffs: If we have a stricter threshold for determining what is scientific evidence, we are going to make fewer wrong proclamations that an effect or relationship exists—but we are also going to miss out on interesting scientific discoveries. If we impose a looser threshold, the opposite is true.  
+
+Social science in the real world involves additional, practical tradeoffs that researchers and data scientists must manage. Such is the case when considering the current question of how large a control group should be in a randomized field experiment. For the purposes of this post, I consider an experimental design where participants are assigned to one of two conditions: a treatment or a control. I am defining the size of a control condition relative to the size of the sample—the proportion allocated to the control condition.  
+
+The tensions in this situation involve the same as those in basic research in addition to others. Randomized field experiments meet people where they are, in their day-to-day lives. This often requires considerable more resources than forcing a college sophomore to show up to your lab between classes. And the stakeholders invested in whatever it is we are testing—a technology, campaign, technique, or strategy—do not want to miss an opportunity we have to engage with people.  
+
+This is especially true in politics. Consider a field experiment testing the effect an advertising or canvassing campaign has on voter turnout. Every person we allocate to the control condition is a potential voter with whom we do not speak. People who work hard to design advertisements want people to see their work; volunteers want to knock on doors and talk to people about the candidate they support. Elections only happen once, as well; we cannot run the experiment back and collect more data in a few months, we cannot go back in later and contact the people that were in the control condition.  
+
+These are some of the tradeoffs researchers and data scientists must consider in these situations. We want valid statistical inferences. We want to efficiently quantify the causal effect of these campaigns. It is clear to us that half of the participants should be in the treatment condition, while the other half is in the control condition. This strategy gets us equally-precise estimates of the mean or frequency of the dependent variable in both conditions. But this means that we do not engage with a full 50% of the people we are targeting. At the other extreme, we could expose 99.5% of the sample to the treatment and only 0.5% to the control. We would have a very precise estimate of what is happening in the treatment condition—but it wouldn't matter, because the standard error in the control condition would be so large that we would be clueless as to if it meaningfully differs from the treatment.  
+
+The figure below illustrates this. I simulated data from an experiment where 50 people were in each condition ("50/50") or only 5 were in the control ("95/5"). Even though the effect is bigger in the latter situation, we cannot detect a significant effect because there are not enough people in the control condition; however, there is a significant effect in the 50/50 split.  
+
+```{r echo = FALSE, fig.align = "center"}
+set.seed(1839)
+halfhalf <- tibble(
+  x = rep(0:1, each = 50),
+  y = rnorm(100, ifelse(x == 0, 0, .8))
+)
+# t.test(y ~ x, halfhalf) # uncomment to see sig
+holdout5 <- tibble(
+  x = c(rep(0, 5), rep(1, 95)),
+  y = rnorm(100, ifelse(x == 0, 0, .8))
+)
+# t.test(y ~ x, holdout5) # uncomment to see sig
+se <- function(x) sd(x) / sqrt(length(x))
+illustrate <- tibble(
+  split = c("50/50", "50/50", "95/5", "95/5"),
+  cond = c("Control", "Treatment", "Control", "Treatment"),
+  mean = c(with(halfhalf, tapply(y, x, mean)), 
+           with(holdout5, tapply(y, x, mean))),
+  se = c(with(halfhalf, tapply(y, x, se)), with(holdout5, tapply(y, x, se)))
+)
+ggplot(illustrate, aes(x = cond, y = mean)) +
+  geom_point(size = 2) +
+  geom_errorbar(aes(ymin = mean - 1.96 * se, ymax = mean + 1.96 * se),
+                width = .2) +
+  facet_grid(~ split) +
+  theme_minimal() +
+  theme(text = element_text(size = 20),
+        legend.position = "none") +
+  labs(x = "\nCondition", y = "Mean")
+```
+
+We might rely on a mental calculus in determining the size of the control condition, weighing the opportunity costs associated with _not_ exposing someone to the treatment against the statistical efficiency of an even split between the conditions. My goal here is to quantitatively inform this calculus through a Monte Carlo simulation study, examining the relationship between statistical power and control group size. I now turn to discussing the methods of this study before discussing results and implications.  
+
+## Method
+
+The procedure for simulating the data is as follows. I decided each simulated dataset would mimic a randomized field experiment on voter turnout. Cases were assigned to either a "treatment" or a "control" condition, making for a simple two-cell design. The outcome was either 1 ("Voted") or 0 ("Did Not Vote"). This could represent any other dichotomous outcome, such as 1 ("Favorable") or 0 ("Unfavorable"), etc.  
+
+Second, I defined a range of characteristics for the data. These are:  
+
+1. Sample size. These were set at 1,000, 2,5000, 5,000, 10,000, 15,000, or 20,000.  
+
+2. Control group size. This was either 10%, 15%, 20%, 25%, and so on, up to 50% of the sample.  
+
+3. Effect size. This was defined by lift, which is the percentage point increase in the positive outcome (e.g., voting, favorable opinion, donating, etc.) that the treatment had over the control. 70% of people voted in the control condition and 72% did so in the treatment, this would represent a lift of 2 percentage points. Note that power depends on the rate of the positive outcome in the control condition. I made this constant across all datasets at 50%. This represents the best case scenario for power, given that power decreases as this control date approaches 0% or 100%. In preliminary simulations, however, I also allowed this base rate to be 30%, 50%, or 70%. The this did not change the shape of the relationship between control size and power; it merely shifted the intercept up or down a little bit. Data from those preliminary simulations can be found on the GitHub repository for this post.  
+
+Third, I simulated 1,000 datasets for each of the 540 combinations of the characteristics above (i.e., *6 x 9 x 10*). For each dataset, cases were assigned to treatment or control conditions deterministically based on the control group size. If we let the size of the control group be the proportion of the sample in the control condition be *Ctl* and the size of the sample to be *N*, then *N x Ctl* cases were in the control, while *N x (1 - Ctl)* were in the treatment condition. For the control condition cases, the dependent variable for each case was drawn from a Binomial distribution, *B(1, 0.5)*, while the treatment case outcome variables were drawn from a distribution *B(1, 0.5 + L)*, where *L* denotes the lift.  
+
+Fourth, *p*-values were obtained by regressing the outcome on the condition in a binomial logistic regression. For each of the 540 types of datasets, I calculated the proportion of the 1,000 simulations that yielded a *p*-value below .05. This represents the statistical power for combination of data characteristics: It estimates the percentage of the time we would find a significant effect, given that it exists. If 800 of the 1,000 simulations yielded *p* < .05, then the power for that data situation would be 80%.  
+
+The resulting data I analyzed to examine the relationship between control size and power was one with 4 variables (N, control size, lift, and power) and 540 cases (each unique combinations of the N, control size, and lift possibilities).  
+
+## Results
+
+I started by generating curves illustrating the relationship between control size and power for each of the 60 *N x Lift* combinations, which are found below. All curves in the following analyses, unless where otherwise noted, were fitted using a natural cubic spline with 3 degrees of freedom (via the `mgcv` and `splines` R packages).  
+
+```{r echo = FALSE, fig.align = "center", out.width = "90%"}
+ggplot(dat, aes(x = ctl, y = power, color = factor(lift * 100))) +
+  geom_point(size = 1) +
+  geom_smooth(se = FALSE, method = "gam", alpha = .8,
+              formula = y ~ ns(x, df = 3), size = 1) +
+  facet_wrap(~ n, labeller = as_labeller(c(
+    "1000" = "1,000",
+    "2500" = "2,500",
+    "5000" = "5,000",
+    "10000" = "10,000",
+    "15000" = "15,000",
+    "20000" = "20,000"
+  ))) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, angle = 45, size = 11),
+        text = element_text(size = 16),
+        # legend.position = "top",
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 14)) +
+  labs(x = "Control Size", y = "Power") +
+  scale_color_discrete(name = "Lift") +
+  scale_x_continuous(label = function(x) paste0(x * 100, "%")) +
+  scale_y_continuous(label = function(x) paste0(x * 100, "%"))
+```
+
+The first lesson from these curves is that deviating from a 50/50 treatment and control split harms statistical power. This is true in just about every circumstance, except when analyses are tremendously over or underpowered using a 50/50 split.  
+
+Below the 20% mark, even analyses that have about 100% power in the 50/50 case can start to lose power. Consider the 4 point lift curve when *N* = 20,000. Even though the study has about 100% power when holding out only 20% of the sample as a control group, this starts to tail off below 20% (granted, most researchers would still be happy with the level of power at 10%).  
+
+Most of these curves, however, do not represent typical situations data scientists face. The lower bound of power generally seen as "acceptable" is 80%, so we try to achieve at least that—and we don't often find ourselves in situations when we have greater than 95% power, either. I turn to only looking at the curves that achieve between 80% and 95% power when the control size is half of the sample. The horizontal dotted lines represent these 80% and 95% thresholds.  
+
+```{r echo = FALSE, fig.align = "center", out.width = "65%"}
+dat %>% 
+  group_by(n, lift) %>% 
+  filter(max(power) > .8 & max(power) < .95) %>% 
+  ggplot(aes(x = ctl, y = power, color = paste0(lift, n))) +
+  geom_point() +
+  geom_smooth(se = FALSE, method = "gam", formula = y ~ ns(x, df = 3)) +
+  geom_hline(aes(yintercept = .8), linetype = 2) +
+  geom_hline(aes(yintercept = .95), linetype = 2) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, angle = 45),
+        text = element_text(size = 20),
+        legend.position = "none") +
+  labs(x = "Control Size", y = "Power") +
+  scale_x_continuous(label = function(x) paste0(x * 100, "%")) +
+  scale_y_continuous(label = function(x) paste0(x * 100, "%")) +
+  coord_cartesian(ylim = c(.35, 1))
+```
+
+If we were already teetering on having 80% power in the 50/50 split situation, we lose that once we dip below about a 40% control size. Since these curves otherwise all follow the same form, I decided to just fit one curve, collapsing across all of the *N x Lift* combinations.  
+
+```{r echo = FALSE, fig.align = "center", out.width = "65%"}
+dat %>% 
+  group_by(n, lift) %>% 
+  filter(max(power) > .8 & max(power) < .95) %>% 
+  ggplot(aes(x = ctl, y = power)) +
+  geom_point(color = "#474A2C") +
+  geom_smooth(se = FALSE, method = "gam", formula = y ~ ns(x, df = 3),
+              color = "#564D80") +
+  geom_hline(aes(yintercept = .8), linetype = 2, color = "grey10") +
+  geom_hline(aes(yintercept = .95), linetype = 2, color = "grey10") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, angle = 45),
+        text = element_text(size = 20),
+        legend.position = "none") +
+  labs(x = "Control Size", y = "Power") +
+  scale_x_continuous(label = function(x) paste0(x * 100, "%")) +
+  scale_y_continuous(label = function(x) paste0(x * 100, "%")) +
+  coord_cartesian(ylim = c(.35, 1))
+```
+
+Things start to take a dip once we go below the 30% control size mark, and the 80% power threshold is crossed just below that point. Just by looking at the curve, I guessed that power really starts to drop off around 25% to 30% control size. To be a bit more precise than eyeballing, I fit a piecewise linear regression to these data (via the `segmented` R package). What this involves is fitting one straight line on cases above a certain threshold and another straight line on cases below it. (Note that, when using this method, one is not limited to this: One can specify more than one threshold and different types of regression lines).  
+
+But where do we set the threshold? Estimation requires the analyst to take a guess at where the breakpoint might be, and an iterative procedure searches around this until it converges on a solution that fit the data well. I ran this on the current data, specifying my initial guess at control size of 30%. The breakpoint was estimated at 23.2%, with a 95% confidence interval from 19.5% to 26.9%. I think of this as the "elbow" of the curve, where our loss of power accelerates. In reality, there is not truly one turning point—the loss of power follows a smooth curve. But estimating this breakpoint helps data scientists have a precise mental benchmark of an area we should not go below when determining the size of control groups.  
+
+```{r echo = FALSE, fig.align = "center", out.width = "65%"}
+fit_lm_dat <- dat %>% 
+  group_by(n, lift) %>% 
+  filter(max(power) > .8 & max(power) < .95)
+fit_lm <- lm(power ~ ctl, fit_lm_dat)
+fit_sgmt <- segmented(fit_lm, ~ctl, .3)
+psi_ci <- confint(fit_sgmt)$ctl
+
+ggplot(fit_lm_dat, aes(x = ctl, y = power)) +
+  geom_point(color = "#474A2C") +
+  geom_smooth(method = "lm", se = FALSE, 
+              formula = y ~ x + I((x - psi_ci[1]) * I(psi_ci[1] > x)),
+              color = "#564D80") +
+  geom_segment(aes(x = psi_ci[2], xend = psi_ci[3], 
+                   y = .4, yend = .4), color = "#E03616") +
+  coord_cartesian(ylim = c(.35, 1)) +
+  geom_point(mapping = aes(x = psi_ci[1], y = .4), color = "#5C0029",
+             shape = "diamond", size = 3) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(hjust = 1, angle = 45),
+        text = element_text(size = 20),
+        legend.position = "none") +
+  labs(x = "Control Size", y = "Power") +
+  scale_x_continuous(label = function(x) paste0(x * 100, "%")) +
+  scale_y_continuous(label = function(x) paste0(x * 100, "%")) +
+  geom_hline(aes(yintercept = .8), linetype = 2, color = "grey10")
+
+```
+
+## Discussion
+
+The best scenario, statistically-speaking, is an even 50% split between treatment and control.  
+
+However, we must often consider many factors outside of the research design and statistical world; research involves tradeoffs. Based on consulting with others involved in the research process and your judgment of the opportunity costs of not exposing participants to the treatment, some important takeaways are:  
+
+1. Minimal losses in power occur when we shrink the control size to 40%.  
+
+2. A 25% to 30% range is a good compromise, as this exposes 70% of the sample to the treatment, yet still does not harm power terribly.  
+
+3. You should probably *not* allocate less than 20% of the sample to the control condition, save for situations when you are looking for very large effects (e.g., 8 point lifts) and/or using very large samples (e.g., 15,000 participants).  
+
+I by no means did an exhaustive simulation of all possible scenarios. If you would like to examine a case specific to your interests, explore these data, or replicate the results, all of the code can be found at my GitHub page.  
