@@ -8,7 +8,7 @@ library(tidyverse)
 library(mgcv)
 library(splines)
 library(segmented)
-dat <- read_csv("power_curve_results3.csv")
+dat <- read_csv("control_size_results.csv")
 ```
 
 Research involves tradeoffs. Basic social science—aimed at scientific discovery and theoretical advances—is dealing with a "replication crisis," and much of the debate between scholars stems from the valuing of costs and benefits differently. Some believe false positives are more dangerous to scientific advancement than are false negatives, while others feel the opposite. This debate centers around tradeoffs: If we have a stricter threshold for determining what is scientific evidence, we are going to make fewer wrong proclamations that an effect or relationship exists—but we are also going to miss out on interesting scientific discoveries. If we impose a looser threshold, the opposite is true.  
