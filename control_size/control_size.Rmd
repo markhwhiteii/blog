@@ -192,6 +192,6 @@ We must often consider many factors outside of the research design and statistic
 
 2. A 25% to 30% range is a good compromise, as this exposes 70% of the sample to the treatment, yet still does not harm power terribly.  
 
-3. You should *not* allocate less than 20% of the sample to the control condition, save for situations when you are looking for very large effects (e.g., 8 point lifts) and/or using very large samples (e.g., 15,000 participants).  
+3. You should *not* allocate less than 20% of the sample to the control condition, save for situations when you are looking for large effects (e.g., 8 point lifts) and/or using large samples (e.g., 15,000 participants).  
 
 I did not perform an exhaustive simulation of all possible scenarios, of course. If you would like to examine a case specific to your interests, explore these data, or replicate the results, all of the code can be found [at GitHub](https://github.com/markhwhiteii/blog/tree/master/control_size).  
