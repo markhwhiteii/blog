@@ -1,0 +1,78 @@
+---
+title: How Big Should the Control Group Be in a Randomized Field Experiment?
+output: html_document
+---
+
+
+
+Research involves trade-offs. Basic social science—aimed at scientific discovery and theory-building—is dealing with a "replication crisis," and much of the debate between scholars stems from people valuing costs and benefits differently. Some believe false positives are more dangerous to scientific advancement than are false negatives, while others feel the opposite. This debate centers around trade-offs: If we have a stricter threshold for determining what is scientific evidence, we are going to make fewer wrong proclamations that an effect or relationship exists—but we are also going to miss out on interesting scientific discoveries. If we impose a looser threshold, the opposite is true.  
+
+Social science in the real world involves additional, practical trade-offs that researchers and data scientists must manage. Such is the case when considering the current question of how large a control group should be in a randomized field experiment. For the purposes of this post, I consider an experimental design where participants are assigned to one of two conditions: a treatment or a control. I am defining the size of a control condition relative to the size of the sample: the proportion allocated to the control condition.  
+
+Tensions in this situation involve the same as those in basic research—in addition to others. Randomized field experiments meet people where they are, in their day-to-day lives. This often requires considerable more resources than forcing a college sophomore to show up to your lab between classes. And the stakeholders invested in whatever it is we are testing—be it a technology, campaign, technique, or strategy—do not want to miss an opportunity we have to engage with people.  
+
+This is especially true in politics. Consider a field experiment testing the effect an advertising or canvassing campaign has on voter turnout. Every person we allocate to the control condition is a potential voter with whom we do not speak. People who work hard to design advertisements want people to see their work; volunteers want to knock on doors and talk to people about the candidate they support. Elections only happen once, as well; we cannot go back later and contact the people who were in the control condition.  
+
+These are just some of the trade-offs researchers and data scientists must consider in conducting field experiments. We want valid statistical inferences. We want to efficiently quantify the causal effect of these campaigns. It is clear to us that half of the participants should be in the treatment condition, while the other half is in the control condition, as this strategy gets us equally-precise estimates of the mean or frequency of the dependent variable in both conditions. But this means that we do not engage with a full 50% of the people we are targeting. So how many should we target? How can we manage these practical and methodological considerations? At the other extreme, we could expose 99.5% of the sample to the treatment and only 0.5% to the control. We are engaging the vast majority of people. And while we would have a very precise estimate of what is happening in the treatment condition, the standard error in the control condition would be so large that we would be clueless as to if it meaningfully differs from the treatment.  
+
+The figure below illustrates this. I simulated data from an *N = 100* experiment where 50 people were in each condition ("50/50") or only 5 were in the control ("95/5"). Even though the effect is bigger in the latter situation, we cannot detect a significant effect—there are not enough people in the control condition (*p* = .102). However, there is a significant effect found with the 50/50 split (*p* = .015).  
+
+<img src="figure/unnamed-chunk-2-1.png" title="plot of chunk unnamed-chunk-2" alt="plot of chunk unnamed-chunk-2" style="display: block; margin: auto;" />
+
+We could employ a mental calculus in determining the size of the control condition, weighing the opportunity costs associated with _not_ exposing someone to the treatment against the statistical efficiency of an even split between the conditions. This might serve us reasonably well, but my goal here is to quantitatively inform this calculus through a Monte Carlo simulation study, examining the relationship between statistical power and control group size. I now turn to discussing the methods of this study (i.e., how the simulation was done) before discussing results and implications.  
+
+## Method
+
+I decided each simulated dataset would mimic a randomized field experiment on voter turnout. Cases were assigned to either a "treatment" or a "control" condition. The outcome was either 1 ("Voted") or 0 ("Did Not Vote"). As these are simulated data, this could represent any other dichotomous outcome, such as 1 ("Favorable") or 0 ("Unfavorable"), etc.  
+
+Second, I defined a range of characteristics for the data. These were:  
+
+1. Sample size: *N* = 1000, 2500, 5000, 10000, 15000, or 20000.  
+
+2. Control group size: 10%, 15%, 20%, 25%, and so on, up to 50% of the sample.  
+
+3. Effect size: This was defined by lift, which is the percentage point increase in the positive outcome (e.g., voting, favorable opinion, donating, etc.) that the treatment had over the control. If 70% of people voted in the control condition and 72% did so in the treatment, this would represent a lift of 2 percentage points. Note that power depends on the rate of the positive outcome in the control condition. I set this constant across all datasets at 50%. This represents the best case scenario for power, given that power decreases as this control date approaches 0% or 100%. In preliminary simulations, however, I allowed this base rate to be 30%, 50%, or 70%. The this did not change the shape of the relationship between control size and power; it merely shifted the intercept up or down a little bit. Data from those preliminary simulations can be found [at GitHub](https://github.com/markhwhiteii/blog/tree/master/control_size).  
+
+Third, I simulated 1,000 datasets for each of the 540 combinations of the characteristics above (i.e., 6 sample sizes times 9 control sizes times 10 effect sizes). For each dataset, cases were assigned to treatment or control conditions deterministically based on the control group size. If we let the size of the control group, *Ctl*, be the proportion of the sample in the control condition, and the size of the sample to be *N*, then *N x Ctl* cases were in the control, while *N x (1 - Ctl)* were in the treatment condition. For the control condition cases, the dependent variable for each case was drawn from a Binomial distribution, *B(1, 0.5)*, while the treatment case outcome variables were drawn from a distribution *B(1, 0.5 + L)*, where *L* denotes the lift.  
+
+Fourth, *p*-values were obtained by regressing the outcome on the condition in a binomial logistic regression. For each of the 540 types of datasets, I calculated the proportion of the 1,000 simulations that yielded a *p*-value below .05. This represents the statistical power for that combination of data characteristics: It estimates the percentage of the time we would find a significant effect, given that it exists at that effect size. For example, if 800 of the 1,000 simulations yielded *p* < .05, then the power for that combination of data characteristics would be 80%.  
+
+The resulting data I analyzed to examine the relationship between control size and power was one with 4 variables (N, control size, lift, and power) and 540 cases (each unique combinations of the N, control size, and lift possibilities).  
+
+## Results
+
+I started by generating curves illustrating the relationship between control size and power for each of the 60 *N x Lift* combinations, which are found below. All curves in the following analyses, unless where otherwise noted, were fitted using a natural cubic spline with 3 degrees of freedom (via the `mgcv` and `splines` R packages); all graphing was done using `ggplot2`.  
+
+<img src="figure/unnamed-chunk-3-1.png" title="plot of chunk unnamed-chunk-3" alt="plot of chunk unnamed-chunk-3" width="90%" style="display: block; margin: auto;" />
+
+The first lesson from these curves is that deviating from a 50/50 treatment and control split harms statistical power. This is true in just about every circumstance, except when analyses are so tremendously over or underpowered that it does not matter.  
+
+Below the 20% control size mark, even analyses that have about 100% power in the 50/50 case can start to lose power. Consider the 4 point lift curve when *N* = 20,000 (bottom right). Even though the study has about 100% power when holding out only 20% of the sample as control cases, this starts to tail off below 20% (granted, most researchers would still be happy with the level of power at the 10% control size).  
+
+Most of these curves, however, do not represent typical situations data scientists face. The lower bound of power generally seen as "acceptable" is 80%, so we try to achieve at least that. We seldom find ourselves in situations when we have greater than 95% power, either. To get a more realistic picture, I now turn to only looking at the curves that achieve between 80% and 95% power when the control size is half of the sample. The horizontal dotted lines represent these 80% and 95% thresholds.  
+
+<img src="figure/unnamed-chunk-4-1.png" title="plot of chunk unnamed-chunk-4" alt="plot of chunk unnamed-chunk-4" width="65%" style="display: block; margin: auto;" />
+
+If we were already teetering on having 80% power in the 50/50 split situation, we lose that once we dip below about a 40% control size. Since these curves otherwise follow the same form, I decided to just fit one curve to all of these data points, collapsing across the *N x Lift* combinations.  
+
+<img src="figure/unnamed-chunk-5-1.png" title="plot of chunk unnamed-chunk-5" alt="plot of chunk unnamed-chunk-5" width="65%" style="display: block; margin: auto;" />
+
+Things start to dip once we go below the 30% control size mark, and the 80% power threshold is crossed just below that point. Just by looking at the curve, I guessed that power really starts to drop off around 25% to 30% control size. To be a bit more precise than eyeballing, I fit a piecewise linear regression to these data (via the `segmented` R package). This involves fitting one straight line on cases above a certain threshold and another straight line on cases below it. Doing so allows us to get an idea of a single breakpoint where the relationship between control size and power changes.  
+
+But where do we set the breakpoint? Estimation requires the analyst to take a guess at where it might be, and an iterative procedure searches around this until it converges on a solution that fit the data well. I specified my initial guess at a control size of 30%. The breakpoint was estimated at 23.2%, with a 95% confidence interval from 19.5% to 26.9%. I think of this as the "elbow" of the curve, where loss of power accelerates. In reality, there is not truly one turning point—the loss of power follows a smooth curve. But estimating this breakpoint gives us a useful approximation. It helps us have a mental benchmark of an area we should not go below when determining the size of control groups.  
+
+<img src="figure/unnamed-chunk-6-1.png" title="plot of chunk unnamed-chunk-6" alt="plot of chunk unnamed-chunk-6" width="65%" style="display: block; margin: auto;" />
+
+## Takeaways
+
+The best scenario, statistically-speaking, is an even split between treatment and control.  
+
+We must often consider many factors outside of the research design and statistical world; research involves trade-offs. The decision of how many people to allocate to a control group should be based on a collaboration between relevant parties involved in the research process. In addition to this collective judgment on the opportunity costs of not exposing participants to the treatment, some important takeaways from this simulation study to remember are:  
+
+1. Minimal losses in power occur when we shrink the control size to 40%.  
+
+2. A 25% to 30% range is a good compromise, as this exposes 70% of the sample to the treatment, yet still does not harm power terribly.  
+
+3. You should *not* allocate less than 20% of the sample to the control condition, save for situations when you are looking for large effects (e.g., 8 point lifts) and/or using large samples (e.g., 15,000 participants).  
+
+I did not perform an exhaustive simulation of all possible scenarios, of course. If you would like to examine a case specific to your interests, explore these data, or replicate the results, all of the code can be found [at GitHub](https://github.com/markhwhiteii/blog/tree/master/control_size).  
