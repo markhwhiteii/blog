@@ -1,0 +1,50 @@
+introduction
+- describe use cases
+  + mention personalized medicine (with citation)
+  + messages to people to prevent them from leavin service (with citation)
+  + main focus: politics (persuasion/gotv ads, canvassing, donation requests)
+- describe general case: figure out what will get us best lift
+  + describe randomized experiment
+  + define lift
+- ask question we will answer: how do we do this?
+
+alternative strategies
+- find out who is neutral on an issue and target them for persuasion
+- find passions (valence + importance) and target for gotv or donation
+- classify people into k groups and focus on what makes them unique
+- call these "message-tailored approaches"
+- issue is that they don't optimize on what we are interested in
+- discuss what it is that they optimize on, in turn
+- say that we can directly optimize on what we are interested in...
+
+htes
+- what we want to do is optimize on a causal effect of the treatment
+- what is causality?
+  + rubin causal model
+  + potential outcomes
+  + can't observe counterfactual, so just find similar people
+- idea of htes is to find similar people in both conditions and compare them
+- this is an estimate of the causal effect, given randomization
+  + not sure if want to get into strong ignorability
+- how do we define "similar people"? many algorithms to do this
+- area is called heterogenous treatment effects
+  + aka interaction detection, optimal treatment regimes, uplift modeling...
+  + ...personalized medicine, subgroup identification, ...
+  + ...all in a bourgeoning area of causal (machine) learning
+- will focus on causal forests in the generalized regression forest framework
+
+causal forest
+- 
+
+example
+- 
+
+code
+- 
+
+comparison
+- 
+
+conclusion
+- 
+
