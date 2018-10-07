@@ -47,15 +47,48 @@ So what do the above approaches optimize on, if not the lift? Keep in mind that 
 
 - Importance. We could define this by finding people who both (a) strongly support an issue and (b) say the issue is very important to them. Let's call *S* how much someone supports the issue and *I* how important it is to them. We could again define an upper cutoff *U* where people above this threshold strongly support the issue and say it is very important. The behavior we are interested in *Y* might be donations to a campaign. We would be optimizing for: *U* < *S* and *U* < *I*, where *S* and *I* are assumed to be related to the main outcome *Y*.  
 
-These approaches do not optimize explicitly on causal effects, but there are approaches that do.  
+# Finding Heterogenous Treatment Effects
 
-# Heterogenous Treatment Effects
+These approaches do not optimize explicitly on causal effects, but there are approaches that do. Before surveying some approaches that look for causal effects, I discuss some important theoretical background.  
+
+## Theoretical Background
+
+As said above, we want to predict the causal effect: *Y*(Treatment) - *Y*(Control). Most papers I've read proposing algorithms that do this at some point talk about what is called the Rubin causal model (i.e., potential outcomes model). This approach defines causality very strictly: It is the value we would have observed if a person was in the treatment minus what we would have observed if a person was in the control. There's a problem here, since a person can only be in one condition at a time. If someone is assigned to the control condition, we never observe the outcome if they had been in the treatment condition (and vice versa).  
+
+Under this framework, getting the actual causal effect requires some magic: We take our world, split it into two universes, have an individual in Universe 1 go through the treatment and that same person in Universe 2 go through a placebo, then compare the outcomes from Universes 1 and 2. This impossibility has been often referred to as "the fundamental problem of causal inference."  
+
+So what do we do? One solution is to get two large groups of people that are similar to one another, assign one group to the treatment, one group to the control, and then compare the expected outcome (e.g., mean response or probability of a behavior occurring) between the conditions. This gives us the average treatment effect (ATE) across all people. When I say that the two groups are "similar," I mean that any miscellaneous characteristics about these people that could influence what treatment they saw or their potential outcomes *Y*(Treament) and *Y*(Control) are accounted for. The gold standard for doing this is conducting a randomized experiment, where people are chosen at random to be either in the control or treatment condition. Since I am only going to consider estimating heterogenous treatment effects within the realm of an experiment, I don't discuss ensuring this "strong ignorability" assumption further.  
+
+Note that the ATE described above is across all people—but we want to know the treatment effect for *a given individual* so we can decide to target them or not based on if this number is in the strength and of the direction we want. But we can only ever measure *Y* in the treatment OR control—so what do we do? Crudely put, all of the algorithms I will describe search out *similar others* and use them as stand-ins for a given person's potential outcome. I hope this demystifies the process a bit: No matter how complicated some papers get, this is essentially what they are doing. They are looking for estimates of potential outcomes under the treatment and control conditions, then subtracting them.  
+
+## Heterogenous Treatment Effects: An Overview
+
+
+
+
+
+- how do we define "similar people"? many algorithms to do this
+- area is called heterogenous treatment effects
+  + aka interaction detection, optimal treatment regimes, uplift modeling...
+  + ...personalized medicine, subgroup identification, ...
+  + ...all in a bourgeoning area of causal (machine) learning
+- will focus on causal forests in the generalized regression forest framework
+
 
 
 
 # Causal Forest
 
+
+
+
 # A Worked Example
 
+
+
+
 # Conclusion
+
+
+
 
