@@ -1,23 +1,57 @@
 ---
-title: "Explicitly Optimizing on Causal Effects: A Gentle Introduction to Heterogenous Treatment Effects in Political Messaging"
+title: "Explicitly Optimizing on Causal Effects: A Gentle Introduction to Heterogenous Treatment Effects for Political Messaging Practitioners"
 output: html_document
 ---
+
+In this post, I will argue for and show one how to not just predict an outcome *Y*, but instead how to focus on the difference in *Y* between a treatment and control condition.  
 
 The paper I wrote for my comprehensive exams looked at the relationship between self-reported racial prejudice and discriminatory behavior. In this literature, meta-analysts often lament how the correlation between the two is unimpressive (I found *r* = .21) and how this means that we cannot "predict" discriminatory behavior well. I made the argument that forcing a linear relationship (by using a correlation coefficient) limits our ability to make predictions and that machine learning might be of use in social and personality psychology—if the field thinks prediction is a worthwhile goal. One professor pushed back on this point. They noted that I may have interpreted "predict" incorrectly: It is not the type of of prediction driven by some statistical model, but it instead the type of prediction done by psychological *theories*. They argued that theories have causality, which is something that machine learning approaches lack.  
 
 This tension between causality and machine learning resonated with me: I graduated from a Ph.D. program that focuses on experimental social psychology, where causality is prized—but the majority of classes I took were in applied statistics, and I now work in the private sector as a data scientist, where machine learning is an in-demand skill. But a focus in causality has been growing in the machine learning literature. Notably, Judea Pearl released *The Book of Why: The New Science of Cause and Effect* this year, and it has been discussed a lot both in and outside of the data science community. One of his gripes with current big data and machine learning approaches (he focuses specifically on so-called "artificial intelligence") is that they ignore causality; if a machine is ever to read human-level intelligence, it must understand cause and effect.  
 
-My RSS feed, which follows arxiv.org/archive/stat and a number of statistics journals, has shown me that a wide number of researchers are focusing on learning and predicting causal treatment effects. There exists somewhat of a gap, however, between those proposing these methods and those actually using them. My goal here is to demystify these approaches a bit, describe some possible use-cases, and show R code for doing these analyses.  
+My RSS feed, which follows arxiv.org/archive/stat and a number of statistics journals, has shown me a wide number of researchers focusing on predicting causal treatment effects. There exists somewhat of a gap, however, between those proposing these methods and those actually using them. My goal here is to demystify these approaches a bit, describe some possible use-cases, and show R code for doing these analyses.  
 
 # Use-Cases
 
+We want to predict expected treatment effects whenever are interested in targeting people for an intervention. What people are most likely to be positively affected by a given drug or therapy? We want to find the people who will be most benefitted (or least harmed) by the treatment. How do we keep people from unsubscribing from our product? We target those people most likely to be swayed by some appeal to stay with our platform. Who are the people most at risk for recruitment into hate groups? We target those most likely to be swayed by the arguments of hate groups with some type of preventative program.  
 
+My focus here will be on the field in which I work: political messaging. How do we persuade people to vote for our candidate? To donate money to our campaign? Which doors should be knock on? How do we get people to go vote? In all of these examples, we are trying to cause—to bring about—some behavior. But who should we target with our intervention that aims to cause this behavior?  
 
 ## General Use
 
+The objective here, put broadly, is to maximize lift (i.e., the treatment effect). First, we run a randomized experiment: Of a given sample, half of the people are randomly assigned to some treatment intervetion, while the other half are assigned to a control or placebo group. I define lift is the difference between the expected outcome in the treatment minus the expected outcome in the control. If our outcome is dichotomous (e.g., yes or no, did vote or didn't, donated or didn't), the lift is the probability of the desired behavior in the treatment minus the probability of the desired behavior in the control. For example, if 55% of the people in the treatment voted, while 50% in the control voted, our lift would be 55% - 50% = 5 percentage points. If our outcome is continuous (e.g., how much money someone donated, how favorably they view our candidate), then the lift is the mean in the treatment minus the mean in the control. For example, if the treatment yielded a \$10.00 average donation and the control yielded \$7.50, then the lift would be \$10.00 - \$7.50 = \$2.50.  
+
+Our goal is to find the people who have the biggest expected lift and deliver our treatment to them. Before discussing algorithms that model heterogenous treatment effects, I will discuss some common alternative strategies.  
+
 # Alternative Strategies
 
+## Neutrality
+
+This involves targeting people who have neutral attitudes, those in the center of the distribution, or those responding "don't know." Those attempting to persuade people that their candidate is qualified, for example, might choose to target people who said "Don't Know" or "Neither Qualified nor Unqualified" to the question, "Do you find Candidate X to be qualified?" The idea would be to train some machine learning model to predict what types of people give these responses and then target those people. Sometimes people might categorize those with modeled attitudes that are around 50 (in a 0-to-100 scale) as "persuadable."  
+
+## Importance
+
+Find what people are passionate about and target them. A good example for this is get-out-the-vote (GOTV). Conduct a survey on what issues people say they agree with and are very important to them, and then deliver a message to these people on that issue. The same might be said in trying to raise donations. Like the above strategy, this would involve training a model to see what types of people are passionate and support a given issue, then targeting those who score highly on this model.  
+
+## Personas
+
+A third strategy is to classify people into *k* groups and tailor messages to what makes these groups unique. In a previous post, I talked about how one could survey people who identify as Democrats, cluster them into groups based on their attitudes toward 18 different issues, and then develop messages that adhere to what makes those groups unique. Does one group of Democrats have much stronger attitudes about immigration? Target those people with immigration-related messages.  
+
+## Optimization Problems
+
+The problem with each of these three approaches is that **they do not optimize on what we are interested in—the lift.** This means that we may have one goal, whereas the above approaches try to optimize a separate goal. It may very well be that the two goals overlap sometimes, but there are likely many times where they may not. In any statistical learning problem, it's important to know what an algorithm is optimizing on and making sure the goals of that procedure align with what you are interested in.  
+
+So what do the above approaches optimize on, if not the lift? Keep in mind that the lift is the difference between our outcome, let's call this *Y*, in the treatment and control conditions: *Y*(Treatment) - *Y*(Control).  
+
+- Neutrality. We might define this by finding the middle third of the distribution in an outcome of interest *Y* and then targeting people with scores in that range. Let's say *L* is a lower cutoff—it is some number where people below this number have "strongly" negative attitudes—and *U* is the upper cutoff, where people above this number have "strongly" positive attitudes. This approach would optimize for: *L* < *Y* < *U*.  
+
+- Importance. We could define this by finding people who both (a) strongly support an issue and (b) say the issue is very important to them. Let's call *S* how much someone supports the issue and *I* how important it is to them. We could again define an upper cutoff *U* where people above this threshold strongly support the issue and say it is very important. The behavior we are interested in *Y* might be donations to a campaign. We would be optimizing for: *U* < *S* and *U* < *I*, where *S* and *I* are assumed to be related to the main outcome *Y*.  
+
+These approaches do not optimize explicitly on causal effects, but there are approaches that do.  
+
 # Heterogenous Treatment Effects
+
+
 
 # Causal Forest
 
