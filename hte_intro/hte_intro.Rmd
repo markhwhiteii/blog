@@ -1,0 +1,27 @@
+---
+title: "Explicitly Optimizing on Causal Effects: A Gentle Introduction to Heterogenous Treatment Effects in Political Messaging"
+output: html_document
+---
+
+The paper I wrote for my comprehensive exams looked at the relationship between self-reported racial prejudice and discriminatory behavior. In this literature, meta-analysts often lament how the correlation between the two is unimpressive (I found *r* = .21) and how this means that we cannot "predict" discriminatory behavior well. I made the argument that forcing a linear relationship (by using a correlation coefficient) limits our ability to make predictions and that machine learning might be of use in social and personality psychology—if the field thinks prediction is a worthwhile goal. One professor pushed back on this point. They noted that I may have interpreted "predict" incorrectly: It is not the type of of prediction driven by some statistical model, but it instead the type of prediction done by psychological *theories*. They argued that theories have causality, which is something that machine learning approaches lack.  
+
+This tension between causality and machine learning resonated with me: I graduated from a Ph.D. program that focuses on experimental social psychology, where causality is prized—but the majority of classes I took were in applied statistics, and I now work in the private sector as a data scientist, where machine learning is an in-demand skill. But a focus in causality has been growing in the machine learning literature. Notably, Judea Pearl released *The Book of Why: The New Science of Cause and Effect* this year, and it has been discussed a lot both in and outside of the data science community. One of his gripes with current big data and machine learning approaches (he focuses specifically on so-called "artificial intelligence") is that they ignore causality; if a machine is ever to read human-level intelligence, it must understand cause and effect.  
+
+My RSS feed, which follows arxiv.org/archive/stat and a number of statistics journals, has shown me that a wide number of researchers are focusing on learning and predicting causal treatment effects. There exists somewhat of a gap, however, between those proposing these methods and those actually using them. My goal here is to demystify these approaches a bit, describe some possible use-cases, and show R code for doing these analyses.  
+
+# Use-Cases
+
+
+
+## General Use
+
+# Alternative Strategies
+
+# Heterogenous Treatment Effects
+
+# Causal Forest
+
+# A Worked Example
+
+# Conclusion
+
