@@ -1,7 +1,7 @@
 introduction
 - describe use cases
-  + mention personalized medicine (with citation)
-  + messages to people to prevent them from leavin service (with citation)
+  + mention personalized medicine
+  + messages to people to prevent them from leaving service
   + main focus: politics (persuasion/gotv ads, canvassing, donation requests)
 - describe general case: figure out what will get us best lift
   + describe randomized experiment
@@ -34,17 +34,17 @@ htes
 - will focus on causal forests in the generalized regression forest framework
 
 causal forest
-- 
+- bagging done on honest causal trees
+- explain how causal trees trained
+- show splitting criterion rewards variation in treatment effects
 
-example
-- 
-
-code
-- 
-
-comparison
-- 
+example, code, comparison
+- describe the trans study and data
+- explain what we will do
+- show code on how to fit and predict
+- show 3 different ways to compare problem
+- show wrapper function for plotting htes to see if heterogeneity exists
+- show lalonde data where it is more obvious that it exists
 
 conclusion
 - 
-
