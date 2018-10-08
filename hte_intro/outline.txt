@@ -31,6 +31,7 @@ htes
   + aka interaction detection, optimal treatment regimes, uplift modeling...
   + ...personalized medicine, subgroup identification, ...
   + ...all in a bourgeoning area of causal (machine) learning
+  + R packages: FindIt, personalized, uplift, bart, beanz, krls, ensembles
 - will focus on causal forests in the generalized regression forest framework
 
 causal forest

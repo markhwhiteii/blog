@@ -53,7 +53,7 @@ The estimated ATE described above is across all people. We want to know the trea
 
 ## Heterogenous Treatment Effects: An Overview
 
-
+(Start with interactions in linear regression).  
 
 
 # Causal Forest
