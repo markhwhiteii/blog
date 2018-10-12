@@ -1,5 +1,7 @@
 things to do in edits:
 - mention causal forest earlier, need to lay out the roadmap of the paper better
+- need to mention ensemble models and other approaches for HTEs as a catch-all
+- ...and throw some citations for people to read
 
 introduction
 - describe use cases
