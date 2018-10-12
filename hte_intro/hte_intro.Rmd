@@ -53,10 +53,19 @@ The estimated ATE described above is across all people. We want to know the trea
 
 ## Heterogenous Treatment Effects: An Overview
 
-(Start with interactions in linear regression).  
+If you learned statistics in the social sciences like I did, the practice of finding which variables predict a bigger treatment effect might sound familiar. In experimental psychology, we would call this looking for "moderators" of the treatment effect. And indeed, this is very close to what we are trying to do here. If an experimental social scientist wanted to find out which groups demonstrate the biggest treatment effect, they would say just fit a regression model with an interaction between a covariate and the treatment indicator. If this interaction term is significant, then the treatment's effect depends on the covariate. From there, we could estimate HTEs by calculating the predicted values for people in both conditions at that level of the covariate, subtract the control from the treatment condition, and that would be the conditional average treatment effect (CATE). This is called the "conditional" average treatment effect because it is the average treatment effect *after* being conditioned on the covariate.  
 
+Thus, we could use traditional regression to estimate HTEs. For a simple example, imagine that there is a treatment condition (*T* = 1) and control condition (*T* = 0). Then imagine that we look at Democrats (*X* = 1) and Republicans (*X* = 0). We are trying to model favorability toward our candidate (*Y*). We would fit a regression models with main effects for *T* and *X*, as well as the interaction between the two. Imagine that we find the interaction is significant, *p* < .01. This means that our treatment effects are heterogeneous—there are HTEs. We would then find out what *Y* is for Democrats in the treatment and control conditions. Let's say Democrats in the control condition were favorable toward our candidate 80% of the time. In papers on HTEs, this is often written by saying the expected value, *E*, of *Y*, given that *T* = 1 and *X* = 1 is 80%, or *E*(*Y* | *T* = 0, *X* = 1) = .80. Now let's say Democrats in the treatment condition were favorable toward our candidate 85% of the time, *E*(*Y* | *T* = 1, *X* = 1) = .85. We could calculate these two expected values in the treatment and control conditions, given the value of the covariate, and get the CATE: 85% - 80% = 5 percentage points. We would then assign every Democrat to have a treatment effect of 5 points.  
 
-# Causal Forest
+So why the need for more complicated algorithms to find HTEs? The above example was very simple: It only involved one covariate. Usually, we don't just have one *X* variables, but many *X* variables. If we have 12 variables we are interested in using to estimate HTEs, we would then feasibly test if the 13-way interaction is significant, if all 12-way interactions are significant, and so on. This approach suffers from a lack of statistical power, and fitting that many interactions would cause us computational issues. A *p*-value threshold of .05 is also arbitrary—we might have better performance in predicting treatment effects, even if the interaction had a *p*-value of .06. In other situations, we might be overfitting the data. Using ordinary least squares regression also imposes a linear relationships, unless we want to start fitting polynomials. Luckily, researchers have found better ways to estimate HTEs.  
+
+I will focus on causal random forests, but many other approaches exist in this growing research area. Chen, Tian, Cai, & Yu (2017) proposed a unified framework for estimating treatment scores, and Huling & Yu (2018) coded this into an R package called `personalized`. This framework is regression-based, except the entire model doesn't need to be fit—only the interaction effects are focused on. This doesn't guarantee an accurate measurement of the treatment effect, but it retains rank-ordering (which is what we need to figure out which people to target), and the zero is still meaningful, so any positive estimates refer to positive treatment effects. I really like this approach, because it is a general framework: They show that any loss function that meets some requirements can be used in this approach. The `personalized` package lets the analyst fit LASSO models, generalized additive models, gradient boosted decision trees, and so on.  
+
+Additionally, Imai & Ratkovic (2013) show a procedure where one can estimate HTEs by rescaling covariates and fitting a squared loss support vector machine with separate LASSO contraints on the coefficients for the main effects and on the coefficients for the interactions. This approach is available in the `FindIt` R package. Uplift random forests (Guelman, Guillen, & Perez-Marin, 2015) fit a forest of "uplift trees." These are similar to the causal trees I will describe, but they use different splitting criteria. This approach is available in the `uplift` R package, along with a k-nearest neighbors method for estimating treatment effects. Bayesian additive regression trees can be fit using the `bart` R package and used to estimate treatment effects. This was most famously shown by Green & Kern (2012) in the context of a GOTV experiment. Like the traditional regression approach described above, treatment effects are estimated by taking the expected value of the dependent variable in the treatment and subtracting the expected value in the control.  
+
+Lastly, it should be noted that a lot of approaches for estimating HTEs do *not* try to create a treatment score for each person. Instead, they aim to find subgroups that show a positive treatment effect, which could certainly be used for targeting in the future. But I see these approaches and their associated R packages as very closely related to assigning expected treatment effects to individuals, but still distinct. I hope to cover this in a future post.  
+
+# The Causal Forest
 
 
 
@@ -67,6 +76,14 @@ The estimated ATE described above is across all people. We want to know the trea
 
 
 # Conclusion
+
+
+
+
+
+
+
+
 
 
 
