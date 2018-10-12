@@ -1,3 +1,6 @@
+things to do in edits:
+- mention causal forest earlier, need to lay out the roadmap of the paper better
+
 introduction
 - describe use cases
   + mention personalized medicine
