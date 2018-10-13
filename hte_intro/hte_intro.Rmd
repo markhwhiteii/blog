@@ -67,7 +67,7 @@ Lastly, it should be noted that a lot of approaches for estimating HTEs do *not*
 
 # The Honest Causal Forest
 
-The honest causal forest is a random forest made up of honest causal trees, and the "random forest" part is fit just like any other random forest (e.g., resampling, considering a subset of predictors, averaging across many trees). Because of this, I will assume you know how decision trees and random forests work; I will focus on what makes the honest causal tree unique from a typical decision tree by answering two questions: What makes it causal? What makes it honest?  
+The honest causal forest (Athey & Imbens, 2016; Athey, Tibshirani, & Wager, 2018; Wager & Athey, 2018) is a random forest made up of honest causal trees, and the "random forest" part is fit just like any other random forest (e.g., resampling, considering a subset of predictors, averaging across many trees). Because of this, I will assume you know how decision trees and random forests work; I will focus on what makes the honest causal tree unique from a typical decision tree by answering two questions: What makes it causal? What makes it honest?  
 
 ## What Makes It Causal?
 
@@ -85,7 +85,7 @@ knitr::include_graphics("flowchart.png")
 
 ---
 
-An added bonus to fitting the causal trees honestly is that the authors have shown that these treatment effect estimates are aymptotically normal (perhaps the biggest contribution of this approach, actually, in the eyes of theoretical statisticians and academics is this asymptotic normal theory). This is fancy language for: As the sample size approaches infinity, the treatment effect estimate is normally distributed. Practically, this means that we can calculate the variance and 95% confidence intervals. Setting aside the well-documented problems with *p*-values and null-hypothesis significance testing, this is very useful for a practitioner because it allows us to appreciate the inherent variability in our estimates. It also means that we could use this model to just target anyone who has an expected treatment effect to be statistically significantly different from zero.  
+An added bonus to fitting the causal trees honestly is that Athey and colleagues have shown that these treatment effect estimates are aymptotically normal (perhaps the biggest contribution of this approac in the eyes of some theoretical statisticians and academics is this asymptotic normal theory). This is fancy language for: As the sample size approaches infinity, the treatment effect estimate is normally distributed. Practically, this means that we can calculate the variance and 95% confidence intervals. Setting aside the well-documented problems with *p*-values and null-hypothesis significance testing, this is very useful for a practitioner because it allows us to appreciate the inherent uncertainty in our predictions. It also means that we could use this model to just target anyone who has an expected treatment effect to be statistically significantly different from zero.  
 
 # A Worked Example
 
