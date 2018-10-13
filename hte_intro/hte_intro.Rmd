@@ -3,6 +3,10 @@ title: "Explicitly Optimizing on Causal Effects via the Causal Random Forest: A 
 output: html_document
 ---
 
+```{r setup, echo = FALSE}
+options(scipen = 1, digits = 3)
+```
+
 In this post, I argue for and demonstrate how to train a model optimized on a treatment's causal effect. This involves predicting the *lift* a treatment is expected to have over the control, which is defined as the difference in an outcome *Y* between treatment and control conditions. This stands in contrast to most supervised learning models, which focus on predicting *Y* and tend to ignore causality. This lack of focus on causality in maching learning has been criticized recently, most notably by Judea Pearl in *The Book of Why: The New Science of Cause and Effect*. One of his gripes with the current big data and machine learning literature (he focuses specifically on "artificial intelligence") is that do not consider causality. If a machine is ever to reach human-level intelligence, Pearl argues, it must understand cause and effect.  
 
 But there is a growing area of research focused on causality in machine learning, which I refer to generally as "heterogeneous treatment effects." In the last few years, a number of interesting papers have been published on the estimation and prediction of treatment effects. There still exists a gap, however, between those proposing these methods and those implementing and using them. My goal here is to bridge this divide by demystifying these models and showing R code for doing these analyses. After discussing some background and alternative approaches, I will focus on my favorite heterogenous treatment effect approach, the **honest causal forest**, and it's associated R package, `grf`.  
@@ -79,7 +83,7 @@ An important question to ask is how to prevent overfitting on this causal splitt
 
 ---
 
-```{r, echo = FALSE, , out.width = '85%', fig.align = 'center'}
+```{r flowchart, echo = FALSE, , out.width = '85%', fig.align = 'center'}
 knitr::include_graphics("flowchart.png")
 ```
 
@@ -89,11 +93,143 @@ An added bonus to fitting the causal trees honestly is that Athey and colleagues
 
 # A Worked Example
 
+```{r load_data, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(grf)
+library(DT)
+dat <- read_tsv("broockman_kalla_replication_data.tab") %>% 
+  filter(respondent_t1 == "1.0" & contacted == "1.0") %>% 
+  transmute(
+    treatment = factor(ifelse(treat_ind == "1.0", "Treatment", "Control")),
+    trans_therm_post = as.numeric(therm_trans_t1),
+    trans_therm_pre = as.numeric(therm_trans_t0),
+    age = vf_age,
+    party = factor(vf_party),
+    race = factor(vf_racename),
+    voted14 = vf_vg_14,
+    voted12 = vf_vg_12,
+    voted10 = vf_vg_10,
+    sdo = as.numeric(sdo_scale),
+    canvass_minutes = as.numeric(canvass_minutes)
+  ) %>% 
+  filter(complete.cases(.))
+```
 
+```{r sample_data, echo = FALSE}
+knitr::kable(head(dat))
+```
 
+```{r made_middle}
+tiles <- quantile(dat$trans_therm_pre)
+lgl <- dat$trans_therm_pre >= tiles[[2]] & dat$trans_therm_pre <= tiles[[4]]
+dat$middle <- lgl * 1
+```
+
+```{r traintest_split}
+set.seed(1839)
+cases <- sample(seq_len(nrow(dat)), round(nrow(dat) * .6))
+train <- dat[cases, ]
+test <- dat[-cases, ]
+```
+
+```{r fit_cf}
+cf <- causal_forest(
+  X = model.matrix(~ ., data = train[, 3:ncol(train)]),
+  Y = train$trans_therm_post,
+  W = as.numeric(train$treatment) - 1,
+  num.trees = 5000,
+  seed = 1839
+)
+```
+
+```{r predict_cf}
+preds <- predict(
+  object = cf, 
+  newdata = model.matrix(~ ., data = test[, 3:ncol(test)]), 
+  estimate.variance = TRUE
+)
+test$preds <- preds$predictions[, 1]
+```
+
+```{r top_preds}
+t1 <- lm(trans_therm_post ~ treatment, test[test$preds > median(test$preds), ])
+summary(t1)$coef
+```
+
+```{r mid_pre}
+t2 <- lm(trans_therm_post ~ treatment, test[test$middle == 1, ])
+summary(t2)$coef
+```
+
+```{r random}
+set.seed(1839)
+cases <- sample(seq_len(nrow(test)), round(nrow(test) * .5))
+t3 <- lm(trans_therm_post ~ treatment, test[cases, ])
+summary(t3)$coef
+```
+
+## Examining Predicted Treatment Effects
+
+```{r examine, message = FALSE, out.width = '75%', fig.align = 'center'}
+p1 <- ggplot(test, aes(x = trans_therm_pre, y = preds)) +
+  geom_point() +
+  geom_smooth() +
+  theme_light()
+
+p2 <- ggplot(test, aes(x = sdo, y = preds)) +
+  geom_point() +
+  geom_smooth(method = "lm") +
+  theme_light()
+
+p3 <- ggplot(test, aes(x = race, y = preds)) +
+  geom_point() +
+  theme_light()
+
+p4 <- ggplot(test, aes(x = canvass_minutes, y = preds)) +
+  geom_point() +
+  geom_smooth() +
+  theme_light()
+
+cowplot::plot_grid(p1, p2, p3, p4)
+```
+
+```{r htes}
+plot_htes <- function(cf_preds, ci = FALSE, z = 1.96) {
+  if (is.null(cf_preds$predictions) || nrow(cf_preds$predictions) == 0)
+    stop("cf_preds must include a matrix called 'predictions'")
+  
+  out <- ggplot(
+    mapping = aes(
+      x = rank(cf_preds$predictions), 
+      y = cf_preds$predictions
+    )
+  ) +
+    geom_point() +
+    labs(x = "Rank", y = "Estimated Treatment Effect") +
+    theme_light()
+  
+  if (ci && nrow(cf_preds$variance.estimates) > 0) {
+    out <- out +
+      geom_errorbar(
+        mapping = aes(
+          ymin = cf_preds$predictions + z * sqrt(cf_preds$variance.estimates),
+          ymax = cf_preds$predictions - z * sqrt(cf_preds$variance.estimates)
+        )
+      )
+  }
+    
+  return(out)
+}
+```
+
+```{r plot_htes1, out.width = '75%', fig.align = 'center'}
+plot_htes(preds)
+```
+
+```{r plot_htes2, out.width = '75%', fig.align = 'center'}
+plot_htes(preds, ci = TRUE)
+```
 
 # Conclusion
-
-
 
 
