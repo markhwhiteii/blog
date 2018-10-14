@@ -93,10 +93,11 @@ An added bonus to fitting the causal trees honestly is that Athey and colleagues
 
 # A Worked Example
 
+I'm using data from Broockman & Kalla's (2016) study on door-to-door canvassing as a way to reduce transphobia. The specific data I'm using come from the first follow-up they conducted three days after talking to registered voters. Households were randomly assigned to an intervention or control condition. In the intervention condition, canvassers talked to the participant about transgender issues in the upcoming election, showed a video that discussed both sides of the issue, and then encouraged the participant to take the perspective of someone who is transgender. In the control, the canvasser talked to the participant about recycling. The primary dependent variable is how the participant feels about transgender people, on a scale from 0 (very negatively) to 100 (very positively). After doing a little bit of cleaning, the data look like this:  
+
 ```{r load_data, echo = FALSE, message = FALSE}
 library(tidyverse)
 library(grf)
-library(DT)
 dat <- read_tsv("broockman_kalla_replication_data.tab") %>% 
   filter(respondent_t1 == "1.0" & contacted == "1.0") %>% 
   transmute(
@@ -119,11 +120,17 @@ dat <- read_tsv("broockman_kalla_replication_data.tab") %>%
 knitr::kable(head(dat))
 ```
 
+`treatment` is a factor denoting their condition, while `trans_therm_post` is the dependent variable of interest. `trans_therm_pre` is the same scale, but measured before the canvassing occurred. We also have participants' `age`, the political `party` with which they are registered, their `race`, and whether or not they voted in the 2010, 2012, and 2014 general elections. `sdo` is a social dominance orientation, which is a personality trait characterized by individuals preferring the existing hierarchy in society. Lastly, `canvass_minutes` describes how long the canvassing interaction lasted.  
+
+The `trans_therm_pre` variable gives us a chance to compare a causal forest to the *neutral or uncertrain* targeting approach I discussed at the beginning of this post. This alternative strategy would involve finding, for instance, the people with attitudes that were higher than the 25th percentile but lower than the 75th percentile. What is nice about the causal forest approach, too, is that we could make this an actual variable in our dataset and include that information, so it no longer becomes a "use an HTE algorithm or target people with neutral attitudes." We can provide an indicator for whether or not their attitudes are actually neutral in the data. I code this variable below. First, I get the quantiles for `trans_therm_pre`, then I make a logical variable for if someone is in the middle 50% of the distribution. Lastly, I convert the logical vector to numeric by multiplying it by 1 and assign it to the data frame `dat`:  
+
 ```{r made_middle}
 tiles <- quantile(dat$trans_therm_pre)
 lgl <- dat$trans_therm_pre >= tiles[[2]] & dat$trans_therm_pre <= tiles[[4]]
 dat$middle <- lgl * 1
 ```
+
+I now split the data into training and test sets. We can imagine that `train` is the data we would collect in a randomized experiment and `test` would be the future cases which we are trying to predict:  
 
 ```{r traintest_split}
 set.seed(1839)
@@ -131,6 +138,8 @@ cases <- sample(seq_len(nrow(dat)), round(nrow(dat) * .6))
 train <- dat[cases, ]
 test <- dat[-cases, ]
 ```
+
+Now it is time to fit the causal forest. Note that, before running the rest of the code below, I have loaded the `grf`) and `tidyverse` packages. The `causal_forest` function has three primary inputs: `X` is a matrix of the covariates which we are using to predict heterogenity in treatment effects, `Y` is a vector of the outcome of interest, and `W` is the treatment assignment. The crucial thing here is that all of these must be numeric, which means that we need to dummy-code the factor variables. An easy way to do this is calling `model.matrix` from base R, which takes a data frame and a formula. If we want to include all variables, one can pass `~ .` as the formula, which basically says, "Regress on the entire data set." Note that I am *not* feeding the first two columns of the training data here, because those include the outcome and condition variables. `trans_therm_post` is already numeric, so I pass it directly to `Y`. Making `treatment` numeric converts everything to either `2` or `1`, and to make it an indicator variable of `0` or `1`, I simply subtract 1. Lastly, I tell the algorithm to fit `5000` trees, as the authors suggest fitting more than the default when we want variance estimates, and I pass a `seed` so that the results are replicable.  
 
 ```{r fit_cf}
 cf <- causal_forest(
@@ -142,6 +151,8 @@ cf <- causal_forest(
 )
 ```
 
+I then predict the `test` data, tell `grf` to include variance estimates, and then I assign the predictions (i.e., the estimated treatment effects) to the `test` data frame so that we can use these in subsequent analyses:  
+
 ```{r predict_cf}
 preds <- predict(
   object = cf, 
@@ -150,6 +161,12 @@ preds <- predict(
 )
 test$preds <- preds$predictions[, 1]
 ```
+
+## Comparing Three Approaches
+
+We can now simulate a real-world scenario by using these predicted treatment effects for the test set to determine who we want to analyze from it. I comapre this approach aginst two other alternative approaches below. First, I pretend that we decided to canvass everyone with a predicted treatment effect above the median treatment effect (i.e., use the HTE method); second, I pretend that we chose to target anyone with neutral pre-canvassing attitudes (i.e., use the neutral or uncertain method); third, I pretend we randomly chose who to target (i.e., a naive method). For each of these strategies, I only pass those specific cases to a linear regression that predicts post-canvassing transgender attitudes from the treatment variable. By passing only a subset of the test data to these analyses, we can see what would have happened if we did each method.  
+
+Because of sample size issues after splitting the sample in so many ways, I will not focus much on interpreting *p*-values here; this is purely for the purpose of demonstration. The results for the three methods, presented in turn, are:  
 
 ```{r top_preds}
 t1 <- lm(trans_therm_post ~ treatment, test[test$preds > median(test$preds), ])
@@ -168,30 +185,47 @@ t3 <- lm(trans_therm_post ~ treatment, test[cases, ])
 summary(t3)$coef
 ```
 
+From these results, we can see that including the half of the sample with the biggest predicted treatment effects yielded a `r round(coef(t1)[[2]], 2)` lift, including just those that had neutral attitudes gave us a lift of `r round(coef(t2)[[2]], 2)`, and choosing half of the sample randomly gave us `r round(coef(t3)[[2]], 2)`.  
+
 ## Examining Predicted Treatment Effects
 
+We would also like to know the nature of the heterogenity: What variables are useful for targeting based on treatment effects? The `grf` package also has a `variable_importance` function, which will help us unpack this. The `grf` package is still in beta, and I am unsure how the variable importance metric is calculated. But it can be used as a way to rank-order their importance. Let's check out what the most importance variables are, in order, and then plot the relationships between those variables and the predicted treatment effects (which I call `preds`):  
+
+```{r var_importance}
+cf %>% 
+  variable_importance() %>% 
+  as.data.frame() %>% 
+  mutate(variable = colnames(cf$X.orig)) %>% 
+  arrange(desc(V1))
+```
+
 ```{r examine, message = FALSE, out.width = '75%', fig.align = 'center'}
-p1 <- ggplot(test, aes(x = trans_therm_pre, y = preds)) +
+p1 <- ggplot(test, aes(x = age, y = preds)) +
   geom_point() +
-  geom_smooth() +
+  geom_smooth(method = "loess", span = 1) +
   theme_light()
 
-p2 <- ggplot(test, aes(x = sdo, y = preds)) +
+p2 <- ggplot(test, aes(x = canvass_minutes, y = preds)) +
   geom_point() +
-  geom_smooth(method = "lm") +
+  geom_smooth(method = "loess", span = 1) +
   theme_light()
 
-p3 <- ggplot(test, aes(x = race, y = preds)) +
+p3 <- ggplot(test, aes(x = trans_therm_pre, y = preds)) +
   geom_point() +
+  geom_smooth(method = "loess", span = 1) +
   theme_light()
 
-p4 <- ggplot(test, aes(x = canvass_minutes, y = preds)) +
+p4 <- ggplot(test, aes(x = sdo, y = preds)) +
   geom_point() +
-  geom_smooth() +
+  geom_smooth(method = "loess", span = 1) +
   theme_light()
 
 cowplot::plot_grid(p1, p2, p3, p4)
 ```
+
+Hopefully this gives us some insight into the nature of the relationship between the treatment effect and other covariates. In practice, we'd want to make sure that these don't wildly violate our priors; if we cannot use our model directly due to logistical roadblocks, we'd use these data to inform how we would go about targeting.  
+
+It is also important to question *if* the treatment effects are even heterogenous. One way to do this is to plot the predicted treatment effects by their rank: Plot the predicted treatment effects on the y-axis, and order them in ascending order on the x-axis. I wrote a helper function to do this, found below. You feed it the result of a call to `predict(...)` using a `causal_forest` object. `ci` asks you if you want to produce confidence intervals, and `z` asks for the *z*-value associated with the width of the confidence interval (the default is 95%).  
 
 ```{r htes}
 plot_htes <- function(cf_preds, ci = FALSE, z = 1.96) {
@@ -222,13 +256,19 @@ plot_htes <- function(cf_preds, ci = FALSE, z = 1.96) {
 }
 ```
 
+We can use this to plot just the effects:  
+
 ```{r plot_htes1, out.width = '75%', fig.align = 'center'}
 plot_htes(preds)
 ```
 
+This looks like a lot of variability! But note the y-axis and also remember that the causal forest quantifies our uncertainty. So let's include confidence intervals:  
+
 ```{r plot_htes2, out.width = '75%', fig.align = 'center'}
 plot_htes(preds, ci = TRUE)
 ```
+
+Yikes—now it doesn't look as variable. This would actually be a situation where I would be likely to say that the treatment effects here are rather *homo*geneous. This doesn't mean that we shouldn't use an HTE targeting method, but we should temper our expectations accordingly.  
 
 # Conclusion
 
