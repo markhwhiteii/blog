@@ -1,6 +1,6 @@
 ---
 title: "Explicitly Optimizing on Causal Effects via the Causal Random Forest: A Practical Introduction and Tutorial"
-output: html_document
+output: html_fragment
 ---
 
 ```{r setup, echo = FALSE}
@@ -83,7 +83,7 @@ An important question to ask is how to prevent overfitting on this causal splitt
 
 ---
 
-```{r flowchart, echo = FALSE, , out.width = '85%', fig.align = 'center'}
+```{r flowchart, echo = FALSE, , out.width = '65%', fig.align = 'center'}
 knitr::include_graphics("flowchart.png")
 ```
 
@@ -199,7 +199,7 @@ cf %>%
   arrange(desc(V1))
 ```
 
-```{r examine, message = FALSE, out.width = '75%', fig.align = 'center'}
+```{r examine, message = FALSE, out.width = '65%', fig.align = 'center'}
 p1 <- ggplot(test, aes(x = age, y = preds)) +
   geom_point() +
   geom_smooth(method = "loess", span = 1) +
@@ -258,13 +258,13 @@ plot_htes <- function(cf_preds, ci = FALSE, z = 1.96) {
 
 We can use this to plot just the effects:  
 
-```{r plot_htes1, out.width = '75%', fig.align = 'center'}
+```{r plot_htes1, out.width = '65%', fig.align = 'center'}
 plot_htes(preds)
 ```
 
 This looks like a lot of variability! But note the y-axis and also remember that the causal forest quantifies our uncertainty. So let's include confidence intervals:  
 
-```{r plot_htes2, out.width = '75%', fig.align = 'center'}
+```{r plot_htes2, out.width = '65%', fig.align = 'center'}
 plot_htes(preds, ci = TRUE)
 ```
 
