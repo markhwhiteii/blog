@@ -1,8 +1,6 @@
 ---
 title: "Explicitly Optimizing on Causal Effects via the Causal Random Forest: A Practical Introduction and Tutorial"
-author: Mark H. White II | markhwhiteii@gmail.com
-date: Sys.Date()
-output: pdf_document
+output: html_fragment
 ---
 
 ```{r setup, echo = FALSE}
