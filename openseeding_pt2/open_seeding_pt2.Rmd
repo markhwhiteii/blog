@@ -1,0 +1,59 @@
+---
+title: ""
+output: html_document
+---
+
+```{r echo = FALSE, warning = FALSE, message = FALSE}
+library(tidyverse)
+results_allnba <- read_csv("results_allnba.csv")
+results_per <- read_csv("results_per.csv")
+```
+
+```{r}
+results_per %>% 
+  filter(complete.cases(.)) %>% 
+  group_by(year) %>% 
+  count(conf) %>% 
+  mutate(prop = n / sum(n)) %>% 
+  ungroup() %>% 
+  filter(conf == "W") %>% 
+  ggplot(aes(x = as.numeric(year), y = prop)) +
+  geom_point() +
+  stat_smooth(se = FALSE, method = "loess", span = 1) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(hjust = 1, angle = 45),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    text = element_text(size = 14)
+  ) +
+  labs(x = NULL) +
+  scale_y_continuous(
+    name = "Top PER Players in Western Conference",
+    label = function(x) paste0(x * 100, "%")
+  ) +
+  geom_hline(yintercept = .5, linetype = 2)
+```
+
+```{r}
+results_allnba %>% 
+  filter(complete.cases(.)) %>% 
+  group_by(year) %>% 
+  filter(conf == "W") %>% 
+  ggplot(aes(x = year, y = prop, group = 1)) +
+  geom_point() +
+  stat_smooth(se = FALSE, method = "loess", span = 1) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(hjust = 1, angle = 45),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    text = element_text(size = 14)
+  ) +
+  labs(x = NULL) +
+  scale_y_continuous(
+    name = "All-NBA Players in Western Conference",
+    label = function(x) paste0(x * 100, "%")
+  ) +
+  geom_hline(yintercept = .5, linetype = 2)
+```
