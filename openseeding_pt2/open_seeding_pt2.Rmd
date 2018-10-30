@@ -1,10 +1,10 @@
 ---
-output: html_document
+output: html_fragment
 ---
 
-This is my second post providing support for open seeding in the NBA; open seeding would mean that the top 16 teams in the league make the playoffs (instead of the top 8 in each conference). [Last time](https://www.markhw.com/open-seeding-pt1), I showed that in only 10 of the last 34 seasons have the 16 teams with the best records been the playoff teams. I wanted to look more at the player level this time, particularly after the last few seasons have seen some big names move from the Eastern to the Western conference. It feels like there is a huge conference imbalance in star power in the league at a time when individual stars mean a lot to the game.  
+This is my second post providing support for open seeding in the NBA; this would mean that the top 16 teams in the league make the playoffs (instead of the top 8 in each conference). [Last time](https://www.markhw.com/open-seeding-pt1), I showed that in only 10 of the last 34 seasons have the 16 teams with the best records been the 16 playoff teams. I wanted to look more at the player level, particularly after big names have recently migrated from the the Eastern to the Western Conference. It feels like there is a huge conference imbalance in star power in the league at a time when individual stars mean a lot to the game.  
 
-I again scraped Basketball-Reference.com for the numbers, and the code can be found at the end of this post. Basketball-Reference has league leaders pages, listing the top 20 players for a season in various statistics. I consider player efficiency rating (PER) to be the best overall performance metric, so I calculated what percent of the top 20 PER performers were in the West for every season since the 1979-1980 season. (I chose to start in this season because the league leaders pages look slightly different in previous seasons, making it more difficult to scrape). If the conferences were balanced, we would expect this to be 50%. I also did the same thing for All-NBA teams: What proportion of the All-NBA players were from the Western conference? Again, we would expect this number to be 50% if the conferences were perfectly-balanced.  
+I again scraped [Basketball-Reference.com](https://www.basketball-reference.com) for the numbers, and the code can be found at the end of this post. Basketball-Reference has league leaders pages, listing the top 20 players for a season in various statistics. I consider player efficiency rating (PER) to be the best overall performance metric, so I calculated what percent of the top 20 PER performers were in the West for every season since the 1979-1980 season. (I chose to start in this season because the league leaders pages look slightly different in previous seasons, making it more difficult to scrape). If the conferences were balanced, we would expect this to be 50%. I also did the same thing for All-NBA teams: What proportion of the All-NBA players were from the Western Conference? Again, we would expect this number to be 50% if the conferences were balanced perfectly.  
 
 ```{r echo = FALSE, warning = FALSE, message = FALSE}
 library(tidyverse)
@@ -12,7 +12,7 @@ results_allnba <- read_csv("results_allnba.csv")
 results_per <- read_csv("results_per.csv")
 ```
 
-```{r}
+```{r fig.align = 'center'}
 results_per %>% 
   filter(complete.cases(.)) %>% 
   group_by(year) %>% 
@@ -38,7 +38,7 @@ results_per %>%
   geom_hline(yintercept = .5, linetype = 2)
 ```
 
-```{r}
+```{r fig.align = 'center'}
 results_allnba %>% 
   filter(complete.cases(.)) %>% 
   group_by(year) %>% 
@@ -62,11 +62,11 @@ results_allnba %>%
 ```
   
   
-Western conference players have been over-represented in the Western Conference in most years. This means the NBA—perhaps the most star-driven league in North American sports—doesn't have the opportunity to showcase all of their great players in the playoffs, because only 8 teams from the West are allowed to compete there. It also looks as though this imbalance is at an all-time high, which could be why talk about open seeding has reached mainstream support and discussion among thinkers around the league recently. Allowing the top 16 teams to play in the playoffs would allow more stars to play on a national stage.  
+Western conference players have been overrepresented in the Western Conference in most years. This means the NBA—perhaps the most star-driven league in North American sports—doesn't have the opportunity to showcase all of their great players in the playoffs, because only 8 teams from the West are allowed to compete there. It also looks as though this imbalance is at an all-time high, which could be why talk about open seeding has reached mainstream support and discussion among thinkers around the league recently. Allowing the top 16 teams to play in the playoffs would allow more stars to play on that national stage.  
 
 ## R Code Appendix
 
-Scraping this posed a fun problem, because a few of the tables I was trying to access were written as comments in the HTML code for the webpage. This meant I had to find the path to that comment, scrape it, paste it, read it in again as HTML, and then parse the table out. This code also shows how one can efficiently vectorize using an `apply` function and then piping into a `do.call` command to bind the results together.  
+Scraping this posed a fun problem, because a few of the tables I was trying to access were written as comments in the HTML code for the webpage. This meant that I could *not* just run `rvest::html_table` and choose the ones I was looking for. Instead, it meant that I had to find the XPath to that comment, scrape it, convert it to a character string, read the string in again as HTML, and then parse the table out. This code also shows how one can efficiently vectorize using an `apply` function and then piping into a `do.call` command to bind the results together into a `data.frame`.  
 
 The entirety of the code for this post can be found at [my GitHub page.](https://github.com/markhwhiteii/blog/tree/master/openseeding_pt2)  
 
