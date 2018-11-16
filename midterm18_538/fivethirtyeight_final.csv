@@ -1,0 +1,513 @@
+state,class,candidate,party,incumbent,win_probability,voteshare,p10_voteshare,p90_voteshare,race_type,district,won
+AZ,1,Kyrsten Sinema,D,false,0.6716,50.26,46.55,53.98,senate,NA,TRUE
+CA,1,Dianne Feinstein,D,true,0.955,57.59,51.83,63.26,senate,NA,TRUE
+CT,1,Christopher Murphy,D,true,0.9983,60.15,55.78,64.54,senate,NA,TRUE
+DE,1,Thomas R. Carper,D,true,0.9994,62.3,57.48,67.11,senate,NA,TRUE
+FL,1,Bill Nelson,D,true,0.7316,51.73,48.12,55.36,senate,NA,NA
+HI,1,Mazie K. Hirono,D,true,1,76.79,71.43,82.17,senate,NA,TRUE
+IN,1,Joe Donnelly,D,true,0.6172,49.67,45.43,53.86,senate,NA,FALSE
+MA,1,Elizabeth Warren,D,true,0.9989,61.87,56.86,66.87,senate,NA,TRUE
+MD,1,Benjamin L. Cardin,D,true,1,65.34,60.41,70.19,senate,NA,TRUE
+ME,1,Angus S. King Jr.,I,true,0.9943,56.89,51.08,62.61,senate,NA,TRUE
+MI,1,Debbie Stabenow,D,true,0.9844,56.09,51.84,60.24,senate,NA,TRUE
+MN,1,Amy Klobuchar,D,true,0.9986,59.73,55.51,64,senate,NA,TRUE
+MN,2,Tina Smith,D,false,0.9388,53.51,49.21,57.72,senate,NA,TRUE
+MO,1,Josh Hawley,R,false,0.5277,48.87,44.86,52.89,senate,NA,TRUE
+MS,1,Roger F. Wicker,R,true,0.9927,57.88,53.38,62.36,senate,NA,TRUE
+MS,2,Cindy Hyde-Smith,R,false,0.7068,32.02,26.26,37.81,senate,NA,NA
+MT,1,Jon Tester,D,true,0.7594,51.04,46.72,55.35,senate,NA,TRUE
+ND,1,Kevin Cramer,R,false,0.7666,52.6,47.95,57.17,senate,NA,TRUE
+NE,1,Deb Fischer,R,true,0.9895,57.2,52.42,61.96,senate,NA,TRUE
+NJ,1,Robert Menendez,D,true,0.938,53.73,49.22,58.25,senate,NA,TRUE
+NM,1,Martin Heinrich,D,true,0.9952,52.56,47.23,57.8,senate,NA,TRUE
+NV,1,Jacky Rosen,D,false,0.6392,49.8,45.84,53.72,senate,NA,TRUE
+NY,1,Kirsten E. Gillibrand,D,true,0.9998,64.24,59.79,68.74,senate,NA,TRUE
+OH,1,Sherrod Brown,D,true,0.982,56.58,52.73,60.45,senate,NA,TRUE
+PA,1,Robert P. Casey Jr.,D,true,0.9871,56.37,52.42,60.32,senate,NA,TRUE
+RI,1,Sheldon Whitehouse,D,true,0.9995,64.39,59.38,69.45,senate,NA,TRUE
+TN,1,Marsha Blackburn,R,false,0.7949,50.92,46.8,55.01,senate,NA,TRUE
+TX,1,Ted Cruz,R,true,0.8118,51.85,47.92,55.75,senate,NA,TRUE
+UT,1,Mitt Romney,R,false,0.9994,58.95,53.08,64.62,senate,NA,TRUE
+VA,1,Tim Kaine,D,true,0.9938,58.09,53.72,62.37,senate,NA,TRUE
+VT,1,Bernard Sanders,I,true,1,67.9,63.09,72.65,senate,NA,TRUE
+WA,1,Maria Cantwell,D,true,0.9973,61.53,56.81,66.23,senate,NA,TRUE
+WI,1,Tammy Baldwin,D,true,0.9859,57,53.09,60.89,senate,NA,TRUE
+WV,1,Joe Manchin III,D,true,0.8731,52.32,48.14,56.44,senate,NA,TRUE
+WY,1,John Barrasso,R,true,0.9998,65.11,59.97,70.16,senate,NA,TRUE
+AK,NA,Don Young,R,true,0.7447,52.28,47.73,56.84,house,1,TRUE
+AL,NA,Bradley Byrne,R,true,0.9998,65.8,61.38,70.27,house,1,TRUE
+AL,NA,Martha Roby,R,true,0.9877,58.93,54.17,63.76,house,2,TRUE
+AL,NA,Mike Rogers,R,true,0.9988,62.13,57.69,66.63,house,3,TRUE
+AL,NA,Robert B. Aderholt,R,true,1,76.91,72.31,81.55,house,4,TRUE
+AL,NA,Mo Brooks,R,true,0.9993,63.45,58.84,68.06,house,5,TRUE
+AL,NA,Gary Palmer,R,true,0.9999,67.61,63.16,72.06,house,6,TRUE
+AL,NA,Terri A. Sewell,D,true,1,100,100,100,house,7,TRUE
+AR,NA,Rick Crawford,R,true,0.9997,62.69,57.92,67.42,house,1,TRUE
+AR,NA,French Hill,R,true,0.8997,52.51,48.43,56.62,house,2,TRUE
+AR,NA,Steve Womack,R,true,0.9995,61.47,56.89,66.05,house,3,TRUE
+AR,NA,Bruce Westerman,R,true,0.9997,62.04,57.55,66.53,house,4,TRUE
+AZ,NA,Tom O'Halleran,D,true,0.9076,54.27,50.16,58.35,house,1,TRUE
+AZ,NA,Ann Kirkpatrick,D,false,0.9604,55.27,51.5,59,house,2,TRUE
+AZ,NA,Raul Grijalva,D,true,0.9999,69.59,64.68,74.53,house,3,TRUE
+AZ,NA,Paul A. Gosar,R,true,0.9998,62.58,57.79,67.37,house,4,TRUE
+AZ,NA,Andy Biggs,R,true,0.9993,63.81,59.1,68.53,house,5,TRUE
+AZ,NA,David Schweikert,R,true,0.9498,55.78,51.36,60.26,house,6,TRUE
+AZ,NA,Ruben Gallego,D,true,0.9999,86.75,80.56,92.37,house,7,TRUE
+AZ,NA,Debbie Lesko,R,true,0.867,53.47,49.44,57.5,house,8,TRUE
+AZ,NA,Greg Stanton,D,false,0.9971,61.01,56.4,65.57,house,9,TRUE
+CA,NA,Doug LaMalfa,R,true,0.9081,55.28,50.19,60.32,house,1,TRUE
+CA,NA,Jared Huffman,D,true,1,81.14,77.13,85.17,house,2,TRUE
+CA,NA,John Garamendi,D,true,0.9998,65.39,60.83,69.95,house,3,TRUE
+CA,NA,Tom McClintock,R,true,0.9019,54.08,50.04,58.13,house,4,TRUE
+CA,NA,Mike Thompson,D,true,0.9998,80.64,73.87,87.04,house,5,TRUE
+CA,NA,Doris O. Matsui,D,true,1,78.4,73.67,83.18,house,6,TRUE
+CA,NA,Ami Bera,D,true,0.9948,58.63,54.66,62.62,house,7,TRUE
+CA,NA,Paul Cook,R,true,0.9642,60.09,52.94,67.18,house,8,TRUE
+CA,NA,Jerry McNerney,D,true,0.9996,64.43,59.85,68.99,house,9,TRUE
+CA,NA,Josh Harder,D,false,0.7454,52.08,48.02,56.1,house,10,TRUE
+CA,NA,Mark DeSaulnier,D,true,1,78.61,74.1,83.15,house,11,TRUE
+CA,NA,Nancy Pelosi,D,true,1,90.91,87.36,94.43,house,12,TRUE
+CA,NA,Barbara Lee,D,true,1,90.25,84.84,95.05,house,13,TRUE
+CA,NA,Jackie Speier,D,true,1,83.64,79.35,87.94,house,14,TRUE
+CA,NA,Eric Swalwell,D,true,1,77.54,72.99,82.12,house,15,TRUE
+CA,NA,Jim Costa,D,true,0.9841,58.23,53.63,62.85,house,16,TRUE
+CA,NA,Ro Khanna,D,true,1,80.23,74.99,85.51,house,17,TRUE
+CA,NA,Anna G. Eshoo,D,true,1,78.83,73.96,83.74,house,18,TRUE
+CA,NA,Zoe Lofgren,D,true,1,86.29,82.4,90.15,house,19,TRUE
+CA,NA,Jimmy Panetta,D,true,0.9998,77.1,70.26,83.66,house,20,TRUE
+CA,NA,David Valadao,R,true,0.839,53.75,48.86,58.64,house,21,TRUE
+CA,NA,Devin Nunes,R,true,0.9749,56.12,52.28,59.97,house,22,TRUE
+CA,NA,Kevin McCarthy,R,true,0.9995,64.62,59.94,69.34,house,23,TRUE
+CA,NA,Salud Carbajal,D,true,0.9905,58.87,54.34,63.37,house,24,TRUE
+CA,NA,Katie Hill,D,false,0.5593,50.5,46.25,54.79,house,25,TRUE
+CA,NA,Julia Brownley,D,true,0.9999,67.51,62.67,72.33,house,26,TRUE
+CA,NA,Judy Chu,D,true,1,75.47,70.37,80.51,house,27,TRUE
+CA,NA,Adam Schiff,D,true,1,81.88,77.79,85.93,house,28,TRUE
+CA,NA,Tony Cárdenas,D,true,1,81.3,76.38,86.27,house,29,NA
+CA,NA,Brad Sherman,D,true,1,77.36,72.94,81.73,house,30,TRUE
+CA,NA,Pete Aguilar,D,true,0.9992,63.33,58.68,68,house,31,TRUE
+CA,NA,Grace Napolitano,D,true,1,83.24,79.12,87.34,house,32,TRUE
+CA,NA,Ted Lieu,D,true,1,73.78,68.72,78.84,house,33,TRUE
+CA,NA,Jimmy Gomez,D,true,0.9997,81.94,75.32,88.25,house,34,TRUE
+CA,NA,Norma Torres,D,true,1,74.55,69.8,79.26,house,35,TRUE
+CA,NA,Raul Ruiz,D,true,0.9987,62.71,58.09,67.37,house,36,TRUE
+CA,NA,Karen Bass,D,true,1,90.71,87.43,94,house,37,TRUE
+CA,NA,Linda Sánchez,D,true,1,72.41,67.8,77.05,house,38,NA
+CA,NA,Gil Cisneros,D,false,0.5177,50.14,46.09,54.22,house,39,NA
+CA,NA,Lucille Roybal-Allard,D,true,0.9996,77.5,70.66,84.08,house,40,TRUE
+CA,NA,Mark Takano,D,true,0.9999,68.08,63.27,72.93,house,41,TRUE
+CA,NA,Ken Calvert,R,true,0.9876,58.88,54.1,63.72,house,42,TRUE
+CA,NA,Maxine Waters,D,true,1,79.03,74.34,83.83,house,43,TRUE
+CA,NA,Nanette Diaz Barragán,D,true,1,72.65,67.12,78.09,house,44,NA
+CA,NA,Katie Porter,D,false,0.6471,51.14,47.17,55.16,house,45,NA
+CA,NA,J. Luis Correa,D,true,1,72.95,68.18,77.76,house,46,TRUE
+CA,NA,Alan Lowenthal,D,true,0.9999,68.32,63.72,72.87,house,47,TRUE
+CA,NA,Harley Rouda,D,false,0.6279,51.05,46.86,55.27,house,48,TRUE
+CA,NA,Mike Levin,D,false,0.9669,55.29,51.72,58.89,house,49,TRUE
+CA,NA,Duncan D. Hunter,R,true,0.8157,52.49,48.89,56.07,house,50,TRUE
+CA,NA,Juan Vargas,D,true,1,74.32,69.27,79.42,house,51,TRUE
+CA,NA,Scott Peters,D,true,0.9996,65,60.19,69.74,house,52,TRUE
+CA,NA,Susan Davis,D,true,1,69.28,64.74,73.79,house,53,TRUE
+CO,NA,Diana DeGette,D,true,1,71.53,66.76,76.3,house,1,TRUE
+CO,NA,Joe Neguse,D,false,0.9996,63.24,58.18,68.22,house,2,TRUE
+CO,NA,Scott Tipton,R,true,0.8941,52.28,47.69,56.84,house,3,TRUE
+CO,NA,Ken Buck,R,true,0.9814,58.27,53.4,63.12,house,4,TRUE
+CO,NA,Doug Lamborn,R,true,0.9878,57.16,52.12,62.14,house,5,TRUE
+CO,NA,Jason Crow,D,false,0.8849,51.66,47.59,55.71,house,6,TRUE
+CO,NA,Ed Perlmutter,D,true,0.9995,62.61,57.75,67.44,house,7,TRUE
+CT,NA,John B. Larson,D,true,0.9999,67.33,62.68,71.94,house,1,TRUE
+CT,NA,Joe Courtney,D,true,0.9999,64.83,60.18,69.47,house,2,TRUE
+CT,NA,Rosa L. DeLauro,D,true,0.9999,70.53,66.04,74.98,house,3,TRUE
+CT,NA,Jim Himes,D,true,0.9999,65.35,60.64,70.08,house,4,TRUE
+CT,NA,Jahana Hayes,D,false,0.9879,58.91,54.16,63.66,house,5,TRUE
+DE,NA,Lisa Blunt Rochester,D,true,0.9988,62.1,57.74,66.42,house,1,TRUE
+FL,NA,Matt Gaetz,R,true,1,70.26,65.76,74.77,house,1,TRUE
+FL,NA,Neal Dunn,R,true,0.9998,66.41,61.66,71.14,house,2,TRUE
+FL,NA,Ted Yoho,R,true,0.9922,59.57,54.87,64.36,house,3,TRUE
+FL,NA,John Rutherford,R,true,0.9999,66.41,61.6,71.1,house,4,TRUE
+FL,NA,Al Lawson,D,true,1,71.08,66.58,75.54,house,5,TRUE
+FL,NA,Michael Waltz,R,false,0.7842,52.31,48.5,56.09,house,6,TRUE
+FL,NA,Stephanie Murphy,D,true,0.97,56.72,52.29,61.2,house,7,TRUE
+FL,NA,Bill Posey,R,true,0.9946,60.53,55.75,65.3,house,8,TRUE
+FL,NA,Darren Soto,D,true,0.9931,59.71,55.01,64.47,house,9,TRUE
+FL,NA,Val Demings,D,true,1,100,100,100,house,10,TRUE
+FL,NA,Daniel Webster,R,true,0.9998,65.15,60.39,69.97,house,11,TRUE
+FL,NA,Gus M. Bilirakis,R,true,0.9972,58.27,53.98,62.5,house,12,TRUE
+FL,NA,Charlie Crist,D,true,0.9989,63.25,58.64,67.89,house,13,TRUE
+FL,NA,Kathy Castor,D,true,1,100,100,100,house,14,TRUE
+FL,NA,Ross Spano,R,false,0.6354,50.9,47.46,54.37,house,15,TRUE
+FL,NA,Vern Buchanan,R,true,0.9019,53.74,50.03,57.39,house,16,TRUE
+FL,NA,Greg Steube,R,false,0.9991,62.95,58.17,67.83,house,17,TRUE
+FL,NA,Brian Mast,R,true,0.9199,53.99,50.39,57.66,house,18,TRUE
+FL,NA,Francis Rooney,R,true,0.9952,59.35,55.02,63.65,house,19,TRUE
+FL,NA,Alcee L. Hastings,D,true,1,100,100,100,house,20,TRUE
+FL,NA,Lois Frankel,D,true,1,100,100,100,house,21,TRUE
+FL,NA,Ted Deutch,D,true,0.9997,65.25,60.62,69.85,house,22,TRUE
+FL,NA,Debbie Wasserman Schultz,D,true,0.9998,65.08,60.21,69.89,house,23,TRUE
+FL,NA,Frederica Wilson,D,true,1,100,100,100,house,24,TRUE
+FL,NA,Mario Diaz-Balart,R,true,0.8351,53.76,48.79,58.75,house,25,TRUE
+FL,NA,Debbie Mucarsel-Powell,D,false,0.5024,50.04,45.87,54.22,house,26,TRUE
+FL,NA,Donna Shalala,D,false,0.8521,52.33,47.32,57.3,house,27,TRUE
+GA,NA,Buddy Carter,R,true,0.999,62.47,58.01,66.97,house,1,TRUE
+GA,NA,Sanford D. Bishop Jr.,D,true,0.9999,66.13,61.56,70.69,house,2,TRUE
+GA,NA,A. Drew Ferguson,R,true,1,68.04,63.65,72.47,house,3,TRUE
+GA,NA,Hank Johnson,D,true,1,72.82,68.31,77.33,house,4,TRUE
+GA,NA,John Lewis,D,true,1,100,100,100,house,5,TRUE
+GA,NA,Karen C. Handel,R,true,0.5943,50.71,46.73,54.75,house,6,FALSE
+GA,NA,Rob Woodall,R,true,0.8481,53.14,49.21,57.02,house,7,NA
+GA,NA,Austin Scott,R,true,1,100,100,100,house,8,TRUE
+GA,NA,Doug Collins,R,true,1,79.54,75.08,84.01,house,9,TRUE
+GA,NA,Jody Hice,R,true,1,67.82,63.46,72.2,house,10,TRUE
+GA,NA,Barry Loudermilk,R,true,0.9999,66.84,62.29,71.38,house,11,TRUE
+GA,NA,Rick Allen,R,true,0.9923,59.72,54.93,64.44,house,12,TRUE
+GA,NA,David Scott,D,true,1,75.42,71,79.79,house,13,TRUE
+GA,NA,Tom Graves,R,true,1,80.14,75.82,84.39,house,14,TRUE
+HI,NA,Ed Case,D,false,1,68.88,63.27,74.4,house,1,TRUE
+HI,NA,Tulsi Gabbard,D,true,1,79.41,74.71,84.1,house,2,TRUE
+IA,NA,Abby Finkenauer,D,false,0.9403,53.53,49.3,57.69,house,1,TRUE
+IA,NA,David Loebsack,D,true,0.995,57.51,53.24,61.71,house,2,TRUE
+IA,NA,Cindy Axne,D,false,0.6989,49.51,45.43,53.54,house,3,TRUE
+IA,NA,Steve King,R,true,0.8858,51.7,47.81,55.58,house,4,TRUE
+ID,NA,Russ Fulcher,R,false,0.9967,57.94,51.53,64.34,house,1,TRUE
+ID,NA,Mike Simpson,R,true,0.9994,63.79,59.1,68.51,house,2,TRUE
+IL,NA,Bobby L. Rush,D,true,1,76.62,72.04,81.22,house,1,TRUE
+IL,NA,Robin Kelly,D,true,1,82.24,77.92,86.6,house,2,TRUE
+IL,NA,Daniel Lipinski,D,true,0.9999,68.66,64.06,73.16,house,3,TRUE
+IL,NA,"Jesus ""Chuy"" Garcia",D,false,1,85.67,81.35,90.01,house,4,TRUE
+IL,NA,Mike Quigley,D,true,1,75.56,70.87,80.25,house,5,TRUE
+IL,NA,Sean Casten,D,false,0.6202,50.99,46.81,55.12,house,6,TRUE
+IL,NA,Danny K. Davis,D,true,1,87.52,83.7,91.33,house,7,TRUE
+IL,NA,Raja Krishnamoorthi,D,true,0.9999,67.74,62.92,72.52,house,8,TRUE
+IL,NA,Jan Schakowsky,D,true,1,73.45,68.77,78.09,house,9,TRUE
+IL,NA,Bradley Schneider,D,true,0.9999,66.97,62.24,71.63,house,10,TRUE
+IL,NA,Bill Foster,D,true,0.9999,67.75,63.15,72.42,house,11,TRUE
+IL,NA,Mike Bost,R,true,0.755,50.71,46.33,55.08,house,12,TRUE
+IL,NA,Rodney Davis,R,true,0.7739,52.23,48.35,56.15,house,13,TRUE
+IL,NA,Lauren Underwood,D,false,0.6926,51.44,47.71,55.14,house,14,TRUE
+IL,NA,John Shimkus,R,true,0.9999,69.64,64.8,74.49,house,15,TRUE
+IL,NA,Adam Kinzinger,R,true,0.9958,58.98,55.03,62.97,house,16,TRUE
+IL,NA,Cheri Bustos,D,true,0.9999,65.3,60.81,69.74,house,17,TRUE
+IL,NA,Darin LaHood,R,true,0.9999,67.35,62.88,71.83,house,18,TRUE
+IN,NA,Peter Visclosky,D,true,1,69.61,65.13,74.16,house,1,TRUE
+IN,NA,Jackie Walorski,R,true,0.9575,56.51,51.77,61.25,house,2,TRUE
+IN,NA,Jim Banks,R,true,0.9985,61.27,57.01,65.57,house,3,TRUE
+IN,NA,Jim Baird,R,false,0.999,62.52,58,67.08,house,4,TRUE
+IN,NA,Susan W. Brooks,R,true,0.9887,57.94,53.76,62.14,house,5,TRUE
+IN,NA,Greg Pence,R,false,0.9997,63.2,58.29,68.09,house,6,TRUE
+IN,NA,André Carson,D,true,1,69.33,64.84,73.83,house,7,NA
+IN,NA,Larry Bucshon,R,true,0.9978,61.35,56.73,66.01,house,8,TRUE
+IN,NA,Trey Hollingsworth,R,true,0.9487,55.17,51.18,59.15,house,9,TRUE
+KS,NA,Roger Marshall,R,true,0.9994,64.22,59.5,68.91,house,1,TRUE
+KS,NA,Paul Davis,D,false,0.6407,48.9,44.72,52.97,house,2,FALSE
+KS,NA,Sharice Davids,D,false,0.8652,51.92,47.74,56.07,house,3,TRUE
+KS,NA,Ron Estes,R,true,0.9959,60.13,55.68,64.61,house,4,TRUE
+KY,NA,James Comer,R,true,1,69,64.29,73.76,house,1,TRUE
+KY,NA,Brett S. Guthrie,R,true,0.9996,62.21,57.45,66.92,house,2,TRUE
+KY,NA,John A. Yarmuth,D,true,0.9992,61.15,56.55,65.71,house,3,TRUE
+KY,NA,Thomas Massie,R,true,0.9996,63.56,58.93,68.11,house,4,TRUE
+KY,NA,Harold Rogers,R,true,1,75.25,70.11,80.4,house,5,TRUE
+KY,NA,Andy Barr,R,true,0.5733,48.9,45.05,52.77,house,6,TRUE
+LA,NA,Steve Scalise,R,true,1,68.75,61.41,76.66,house,1,TRUE
+LA,NA,Cedric Richmond,D,true,1,85.31,78.94,91.19,house,2,TRUE
+LA,NA,Clay Higgins,R,true,0.9958,54.86,47.64,62.75,house,3,TRUE
+LA,NA,Mike Johnson,R,true,0.9995,62.43,57.52,67.34,house,4,TRUE
+LA,NA,Ralph Abraham,R,true,0.9999,63.99,59.15,68.81,house,5,TRUE
+LA,NA,Garret Graves,R,true,0.9999,65.61,58.47,73.42,house,6,TRUE
+MA,NA,Richard E. Neal,D,true,1,100,100,100,house,1,TRUE
+MA,NA,James McGovern,D,true,1,71.25,66.55,75.89,house,2,TRUE
+MA,NA,Lori Trahan,D,false,0.9997,64.28,59.21,69.23,house,3,TRUE
+MA,NA,Joseph P. Kennedy III,D,true,1,100,100,100,house,4,TRUE
+MA,NA,Katherine Clark,D,true,1,76.88,72.11,81.69,house,5,TRUE
+MA,NA,Seth Moulton,D,true,1,67.02,61.95,72.07,house,6,TRUE
+MA,NA,Ayanna Pressley,D,false,1,100,100,100,house,7,TRUE
+MA,NA,Stephen F. Lynch,D,true,1,100,100,100,house,8,TRUE
+MA,NA,William Keating,D,true,0.9982,62.43,57.52,67.27,house,9,TRUE
+MD,NA,Andy Harris,R,true,0.9938,58.57,53.55,63.6,house,1,TRUE
+MD,NA,C. A. Dutch Ruppersberger,D,true,1,67.46,62.67,72.22,house,2,TRUE
+MD,NA,John P. Sarbanes,D,true,1,68.39,63.6,73.21,house,3,TRUE
+MD,NA,Anthony Brown,D,true,1,78.66,74.05,83.19,house,4,TRUE
+MD,NA,Steny H. Hoyer,D,true,1,70.61,65.92,75.2,house,5,TRUE
+MD,NA,David Trone,D,false,0.9962,58.65,53.8,63.38,house,6,TRUE
+MD,NA,Elijah Cummings,D,true,1,77.15,72.51,81.68,house,7,TRUE
+MD,NA,Jamie Raskin,D,true,1,69.23,64.41,74.01,house,8,TRUE
+ME,NA,Chellie Pingree,D,true,0.9997,61.54,57.11,65.88,house,1,TRUE
+ME,NA,Jared Golden,D,false,0.6451,49.42,44.96,53.83,house,2,TRUE
+MI,NA,Jack Bergman,R,true,0.9572,55.97,51.59,60.27,house,1,TRUE
+MI,NA,Bill Huizenga,R,true,0.9764,55.32,51.09,59.52,house,2,TRUE
+MI,NA,Justin Amash,R,true,0.9821,56.48,51.71,61.23,house,3,TRUE
+MI,NA,John Moolenaar,R,true,0.9987,63.25,58.47,68.11,house,4,TRUE
+MI,NA,Daniel Kildee,D,true,0.9999,65.21,60.18,70.14,house,5,TRUE
+MI,NA,Fred Upton,R,true,0.8294,51.52,47.31,55.74,house,6,TRUE
+MI,NA,Tim Walberg,R,true,0.7508,52.42,47.74,57.14,house,7,TRUE
+MI,NA,Elissa Slotkin,D,false,0.7064,50.07,46.18,53.84,house,8,TRUE
+MI,NA,Andy Levin,D,false,0.9978,59.67,54.78,64.54,house,9,TRUE
+MI,NA,Paul Mitchell,R,true,0.9992,62.15,57.2,67.03,house,10,TRUE
+MI,NA,Haley Stevens,D,false,0.8229,50.72,46.62,54.7,house,11,TRUE
+MI,NA,Debbie Dingell,D,true,1,69.71,65.01,74.36,house,12,TRUE
+MI,NA,Rashida Tlaib,D,false,1,85.85,79.55,91.64,house,13,TRUE
+MI,NA,Brenda Lawrence,D,true,1,80.44,75.79,85,house,14,TRUE
+MN,NA,Dan Feehan,D,false,0.599,50.72,46.87,54.55,house,1,FALSE
+MN,NA,Angie Craig,D,false,0.8715,53.18,49.58,56.74,house,2,TRUE
+MN,NA,Dean Phillips,D,false,0.86,53.1,49.4,56.8,house,3,TRUE
+MN,NA,Betty McCollum,D,true,1,67.65,62.74,72.51,house,4,TRUE
+MN,NA,Ilhan Omar,D,false,1,80.84,76.52,85.16,house,5,TRUE
+MN,NA,Tom Emmer,R,true,0.9992,63.29,58.78,67.81,house,6,TRUE
+MN,NA,Collin C. Peterson,D,true,0.9604,56.43,51.85,60.95,house,7,TRUE
+MN,NA,Pete Stauber,R,false,0.8213,51.08,46.26,55.88,house,8,TRUE
+MO,NA,"William ""Lacy"" Clay Jr.",D,true,1,78.8,74.18,83.41,house,1,TRUE
+MO,NA,Ann Wagner,R,true,0.9153,52.74,48.48,56.95,house,2,TRUE
+MO,NA,Blaine Luetkemeyer,R,true,1,66.33,61.54,71,house,3,TRUE
+MO,NA,Vicky Hartzler,R,true,0.9996,62.54,57.89,67.06,house,4,TRUE
+MO,NA,Emanuel Cleaver,D,true,0.9994,62.65,57.82,67.47,house,5,TRUE
+MO,NA,Sam Graves,R,true,0.9998,64.48,59.73,69.22,house,6,TRUE
+MO,NA,Billy Long,R,true,1,67.67,62.95,72.38,house,7,TRUE
+MO,NA,Jason Smith,R,true,1,69.17,63.99,74.29,house,8,TRUE
+MS,NA,Trent Kelly,R,true,0.9997,61.84,57.46,66.25,house,1,TRUE
+MS,NA,Bennie G. Thompson,D,true,1,75.69,71.13,80.21,house,2,TRUE
+MS,NA,Michael Guest,R,false,0.9979,59.01,54.54,63.49,house,3,TRUE
+MS,NA,Steven Palazzo,R,true,0.997,59.48,54.81,64.12,house,4,TRUE
+MT,NA,Greg Gianforte,R,true,0.8233,51.13,47.07,55.09,house,1,TRUE
+NC,NA,G.K. Butterfield,D,true,1,72.62,67.99,77.17,house,1,TRUE
+NC,NA,George Holding,R,true,0.8569,51.92,47.86,55.94,house,2,TRUE
+NC,NA,Walter B. Jones,R,true,1,100,100,100,house,3,TRUE
+NC,NA,David Price,D,true,1,74.9,70.34,79.43,house,4,TRUE
+NC,NA,Virginia Foxx,R,true,0.9825,58.36,53.52,63.28,house,5,TRUE
+NC,NA,Mark Walker,R,true,0.9555,56.82,51.77,61.86,house,6,TRUE
+NC,NA,David Rouzer,R,true,0.9495,54.55,49.76,59.29,house,7,TRUE
+NC,NA,Richard Hudson,R,true,0.9318,55.44,50.81,60.05,house,8,TRUE
+NC,NA,Dan McCready,D,false,0.5496,48.83,45.04,52.56,house,9,FALSE
+NC,NA,Patrick T. McHenry,R,true,0.9985,62.05,57.53,66.59,house,10,TRUE
+NC,NA,Mark Meadows,R,true,0.9979,60.41,55.56,65.24,house,11,TRUE
+NC,NA,Alma Adams,D,true,1,72.84,68.41,77.28,house,12,TRUE
+NC,NA,Ted Budd,R,true,0.6499,49.6,45.52,53.68,house,13,TRUE
+ND,NA,Kelly Armstrong,R,false,0.9993,58.36,54.14,62.5,house,1,TRUE
+NE,NA,Jeff Fortenberry,R,true,0.9986,60.99,56.9,65.18,house,1,TRUE
+NE,NA,Don Bacon,R,true,0.6772,51.51,47.1,55.92,house,2,TRUE
+NE,NA,Adrian Smith,R,true,1,71.93,67.21,76.64,house,3,TRUE
+NH,NA,Chris Pappas,D,false,0.9222,52.76,48.59,56.85,house,1,TRUE
+NH,NA,Ann Kuster,D,true,0.998,58.4,54.29,62.45,house,2,TRUE
+NJ,NA,Donald Norcross,D,true,1,67.5,62.71,72.24,house,1,TRUE
+NJ,NA,Jeff Van Drew,D,false,0.9864,55.54,51.23,59.82,house,2,TRUE
+NJ,NA,Andy Kim,D,false,0.6289,49.71,45.9,53.46,house,3,TRUE
+NJ,NA,Chris Smith,R,true,0.9748,55.69,50.57,60.82,house,4,TRUE
+NJ,NA,Josh Gottheimer,D,true,0.9862,56.97,52.12,61.75,house,5,TRUE
+NJ,NA,Frank Pallone Jr.,D,true,0.9999,68.53,63.89,73.14,house,6,TRUE
+NJ,NA,Tom Malinowski,D,false,0.7512,50.7,46.41,54.92,house,7,TRUE
+NJ,NA,Albio Sires,D,true,1,78.84,74,83.64,house,8,TRUE
+NJ,NA,Bill Pascrell Jr.,D,true,1,72.25,67.38,77.03,house,9,TRUE
+NJ,NA,Donald Payne Jr.,D,true,1,84.86,80.48,89.19,house,10,TRUE
+NJ,NA,Mikie Sherrill,D,false,0.861,52,47.48,56.45,house,11,TRUE
+NJ,NA,Bonnie Watson Coleman,D,true,1,72.08,67.51,76.64,house,12,TRUE
+NM,NA,Debra A. Haaland,D,false,0.9931,56.26,51.74,60.72,house,1,TRUE
+NM,NA,Xochitl Torres Small,D,false,0.5222,50.15,46.34,53.96,house,2,TRUE
+NM,NA,Ben R. Lujan,D,true,0.9998,61.39,57.02,65.72,house,3,TRUE
+NV,NA,Dina Titus,D,true,1,66.34,61.52,71.18,house,1,TRUE
+NV,NA,Mark Amodei,R,true,0.9986,59.9,56.07,63.74,house,2,TRUE
+NV,NA,Susie Lee,D,false,0.8813,51.22,47.04,55.33,house,3,TRUE
+NV,NA,Steven A. Horsford,D,false,0.8934,52,47.31,56.67,house,4,TRUE
+NY,NA,Lee Zeldin,R,true,0.9596,54.36,50.12,58.64,house,1,TRUE
+NY,NA,Pete King,R,true,0.8518,54.06,49.07,59.07,house,2,TRUE
+NY,NA,Thomas Suozzi,D,true,0.9972,62.11,57.18,67.08,house,3,TRUE
+NY,NA,Kathleen Rice,D,true,0.9997,65.76,60.89,70.61,house,4,TRUE
+NY,NA,Gregory W. Meeks,D,true,1,100,100,100,house,5,TRUE
+NY,NA,Grace Meng,D,true,1,84.62,78.19,90.57,house,6,TRUE
+NY,NA,Nydia M. Velázquez,D,true,1,89.93,84.42,94.82,house,7,NA
+NY,NA,Hakeem Jeffries,D,true,1,89.47,83.88,94.48,house,8,TRUE
+NY,NA,Yvette D. Clarke,D,true,1,83.83,79.35,88.24,house,9,TRUE
+NY,NA,Jerrold Nadler,D,true,1,80.53,75.67,85.37,house,10,TRUE
+NY,NA,Daniel Donovan,R,true,0.7969,51.21,46.92,55.54,house,11,FALSE
+NY,NA,Carolyn Maloney,D,true,1,82.33,77.16,87.52,house,12,TRUE
+NY,NA,Adriano Espaillat,D,true,1,93.18,90.17,96.21,house,13,TRUE
+NY,NA,Alexandria Ocasio-Cortez,D,false,1,79.38,72.34,82.18,house,14,TRUE
+NY,NA,José E. Serrano,D,true,1,95.93,93.63,98.24,house,15,NA
+NY,NA,Eliot Engel,D,true,1,100,100,100,house,16,TRUE
+NY,NA,Nita Lowey,D,true,0.9999,81.51,74.78,87.86,house,17,TRUE
+NY,NA,Sean Patrick Maloney,D,true,0.9928,59.91,55.22,64.56,house,18,TRUE
+NY,NA,Antonio Delgado,D,false,0.6686,49.75,45.83,53.66,house,19,TRUE
+NY,NA,Paul D. Tonko,D,true,0.9999,69.65,65.11,74.2,house,20,TRUE
+NY,NA,Elise Stefanik,R,true,0.9417,54.27,49.64,58.9,house,21,TRUE
+NY,NA,Anthony Brindisi,D,false,0.6044,50.81,46.85,54.72,house,22,NA
+NY,NA,Tom Reed,R,true,0.9214,54.65,50.48,58.89,house,23,TRUE
+NY,NA,John Katko,R,true,0.8349,53.13,48.95,57.33,house,24,TRUE
+NY,NA,Joseph D. Morelle,D,false,0.9958,59.6,55.37,63.83,house,25,TRUE
+NY,NA,Brian Higgins,D,true,1,73.76,69.3,78.25,house,26,TRUE
+NY,NA,Chris Collins,R,true,0.7973,51,46.86,55.04,house,27,NA
+OH,NA,Steve Chabot,R,true,0.8233,51.3,47.37,55.21,house,1,TRUE
+OH,NA,Brad Wenstrup,R,true,0.9918,56.76,52.52,60.99,house,2,TRUE
+OH,NA,Joyce Beatty,D,true,1,74.4,69.9,78.86,house,3,TRUE
+OH,NA,Jim Jordan,R,true,0.9944,59.61,55.17,64.04,house,4,TRUE
+OH,NA,Robert E. Latta,R,true,0.999,61.07,56.31,65.85,house,5,TRUE
+OH,NA,Bill Johnson,R,true,0.9999,68.51,63.74,73.32,house,6,TRUE
+OH,NA,Bob Gibbs,R,true,0.9847,57.09,53.09,61.1,house,7,TRUE
+OH,NA,Warren Davidson,R,true,0.9999,66.68,62.09,71.39,house,8,TRUE
+OH,NA,Marcy Kaptur,D,true,1,71.15,66.67,75.62,house,9,TRUE
+OH,NA,Michael Turner,R,true,0.9413,54.25,49.43,59.01,house,10,TRUE
+OH,NA,Marcia L. Fudge,D,true,1,82.74,78.34,87.13,house,11,TRUE
+OH,NA,Troy Balderson,R,true,0.6483,49.76,45.87,53.61,house,12,TRUE
+OH,NA,Tim Ryan,D,true,0.9999,68.25,63.73,72.77,house,13,TRUE
+OH,NA,David Joyce,R,true,0.8743,54.09,49.49,58.67,house,14,TRUE
+OH,NA,Steve Stivers,R,true,0.9865,56.78,52,61.52,house,15,TRUE
+OH,NA,Anthony Gonzalez,R,false,0.9742,57.2,52.65,61.79,house,16,TRUE
+OK,NA,Kevin Hern,R,false,0.9988,60.78,56.89,64.66,house,1,TRUE
+OK,NA,Markwayne Mullin,R,true,0.999,62.29,56.85,67.68,house,2,TRUE
+OK,NA,Frank Lucas,R,true,1,71.26,66.18,76.42,house,3,TRUE
+OK,NA,Tom Cole,R,true,0.9999,65.87,61.52,70.17,house,4,TRUE
+OK,NA,Steve Russell,R,true,0.9337,54.97,50.77,59.18,house,5,FALSE
+OR,NA,Suzanne Bonamici,D,true,0.9999,65.57,60.75,70.27,house,1,TRUE
+OR,NA,Greg Walden,R,true,0.9941,57.68,52.86,62.47,house,2,TRUE
+OR,NA,Earl Blumenauer,D,true,1,74.37,69.62,79.06,house,3,TRUE
+OR,NA,Peter DeFazio,D,true,0.997,58.89,54.01,63.73,house,4,TRUE
+OR,NA,Kurt Schrader,D,true,0.9423,55.5,49.15,61.81,house,5,TRUE
+PA,NA,Brian Fitzpatrick,R,true,0.5938,50.66,46.87,54.44,house,1,TRUE
+PA,NA,Brendan Boyle,D,true,1,79.55,75.16,83.96,house,2,TRUE
+PA,NA,Dwight Evans,D,true,1,92.86,89.95,95.77,house,3,TRUE
+PA,NA,Madeleine Dean,D,false,0.9995,63.89,59.24,68.53,house,4,TRUE
+PA,NA,Mary Gay Scanlon,D,false,0.9997,66.04,61.08,70.94,house,5,TRUE
+PA,NA,Chrissy Houlahan,D,false,0.9897,58.99,54.34,63.63,house,6,TRUE
+PA,NA,Susan Wild,D,false,0.9395,53.37,49.22,57.46,house,7,TRUE
+PA,NA,Matt Cartwright,D,true,0.9662,55.55,51.77,59.34,house,8,TRUE
+PA,NA,Dan Meuser,R,false,0.9989,61.05,56.9,65.21,house,9,TRUE
+PA,NA,Scott Perry,R,true,0.7125,51.54,47.94,55.18,house,10,TRUE
+PA,NA,Lloyd Smucker,R,true,0.9831,57.18,53.05,61.33,house,11,TRUE
+PA,NA,Tom Marino,R,true,0.9999,66.54,61.8,71.22,house,12,TRUE
+PA,NA,John Joyce,R,false,0.9999,65.7,61.17,70.25,house,13,TRUE
+PA,NA,Guy Reschenthaler,R,false,0.9896,59.24,54.44,64.04,house,14,TRUE
+PA,NA,Glenn W. Thompson,R,true,1,71.28,66.46,76.1,house,15,TRUE
+PA,NA,Mike Kelly,R,true,0.8904,52.66,48.5,56.78,house,16,TRUE
+PA,NA,Conor Lamb,D,true,0.9621,55.38,51.6,59.16,house,17,TRUE
+PA,NA,Mike Doyle,D,true,1,100,100,100,house,18,TRUE
+RI,NA,David Cicilline,D,true,1,71.69,66.88,76.39,house,1,TRUE
+RI,NA,Jim Langevin,D,true,0.9999,69.23,64.5,73.87,house,2,TRUE
+SC,NA,Katie Arrington,R,false,0.9137,54,50.25,57.76,house,1,FALSE
+SC,NA,Joe Wilson,R,true,0.9957,59.11,54.22,63.97,house,2,TRUE
+SC,NA,Jeff Duncan,R,true,0.9995,63.73,58.9,68.53,house,3,TRUE
+SC,NA,William Timmons,R,false,0.9999,65.11,60.38,69.79,house,4,TRUE
+SC,NA,Ralph Norman,R,true,0.9924,57.99,53.21,62.69,house,5,TRUE
+SC,NA,James E. Clyburn,D,true,1,72.74,67.87,77.62,house,6,TRUE
+SC,NA,Tom Rice,R,true,0.9959,60.46,55.82,65.03,house,7,TRUE
+SD,NA,Dusty Johnson,R,false,0.9964,57.01,52.74,61.25,house,1,TRUE
+TN,NA,Phil Roe,R,true,1,73.24,68.31,78.17,house,1,TRUE
+TN,NA,Tim Burchett,R,false,0.9999,63.97,59.22,68.71,house,2,TRUE
+TN,NA,Chuck Fleischmann,R,true,0.9995,63.46,58.55,68.34,house,3,TRUE
+TN,NA,Scott DesJarlais,R,true,0.9959,59.14,54.2,64.06,house,4,TRUE
+TN,NA,Jim Cooper,D,true,0.9999,68.58,64.28,72.94,house,5,TRUE
+TN,NA,John Rose,R,false,1,69.2,64.24,74.13,house,6,TRUE
+TN,NA,Mark E. Green,R,false,0.9999,64.9,59.99,69.74,house,7,TRUE
+TN,NA,David Kustoff,R,true,0.9999,68.32,63.5,73.09,house,8,TRUE
+TN,NA,Steve Cohen,D,true,1,76.84,71.77,81.86,house,9,TRUE
+TX,NA,Louie Gohmert,R,true,1,70.88,65.95,75.78,house,1,TRUE
+TX,NA,Dan Crenshaw,R,false,0.946,53.57,49.09,58.06,house,2,TRUE
+TX,NA,Van Taylor,R,false,0.9947,58.64,53.69,63.52,house,3,TRUE
+TX,NA,John Ratcliffe,R,true,1,74.72,69.86,79.52,house,4,TRUE
+TX,NA,Lance Gooden,R,false,0.9996,64.67,60.18,69.22,house,5,TRUE
+TX,NA,Ron Wright,R,false,0.9688,54.33,50.17,58.44,house,6,TRUE
+TX,NA,John Culberson,R,true,0.5534,50.43,46.22,54.61,house,7,FALSE
+TX,NA,Kevin Brady,R,true,1,75.93,71.16,80.63,house,8,TRUE
+TX,NA,Al Green,D,true,1,85.33,79.03,91.16,house,9,TRUE
+TX,NA,Michael T. McCaul,R,true,0.9716,55.3,50.56,60.06,house,10,TRUE
+TX,NA,K. Michael Conaway,R,true,1,78.37,73.56,83.14,house,11,TRUE
+TX,NA,Kay Granger,R,true,1,65.56,61.54,69.5,house,12,TRUE
+TX,NA,Mac Thornberry,R,true,1,79.98,75.3,84.63,house,13,TRUE
+TX,NA,Randy Weber,R,true,0.9946,58.8,53.84,63.74,house,14,TRUE
+TX,NA,Vicente Gonzalez,D,true,0.9998,65.57,60.46,70.6,house,15,TRUE
+TX,NA,Veronica Escobar,D,false,1,69.94,64.8,75.07,house,16,TRUE
+TX,NA,Bill Flores,R,true,0.9989,59.29,55.27,63.34,house,17,TRUE
+TX,NA,Sheila Jackson Lee,D,true,1,76.37,71.33,81.43,house,18,TRUE
+TX,NA,Jodey Arrington,R,true,1,76.75,72.11,81.46,house,19,TRUE
+TX,NA,Joaquin Castro,D,true,0.9999,82,75.34,88.32,house,20,TRUE
+TX,NA,Chip Roy,R,false,0.9053,52.15,47.86,56.41,house,21,TRUE
+TX,NA,Pete Olson,R,true,0.8809,52.8,47.77,57.84,house,22,TRUE
+TX,NA,Will Hurd,R,true,0.7922,51.89,46.7,57.06,house,23,NA
+TX,NA,Kenny Marchant,R,true,0.9804,57.77,53.19,62.32,house,24,TRUE
+TX,NA,Roger Williams,R,true,0.9625,55.37,50.44,60.32,house,25,TRUE
+TX,NA,Michael Burgess,R,true,0.9996,63.44,58.53,68.32,house,26,TRUE
+TX,NA,Michael Cloud,R,true,0.9992,61.71,56.7,66.76,house,27,TRUE
+TX,NA,Henry Cuellar,D,true,0.9999,81.21,74.52,87.56,house,28,TRUE
+TX,NA,Sylvia R. Garcia,D,false,1,71.37,65.72,77.01,house,29,TRUE
+TX,NA,Eddie Bernice Johnson,D,true,1,88.5,82.66,93.79,house,30,TRUE
+TX,NA,John Carter,R,true,0.949,54,49.72,58.29,house,31,TRUE
+TX,NA,Pete Sessions,R,true,0.5374,48.99,44.45,53.5,house,32,FALSE
+TX,NA,Marc Veasey,D,true,1,74.19,68.68,79.69,house,33,TRUE
+TX,NA,Filemon Vela,D,true,0.9998,68.27,63.07,73.49,house,34,TRUE
+TX,NA,Lloyd Doggett,D,true,0.9999,69.26,64.23,74.34,house,35,TRUE
+TX,NA,Brian Babin,R,true,1,70.49,65.81,75.16,house,36,TRUE
+UT,NA,Rob Bishop,R,true,0.9999,61,55.54,66.39,house,1,TRUE
+UT,NA,Chris Stewart,R,true,0.9911,55.25,49.91,60.49,house,2,TRUE
+UT,NA,John R. Curtis,R,true,0.9999,64.24,58.54,69.85,house,3,TRUE
+UT,NA,Ben McAdams,D,false,0.642,51.08,47.18,55.04,house,4,NA
+VA,NA,Robert J. Wittman,R,true,0.9861,58.5,53.85,63.17,house,1,TRUE
+VA,NA,Scott Taylor,R,true,0.594,50.65,46.98,54.35,house,2,FALSE
+VA,NA,Robert C. Scott,D,true,1,100,100,100,house,3,TRUE
+VA,NA,A. Donald McEachin,D,true,0.9997,62.7,57.94,67.44,house,4,TRUE
+VA,NA,Denver Riggleman,R,false,0.7004,51.53,47.73,55.34,house,5,TRUE
+VA,NA,Ben Cline,R,false,0.9965,60.68,56.12,65.21,house,6,TRUE
+VA,NA,Abigail Spanberger,D,false,0.52,48.8,45.06,52.48,house,7,TRUE
+VA,NA,Don Beyer,D,true,1,76.01,71.21,80.73,house,8,TRUE
+VA,NA,Morgan Griffith,R,true,0.9941,60.52,55.57,65.43,house,9,TRUE
+VA,NA,Jennifer Wexton,D,false,0.8886,53.63,49.82,57.45,house,10,TRUE
+VA,NA,Gerald E. Connolly,D,true,1,67.24,62.22,72.2,house,11,TRUE
+VT,NA,Peter Welch,D,true,1,70.99,65.98,75.93,house,1,TRUE
+WA,NA,Suzan DelBene,D,true,0.9996,64.21,59.57,68.93,house,1,TRUE
+WA,NA,Rick Larsen,D,true,0.9998,77.76,70.92,84.28,house,2,TRUE
+WA,NA,Jaime Herrera Beutler,R,true,0.8139,52.65,48.84,56.47,house,3,TRUE
+WA,NA,Dan Newhouse,R,true,0.9973,61.54,56.75,66.39,house,4,TRUE
+WA,NA,Cathy McMorris Rodgers,R,true,0.8184,52.87,48.75,57.04,house,5,TRUE
+WA,NA,Derek Kilmer,D,true,0.9999,66.99,62.32,71.59,house,6,TRUE
+WA,NA,Pramila Jayapal,D,true,1,84.56,80.31,88.79,house,7,TRUE
+WA,NA,Kim Schrier,D,false,0.7155,51.74,47.8,55.67,house,8,TRUE
+WA,NA,Adam Smith,D,true,0.9857,61.72,54.89,68.6,house,9,TRUE
+WA,NA,Denny Heck,D,true,0.9997,65.47,60.9,69.95,house,10,TRUE
+WI,NA,Bryan Steil,R,false,0.8111,51.02,46.9,55.08,house,1,TRUE
+WI,NA,Mark Pocan,D,true,1,100,100,100,house,2,TRUE
+WI,NA,Ron Kind,D,true,0.9979,62.14,57.51,66.78,house,3,TRUE
+WI,NA,Gwen Moore,D,true,1,75.93,71.17,80.64,house,4,TRUE
+WI,NA,F. James Sensenbrenner,R,true,0.9934,59.93,55.18,64.74,house,5,TRUE
+WI,NA,Glenn Grothman,R,true,0.9737,56.41,52.29,60.47,house,6,TRUE
+WI,NA,Sean P. Duffy,R,true,0.9962,59.24,54.25,64.15,house,7,TRUE
+WI,NA,Mike Gallagher,R,true,0.9967,61.13,56.44,65.84,house,8,TRUE
+WV,NA,David McKinley,R,true,0.9997,62.69,58.84,66.62,house,1,TRUE
+WV,NA,Alex Mooney,R,true,0.9728,55.23,50.62,59.81,house,2,TRUE
+WV,NA,Carol Miller,R,false,0.9034,54.86,50.07,59.68,house,3,TRUE
+WY,NA,Liz Cheney,R,true,0.9998,63.11,58.14,68,house,1,TRUE
+AK,NA,Mike Dunleavy,R,false,0.7147,51.08,45.74,56.45,governor,NA,TRUE
+AL,NA,Kay Ivey,R,true,0.9906,59.05,54.49,63.6,governor,NA,TRUE
+AR,NA,Asa Hutchinson,R,true,0.9996,62.48,57.88,67.08,governor,NA,TRUE
+AZ,NA,Doug Ducey,R,true,0.9857,55.61,51.91,59.32,governor,NA,TRUE
+CA,NA,Gavin Newsom,D,false,0.9936,59.56,55.07,64.04,governor,NA,TRUE
+CO,NA,Jared Polis,D,false,0.9253,54.29,49.52,58.97,governor,NA,TRUE
+CT,NA,Ned Lamont,D,false,0.7931,50.99,46.78,55.14,governor,NA,TRUE
+FL,NA,Andrew Gillum,D,false,0.7783,50.88,47.2,54.54,governor,NA,NA
+GA,NA,Brian Kemp,R,false,0.6591,50.36,46.88,53.87,governor,NA,NA
+HI,NA,David Ige,D,true,0.9989,63.39,57.74,68.97,governor,NA,TRUE
+IA,NA,Fred Hubbell,D,false,0.6362,50.15,46.24,53.99,governor,NA,FALSE
+ID,NA,Brad Little,R,false,0.9891,57.32,52.31,62.28,governor,NA,TRUE
+IL,NA,JB Pritzker,D,false,0.8759,52.9,46.94,58.88,governor,NA,TRUE
+KS,NA,Laura Kelly,D,false,0.5001,44.27,39.05,49.36,governor,NA,TRUE
+MA,NA,Charlie Baker,R,true,0.9995,66.99,61.69,72.33,governor,NA,TRUE
+MD,NA,Larry Hogan,R,true,0.9868,56.38,51.97,60.77,governor,NA,TRUE
+ME,NA,Janet Mills,D,false,0.8975,53.89,48.98,58.74,governor,NA,TRUE
+MI,NA,Gretchen Whitmer,D,false,0.9324,53.3,49.11,57.46,governor,NA,TRUE
+MN,NA,Tim Walz,D,false,0.9399,54.11,49.79,58.43,governor,NA,TRUE
+NE,NA,Pete Ricketts,R,true,0.992,61.06,55.72,66.42,governor,NA,TRUE
+NH,NA,Chris Sununu,R,true,0.852,52.96,48.07,57.85,governor,NA,TRUE
+NM,NA,Michelle Lujan Grisham,D,false,0.9267,54.32,50.53,58.06,governor,NA,TRUE
+NV,NA,Steve Sisolak,D,false,0.6001,49.59,45.6,53.54,governor,NA,TRUE
+NY,NA,Andrew Cuomo,D,true,0.9952,58.19,53.43,62.98,governor,NA,TRUE
+OH,NA,Richard Cordray,D,false,0.6194,49.95,45.78,54.06,governor,NA,FALSE
+OK,NA,Kevin Stitt,R,false,0.8257,52.38,47.99,56.75,governor,NA,TRUE
+OR,NA,Kate Brown,D,true,0.7993,49.94,45.1,54.79,governor,NA,TRUE
+PA,NA,Tom Wolf,D,true,0.9923,56.81,52.9,60.7,governor,NA,TRUE
+RI,NA,Gina Raimondo,D,true,0.9546,54.35,47.81,60.72,governor,NA,TRUE
+SC,NA,Henry McMaster,R,true,0.9851,57.69,53.41,61.99,governor,NA,TRUE
+SD,NA,Kristi Noem,R,false,0.6537,50.65,45.85,55.46,governor,NA,TRUE
+TN,NA,Bill Lee,R,false,0.9881,54.83,50.27,59.34,governor,NA,TRUE
+TX,NA,Greg Abbott,R,true,0.9973,58.38,54.5,62.27,governor,NA,TRUE
+VT,NA,Phil Scott,R,true,0.9754,53.79,48.4,59.12,governor,NA,TRUE
+WI,NA,Tony Evers,D,false,0.6171,49.34,44.75,53.96,governor,NA,TRUE
+WY,NA,Mark Gordon,R,false,0.9992,63.05,57.81,68.31,governor,NA,TRUE
+CA,NA,Tony Cardenas,NA,NA,NA,NA,NA,NA,house,NA,TRUE
+CA,NA,Linda Sanchez,NA,NA,NA,NA,NA,NA,house,NA,TRUE
+CA,NA,Nanette Diaz Barragan,NA,NA,NA,NA,NA,NA,house,NA,TRUE
+IN,NA,Andre Carson,NA,NA,NA,NA,NA,NA,house,NA,TRUE
+NY,NA,Nydia M. Velazquez,NA,NA,NA,NA,NA,NA,house,NA,TRUE
+NY,NA,Jose E. Serrano,NA,NA,NA,NA,NA,NA,house,NA,TRUE

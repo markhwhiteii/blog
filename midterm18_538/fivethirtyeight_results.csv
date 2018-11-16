@@ -1,0 +1,507 @@
+state,candidate,race_type,won
+AZ,Kyrsten Sinema,senate,TRUE
+CA,Dianne Feinstein,senate,TRUE
+CT,Christopher Murphy,senate,TRUE
+DE,Thomas R. Carper,senate,TRUE
+FL,Bill Nelson,senate,
+HI,Mazie K. Hirono,senate,TRUE
+IN,Joe Donnelly,senate,FALSE
+MA,Elizabeth Warren,senate,TRUE
+MD,Benjamin L. Cardin,senate,TRUE
+ME,Angus S. King Jr.,senate,TRUE
+MI,Debbie Stabenow,senate,TRUE
+MN,Amy Klobuchar,senate,TRUE
+MN,Tina Smith,senate,TRUE
+MO,Josh Hawley,senate,TRUE
+MS,Roger F. Wicker,senate,TRUE
+MS,Cindy Hyde-Smith,senate,
+MT,Jon Tester,senate,TRUE
+ND,Kevin Cramer,senate,TRUE
+NE,Deb Fischer,senate,TRUE
+NJ,Robert Menendez,senate,TRUE
+NM,Martin Heinrich,senate,TRUE
+NV,Jacky Rosen,senate,TRUE
+NY,Kirsten E. Gillibrand,senate,TRUE
+OH,Sherrod Brown,senate,TRUE
+PA,Robert P. Casey Jr.,senate,TRUE
+RI,Sheldon Whitehouse,senate,TRUE
+TN,Marsha Blackburn,senate,TRUE
+TX,Ted Cruz,senate,TRUE
+UT,Mitt Romney,senate,TRUE
+VA,Tim Kaine,senate,TRUE
+VT,Bernard Sanders,senate,TRUE
+WA,Maria Cantwell,senate,TRUE
+WI,Tammy Baldwin,senate,TRUE
+WV,Joe Manchin III,senate,TRUE
+WY,John Barrasso,senate,TRUE
+AK,Don Young,house,TRUE
+AL,Bradley Byrne,house,TRUE
+AL,Martha Roby,house,TRUE
+AL,Mike Rogers,house,TRUE
+AL,Robert B. Aderholt,house,TRUE
+AL,Mo Brooks,house,TRUE
+AL,Gary Palmer,house,TRUE
+AL,Terri A. Sewell,house,TRUE
+AR,Rick Crawford,house,TRUE
+AR,French Hill,house,TRUE
+AR,Steve Womack,house,TRUE
+AR,Bruce Westerman,house,TRUE
+AZ,Tom O'Halleran,house,TRUE
+AZ,Ann Kirkpatrick,house,TRUE
+AZ,Raul Grijalva,house,TRUE
+AZ,Paul A. Gosar,house,TRUE
+AZ,Andy Biggs,house,TRUE
+AZ,David Schweikert,house,TRUE
+AZ,Ruben Gallego,house,TRUE
+AZ,Debbie Lesko,house,TRUE
+AZ,Greg Stanton,house,TRUE
+CA,Doug LaMalfa,house,TRUE
+CA,Jared Huffman,house,TRUE
+CA,John Garamendi,house,TRUE
+CA,Tom McClintock,house,TRUE
+CA,Mike Thompson,house,TRUE
+CA,Doris O. Matsui,house,TRUE
+CA,Ami Bera,house,TRUE
+CA,Paul Cook,house,TRUE
+CA,Jerry McNerney,house,TRUE
+CA,Josh Harder,house,TRUE
+CA,Mark DeSaulnier,house,TRUE
+CA,Nancy Pelosi,house,TRUE
+CA,Barbara Lee,house,TRUE
+CA,Jackie Speier,house,TRUE
+CA,Eric Swalwell,house,TRUE
+CA,Jim Costa,house,TRUE
+CA,Ro Khanna,house,TRUE
+CA,Anna G. Eshoo,house,TRUE
+CA,Zoe Lofgren,house,TRUE
+CA,Jimmy Panetta,house,TRUE
+CA,David Valadao,house,TRUE
+CA,Devin Nunes,house,TRUE
+CA,Kevin McCarthy,house,TRUE
+CA,Salud Carbajal,house,TRUE
+CA,Katie Hill,house,TRUE
+CA,Julia Brownley,house,TRUE
+CA,Judy Chu,house,TRUE
+CA,Adam Schiff,house,TRUE
+CA,Tony Cardenas,house,TRUE
+CA,Brad Sherman,house,TRUE
+CA,Pete Aguilar,house,TRUE
+CA,Grace Napolitano,house,TRUE
+CA,Ted Lieu,house,TRUE
+CA,Jimmy Gomez,house,TRUE
+CA,Norma Torres,house,TRUE
+CA,Raul Ruiz,house,TRUE
+CA,Karen Bass,house,TRUE
+CA,Linda Sanchez,house,TRUE
+CA,Gil Cisneros,house,
+CA,Lucille Roybal-Allard,house,TRUE
+CA,Mark Takano,house,TRUE
+CA,Ken Calvert,house,TRUE
+CA,Maxine Waters,house,TRUE
+CA,Nanette Diaz Barragan,house,TRUE
+CA,Katie Porter,house,
+CA,J. Luis Correa,house,TRUE
+CA,Alan Lowenthal,house,TRUE
+CA,Harley Rouda,house,TRUE
+CA,Mike Levin,house,TRUE
+CA,Duncan D. Hunter,house,TRUE
+CA,Juan Vargas,house,TRUE
+CA,Scott Peters,house,TRUE
+CA,Susan Davis,house,TRUE
+CO,Diana DeGette,house,TRUE
+CO,Joe Neguse,house,TRUE
+CO,Scott Tipton,house,TRUE
+CO,Ken Buck,house,TRUE
+CO,Doug Lamborn,house,TRUE
+CO,Jason Crow,house,TRUE
+CO,Ed Perlmutter,house,TRUE
+CT,John B. Larson,house,TRUE
+CT,Joe Courtney,house,TRUE
+CT,Rosa L. DeLauro,house,TRUE
+CT,Jim Himes,house,TRUE
+CT,Jahana Hayes,house,TRUE
+DE,Lisa Blunt Rochester,house,TRUE
+FL,Matt Gaetz,house,TRUE
+FL,Neal Dunn,house,TRUE
+FL,Ted Yoho,house,TRUE
+FL,John Rutherford,house,TRUE
+FL,Al Lawson,house,TRUE
+FL,Michael Waltz,house,TRUE
+FL,Stephanie Murphy,house,TRUE
+FL,Bill Posey,house,TRUE
+FL,Darren Soto,house,TRUE
+FL,Val Demings,house,TRUE
+FL,Daniel Webster,house,TRUE
+FL,Gus M. Bilirakis,house,TRUE
+FL,Charlie Crist,house,TRUE
+FL,Kathy Castor,house,TRUE
+FL,Ross Spano,house,TRUE
+FL,Vern Buchanan,house,TRUE
+FL,Greg Steube,house,TRUE
+FL,Brian Mast,house,TRUE
+FL,Francis Rooney,house,TRUE
+FL,Alcee L. Hastings,house,TRUE
+FL,Lois Frankel,house,TRUE
+FL,Ted Deutch,house,TRUE
+FL,Debbie Wasserman Schultz,house,TRUE
+FL,Frederica Wilson,house,TRUE
+FL,Mario Diaz-Balart,house,TRUE
+FL,Debbie Mucarsel-Powell,house,TRUE
+FL,Donna Shalala,house,TRUE
+GA,Buddy Carter,house,TRUE
+GA,Sanford D. Bishop Jr.,house,TRUE
+GA,A. Drew Ferguson,house,TRUE
+GA,Hank Johnson,house,TRUE
+GA,John Lewis,house,TRUE
+GA,Karen C. Handel,house,FALSE
+GA,Rob Woodall,house,
+GA,Austin Scott,house,TRUE
+GA,Doug Collins,house,TRUE
+GA,Jody Hice,house,TRUE
+GA,Barry Loudermilk,house,TRUE
+GA,Rick Allen,house,TRUE
+GA,David Scott,house,TRUE
+GA,Tom Graves,house,TRUE
+HI,Ed Case,house,TRUE
+HI,Tulsi Gabbard,house,TRUE
+IA,Abby Finkenauer,house,TRUE
+IA,David Loebsack,house,TRUE
+IA,Cindy Axne,house,TRUE
+IA,Steve King,house,TRUE
+ID,Russ Fulcher,house,TRUE
+ID,Mike Simpson,house,TRUE
+IL,Bobby L. Rush,house,TRUE
+IL,Robin Kelly,house,TRUE
+IL,Daniel Lipinski,house,TRUE
+IL,"Jesus ""Chuy"" Garcia",house,TRUE
+IL,Mike Quigley,house,TRUE
+IL,Sean Casten,house,TRUE
+IL,Danny K. Davis,house,TRUE
+IL,Raja Krishnamoorthi,house,TRUE
+IL,Jan Schakowsky,house,TRUE
+IL,Bradley Schneider,house,TRUE
+IL,Bill Foster,house,TRUE
+IL,Mike Bost,house,TRUE
+IL,Rodney Davis,house,TRUE
+IL,Lauren Underwood,house,TRUE
+IL,John Shimkus,house,TRUE
+IL,Adam Kinzinger,house,TRUE
+IL,Cheri Bustos,house,TRUE
+IL,Darin LaHood,house,TRUE
+IN,Peter Visclosky,house,TRUE
+IN,Jackie Walorski,house,TRUE
+IN,Jim Banks,house,TRUE
+IN,Jim Baird,house,TRUE
+IN,Susan W. Brooks,house,TRUE
+IN,Greg Pence,house,TRUE
+IN,Andre Carson,house,TRUE
+IN,Larry Bucshon,house,TRUE
+IN,Trey Hollingsworth,house,TRUE
+KS,Roger Marshall,house,TRUE
+KS,Paul Davis,house,FALSE
+KS,Sharice Davids,house,TRUE
+KS,Ron Estes,house,TRUE
+KY,James Comer,house,TRUE
+KY,Brett S. Guthrie,house,TRUE
+KY,John A. Yarmuth,house,TRUE
+KY,Thomas Massie,house,TRUE
+KY,Harold Rogers,house,TRUE
+KY,Andy Barr,house,TRUE
+LA,Steve Scalise,house,TRUE
+LA,Cedric Richmond,house,TRUE
+LA,Clay Higgins,house,TRUE
+LA,Mike Johnson,house,TRUE
+LA,Ralph Abraham,house,TRUE
+LA,Garret Graves,house,TRUE
+MA,Richard E. Neal,house,TRUE
+MA,James McGovern,house,TRUE
+MA,Lori Trahan,house,TRUE
+MA,Joseph P. Kennedy III,house,TRUE
+MA,Katherine Clark,house,TRUE
+MA,Seth Moulton,house,TRUE
+MA,Ayanna Pressley,house,TRUE
+MA,Stephen F. Lynch,house,TRUE
+MA,William Keating,house,TRUE
+MD,Andy Harris,house,TRUE
+MD,C. A. Dutch Ruppersberger,house,TRUE
+MD,John P. Sarbanes,house,TRUE
+MD,Anthony Brown,house,TRUE
+MD,Steny H. Hoyer,house,TRUE
+MD,David Trone,house,TRUE
+MD,Elijah Cummings,house,TRUE
+MD,Jamie Raskin,house,TRUE
+ME,Chellie Pingree,house,TRUE
+ME,Jared Golden,house,TRUE
+MI,Jack Bergman,house,TRUE
+MI,Bill Huizenga,house,TRUE
+MI,Justin Amash,house,TRUE
+MI,John Moolenaar,house,TRUE
+MI,Daniel Kildee,house,TRUE
+MI,Fred Upton,house,TRUE
+MI,Tim Walberg,house,TRUE
+MI,Elissa Slotkin,house,TRUE
+MI,Andy Levin,house,TRUE
+MI,Paul Mitchell,house,TRUE
+MI,Haley Stevens,house,TRUE
+MI,Debbie Dingell,house,TRUE
+MI,Rashida Tlaib,house,TRUE
+MI,Brenda Lawrence,house,TRUE
+MN,Dan Feehan,house,FALSE
+MN,Angie Craig,house,TRUE
+MN,Dean Phillips,house,TRUE
+MN,Betty McCollum,house,TRUE
+MN,Ilhan Omar,house,TRUE
+MN,Tom Emmer,house,TRUE
+MN,Collin C. Peterson,house,TRUE
+MN,Pete Stauber,house,TRUE
+MO,"William ""Lacy"" Clay Jr.",house,TRUE
+MO,Ann Wagner,house,TRUE
+MO,Blaine Luetkemeyer,house,TRUE
+MO,Vicky Hartzler,house,TRUE
+MO,Emanuel Cleaver,house,TRUE
+MO,Sam Graves,house,TRUE
+MO,Billy Long,house,TRUE
+MO,Jason Smith,house,TRUE
+MS,Trent Kelly,house,TRUE
+MS,Bennie G. Thompson,house,TRUE
+MS,Michael Guest,house,TRUE
+MS,Steven Palazzo,house,TRUE
+MT,Greg Gianforte,house,TRUE
+NC,G.K. Butterfield,house,TRUE
+NC,George Holding,house,TRUE
+NC,Walter B. Jones,house,TRUE
+NC,David Price,house,TRUE
+NC,Virginia Foxx,house,TRUE
+NC,Mark Walker,house,TRUE
+NC,David Rouzer,house,TRUE
+NC,Richard Hudson,house,TRUE
+NC,Dan McCready,house,FALSE
+NC,Patrick T. McHenry,house,TRUE
+NC,Mark Meadows,house,TRUE
+NC,Alma Adams,house,TRUE
+NC,Ted Budd,house,TRUE
+ND,Kelly Armstrong,house,TRUE
+NE,Jeff Fortenberry,house,TRUE
+NE,Don Bacon,house,TRUE
+NE,Adrian Smith,house,TRUE
+NH,Chris Pappas,house,TRUE
+NH,Ann Kuster,house,TRUE
+NJ,Donald Norcross,house,TRUE
+NJ,Jeff Van Drew,house,TRUE
+NJ,Andy Kim,house,TRUE
+NJ,Chris Smith,house,TRUE
+NJ,Josh Gottheimer,house,TRUE
+NJ,Frank Pallone Jr.,house,TRUE
+NJ,Tom Malinowski,house,TRUE
+NJ,Albio Sires,house,TRUE
+NJ,Bill Pascrell Jr.,house,TRUE
+NJ,Donald Payne Jr.,house,TRUE
+NJ,Mikie Sherrill,house,TRUE
+NJ,Bonnie Watson Coleman,house,TRUE
+NM,Debra A. Haaland,house,TRUE
+NM,Xochitl Torres Small,house,TRUE
+NM,Ben R. Lujan,house,TRUE
+NV,Dina Titus,house,TRUE
+NV,Mark Amodei,house,TRUE
+NV,Susie Lee,house,TRUE
+NV,Steven A. Horsford,house,TRUE
+NY,Lee Zeldin,house,TRUE
+NY,Pete King,house,TRUE
+NY,Thomas Suozzi,house,TRUE
+NY,Kathleen Rice,house,TRUE
+NY,Gregory W. Meeks,house,TRUE
+NY,Grace Meng,house,TRUE
+NY,Nydia M. Velazquez,house,TRUE
+NY,Hakeem Jeffries,house,TRUE
+NY,Yvette D. Clarke,house,TRUE
+NY,Jerrold Nadler,house,TRUE
+NY,Daniel Donovan,house,FALSE
+NY,Carolyn Maloney,house,TRUE
+NY,Adriano Espaillat,house,TRUE
+NY,Alexandria Ocasio-Cortez,house,TRUE
+NY,Jose E. Serrano,house,TRUE
+NY,Eliot Engel,house,TRUE
+NY,Nita Lowey,house,TRUE
+NY,Sean Patrick Maloney,house,TRUE
+NY,Antonio Delgado,house,TRUE
+NY,Paul D. Tonko,house,TRUE
+NY,Elise Stefanik,house,TRUE
+NY,Anthony Brindisi,house,
+NY,Tom Reed,house,TRUE
+NY,John Katko,house,TRUE
+NY,Joseph D. Morelle,house,TRUE
+NY,Brian Higgins,house,TRUE
+NY,Chris Collins,house,
+OH,Steve Chabot,house,TRUE
+OH,Brad Wenstrup,house,TRUE
+OH,Joyce Beatty,house,TRUE
+OH,Jim Jordan,house,TRUE
+OH,Robert E. Latta,house,TRUE
+OH,Bill Johnson,house,TRUE
+OH,Bob Gibbs,house,TRUE
+OH,Warren Davidson,house,TRUE
+OH,Marcy Kaptur,house,TRUE
+OH,Michael Turner,house,TRUE
+OH,Marcia L. Fudge,house,TRUE
+OH,Troy Balderson,house,TRUE
+OH,Tim Ryan,house,TRUE
+OH,David Joyce,house,TRUE
+OH,Steve Stivers,house,TRUE
+OH,Anthony Gonzalez,house,TRUE
+OK,Kevin Hern,house,TRUE
+OK,Markwayne Mullin,house,TRUE
+OK,Frank Lucas,house,TRUE
+OK,Tom Cole,house,TRUE
+OK,Steve Russell,house,FALSE
+OR,Suzanne Bonamici,house,TRUE
+OR,Greg Walden,house,TRUE
+OR,Earl Blumenauer,house,TRUE
+OR,Peter DeFazio,house,TRUE
+OR,Kurt Schrader,house,TRUE
+PA,Brian Fitzpatrick,house,TRUE
+PA,Brendan Boyle,house,TRUE
+PA,Dwight Evans,house,TRUE
+PA,Madeleine Dean,house,TRUE
+PA,Mary Gay Scanlon,house,TRUE
+PA,Chrissy Houlahan,house,TRUE
+PA,Susan Wild,house,TRUE
+PA,Matt Cartwright,house,TRUE
+PA,Dan Meuser,house,TRUE
+PA,Scott Perry,house,TRUE
+PA,Lloyd Smucker,house,TRUE
+PA,Tom Marino,house,TRUE
+PA,John Joyce,house,TRUE
+PA,Guy Reschenthaler,house,TRUE
+PA,Glenn W. Thompson,house,TRUE
+PA,Mike Kelly,house,TRUE
+PA,Conor Lamb,house,TRUE
+PA,Mike Doyle,house,TRUE
+RI,David Cicilline,house,TRUE
+RI,Jim Langevin,house,TRUE
+SC,Katie Arrington,house,FALSE
+SC,Joe Wilson,house,TRUE
+SC,Jeff Duncan,house,TRUE
+SC,William Timmons,house,TRUE
+SC,Ralph Norman,house,TRUE
+SC,James E. Clyburn,house,TRUE
+SC,Tom Rice,house,TRUE
+SD,Dusty Johnson,house,TRUE
+TN,Phil Roe,house,TRUE
+TN,Tim Burchett,house,TRUE
+TN,Chuck Fleischmann,house,TRUE
+TN,Scott DesJarlais,house,TRUE
+TN,Jim Cooper,house,TRUE
+TN,John Rose,house,TRUE
+TN,Mark E. Green,house,TRUE
+TN,David Kustoff,house,TRUE
+TN,Steve Cohen,house,TRUE
+TX,Louie Gohmert,house,TRUE
+TX,Dan Crenshaw,house,TRUE
+TX,Van Taylor,house,TRUE
+TX,John Ratcliffe,house,TRUE
+TX,Lance Gooden,house,TRUE
+TX,Ron Wright,house,TRUE
+TX,John Culberson,house,FALSE
+TX,Kevin Brady,house,TRUE
+TX,Al Green,house,TRUE
+TX,Michael T. McCaul,house,TRUE
+TX,K. Michael Conaway,house,TRUE
+TX,Kay Granger,house,TRUE
+TX,Mac Thornberry,house,TRUE
+TX,Randy Weber,house,TRUE
+TX,Vicente Gonzalez,house,TRUE
+TX,Veronica Escobar,house,TRUE
+TX,Bill Flores,house,TRUE
+TX,Sheila Jackson Lee,house,TRUE
+TX,Jodey Arrington,house,TRUE
+TX,Joaquin Castro,house,TRUE
+TX,Chip Roy,house,TRUE
+TX,Pete Olson,house,TRUE
+TX,Will Hurd,house,
+TX,Kenny Marchant,house,TRUE
+TX,Roger Williams,house,TRUE
+TX,Michael Burgess,house,TRUE
+TX,Michael Cloud,house,TRUE
+TX,Henry Cuellar,house,TRUE
+TX,Sylvia R. Garcia,house,TRUE
+TX,Eddie Bernice Johnson,house,TRUE
+TX,John Carter,house,TRUE
+TX,Pete Sessions,house,FALSE
+TX,Marc Veasey,house,TRUE
+TX,Filemon Vela,house,TRUE
+TX,Lloyd Doggett,house,TRUE
+TX,Brian Babin,house,TRUE
+UT,Rob Bishop,house,TRUE
+UT,Chris Stewart,house,TRUE
+UT,John R. Curtis,house,TRUE
+UT,Ben McAdams,house,
+VA,Robert J. Wittman,house,TRUE
+VA,Scott Taylor,house,FALSE
+VA,Robert C. Scott,house,TRUE
+VA,A. Donald McEachin,house,TRUE
+VA,Denver Riggleman,house,TRUE
+VA,Ben Cline,house,TRUE
+VA,Abigail Spanberger,house,TRUE
+VA,Don Beyer,house,TRUE
+VA,Morgan Griffith,house,TRUE
+VA,Jennifer Wexton,house,TRUE
+VA,Gerald E. Connolly,house,TRUE
+VT,Peter Welch,house,TRUE
+WA,Suzan DelBene,house,TRUE
+WA,Rick Larsen,house,TRUE
+WA,Jaime Herrera Beutler,house,TRUE
+WA,Dan Newhouse,house,TRUE
+WA,Cathy McMorris Rodgers,house,TRUE
+WA,Derek Kilmer,house,TRUE
+WA,Pramila Jayapal,house,TRUE
+WA,Kim Schrier,house,TRUE
+WA,Adam Smith,house,TRUE
+WA,Denny Heck,house,TRUE
+WI,Bryan Steil,house,TRUE
+WI,Mark Pocan,house,TRUE
+WI,Ron Kind,house,TRUE
+WI,Gwen Moore,house,TRUE
+WI,F. James Sensenbrenner,house,TRUE
+WI,Glenn Grothman,house,TRUE
+WI,Sean P. Duffy,house,TRUE
+WI,Mike Gallagher,house,TRUE
+WV,David McKinley,house,TRUE
+WV,Alex Mooney,house,TRUE
+WV,Carol Miller,house,TRUE
+WY,Liz Cheney,house,TRUE
+AK,Mike Dunleavy,governor,TRUE
+AL,Kay Ivey,governor,TRUE
+AR,Asa Hutchinson,governor,TRUE
+AZ,Doug Ducey,governor,TRUE
+CA,Gavin Newsom,governor,TRUE
+CO,Jared Polis,governor,TRUE
+CT,Ned Lamont,governor,TRUE
+FL,Andrew Gillum,governor,
+GA,Brian Kemp,governor,
+HI,David Ige,governor,TRUE
+IA,Fred Hubbell,governor,FALSE
+ID,Brad Little,governor,TRUE
+IL,JB Pritzker,governor,TRUE
+KS,Laura Kelly,governor,TRUE
+MA,Charlie Baker,governor,TRUE
+MD,Larry Hogan,governor,TRUE
+ME,Janet Mills,governor,TRUE
+MI,Gretchen Whitmer,governor,TRUE
+MN,Tim Walz,governor,TRUE
+NE,Pete Ricketts,governor,TRUE
+NH,Chris Sununu,governor,TRUE
+NM,Michelle Lujan Grisham,governor,TRUE
+NV,Steve Sisolak,governor,TRUE
+NY,Andrew Cuomo,governor,TRUE
+OH,Richard Cordray,governor,FALSE
+OK,Kevin Stitt,governor,TRUE
+OR,Kate Brown,governor,TRUE
+PA,Tom Wolf,governor,TRUE
+RI,Gina Raimondo,governor,TRUE
+SC,Henry McMaster,governor,TRUE
+SD,Kristi Noem,governor,TRUE
+TN,Bill Lee,governor,TRUE
+TX,Greg Abbott,governor,TRUE
+VT,Phil Scott,governor,TRUE
+WI,Tony Evers,governor,TRUE
+WY,Mark Gordon,governor,TRUE
