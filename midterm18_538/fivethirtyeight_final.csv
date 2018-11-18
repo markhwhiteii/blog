@@ -3,7 +3,7 @@ AZ,1,Kyrsten Sinema,D,false,0.6716,50.26,46.55,53.98,senate,NA,TRUE
 CA,1,Dianne Feinstein,D,true,0.955,57.59,51.83,63.26,senate,NA,TRUE
 CT,1,Christopher Murphy,D,true,0.9983,60.15,55.78,64.54,senate,NA,TRUE
 DE,1,Thomas R. Carper,D,true,0.9994,62.3,57.48,67.11,senate,NA,TRUE
-FL,1,Bill Nelson,D,true,0.7316,51.73,48.12,55.36,senate,NA,NA
+FL,1,Bill Nelson,D,true,0.7316,51.73,48.12,55.36,senate,NA,FALSE
 HI,1,Mazie K. Hirono,D,true,1,76.79,71.43,82.17,senate,NA,TRUE
 IN,1,Joe Donnelly,D,true,0.6172,49.67,45.43,53.86,senate,NA,FALSE
 MA,1,Elizabeth Warren,D,true,0.9989,61.87,56.86,66.87,senate,NA,TRUE
@@ -93,13 +93,13 @@ CA,NA,Norma Torres,D,true,1,74.55,69.8,79.26,house,35,TRUE
 CA,NA,Raul Ruiz,D,true,0.9987,62.71,58.09,67.37,house,36,TRUE
 CA,NA,Karen Bass,D,true,1,90.71,87.43,94,house,37,TRUE
 CA,NA,Linda Sánchez,D,true,1,72.41,67.8,77.05,house,38,NA
-CA,NA,Gil Cisneros,D,false,0.5177,50.14,46.09,54.22,house,39,NA
+CA,NA,Gil Cisneros,D,false,0.5177,50.14,46.09,54.22,house,39,TRUE
 CA,NA,Lucille Roybal-Allard,D,true,0.9996,77.5,70.66,84.08,house,40,TRUE
 CA,NA,Mark Takano,D,true,0.9999,68.08,63.27,72.93,house,41,TRUE
 CA,NA,Ken Calvert,R,true,0.9876,58.88,54.1,63.72,house,42,TRUE
 CA,NA,Maxine Waters,D,true,1,79.03,74.34,83.83,house,43,TRUE
 CA,NA,Nanette Diaz Barragán,D,true,1,72.65,67.12,78.09,house,44,NA
-CA,NA,Katie Porter,D,false,0.6471,51.14,47.17,55.16,house,45,NA
+CA,NA,Katie Porter,D,false,0.6471,51.14,47.17,55.16,house,45,TRUE
 CA,NA,J. Luis Correa,D,true,1,72.95,68.18,77.76,house,46,TRUE
 CA,NA,Alan Lowenthal,D,true,0.9999,68.32,63.72,72.87,house,47,TRUE
 CA,NA,Harley Rouda,D,false,0.6279,51.05,46.86,55.27,house,48,TRUE
@@ -476,8 +476,8 @@ AZ,NA,Doug Ducey,R,true,0.9857,55.61,51.91,59.32,governor,NA,TRUE
 CA,NA,Gavin Newsom,D,false,0.9936,59.56,55.07,64.04,governor,NA,TRUE
 CO,NA,Jared Polis,D,false,0.9253,54.29,49.52,58.97,governor,NA,TRUE
 CT,NA,Ned Lamont,D,false,0.7931,50.99,46.78,55.14,governor,NA,TRUE
-FL,NA,Andrew Gillum,D,false,0.7783,50.88,47.2,54.54,governor,NA,NA
-GA,NA,Brian Kemp,R,false,0.6591,50.36,46.88,53.87,governor,NA,NA
+FL,NA,Andrew Gillum,D,false,0.7783,50.88,47.2,54.54,governor,NA,FALSE
+GA,NA,Brian Kemp,R,false,0.6591,50.36,46.88,53.87,governor,NA,TRUE
 HI,NA,David Ige,D,true,0.9989,63.39,57.74,68.97,governor,NA,TRUE
 IA,NA,Fred Hubbell,D,false,0.6362,50.15,46.24,53.99,governor,NA,FALSE
 ID,NA,Brad Little,R,false,0.9891,57.32,52.31,62.28,governor,NA,TRUE

@@ -25,8 +25,8 @@ gov <- read_csv("governor_state_forecast.csv") %>%
 
 dat <- do.call(bind_rows, list(sen, house, gov))
 
-# dat %>% 
-#   full_join(out, by = c("state", "candidate", "race_type")) %>% 
+# dat %>%
+#   full_join(out, by = c("state", "candidate", "race_type")) %>%
 #   write_csv("fivethirtyeight_final.csv")
 
 # get correlation at each day --------------------------------------------------

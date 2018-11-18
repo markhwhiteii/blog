@@ -3,7 +3,7 @@ AZ,Kyrsten Sinema,senate,TRUE
 CA,Dianne Feinstein,senate,TRUE
 CT,Christopher Murphy,senate,TRUE
 DE,Thomas R. Carper,senate,TRUE
-FL,Bill Nelson,senate,
+FL,Bill Nelson,senate,FALSE
 HI,Mazie K. Hirono,senate,TRUE
 IN,Joe Donnelly,senate,FALSE
 MA,Elizabeth Warren,senate,TRUE
@@ -93,13 +93,13 @@ CA,Norma Torres,house,TRUE
 CA,Raul Ruiz,house,TRUE
 CA,Karen Bass,house,TRUE
 CA,Linda Sanchez,house,TRUE
-CA,Gil Cisneros,house,
+CA,Gil Cisneros,house,TRUE
 CA,Lucille Roybal-Allard,house,TRUE
 CA,Mark Takano,house,TRUE
 CA,Ken Calvert,house,TRUE
 CA,Maxine Waters,house,TRUE
 CA,Nanette Diaz Barragan,house,TRUE
-CA,Katie Porter,house,
+CA,Katie Porter,house,TRUE
 CA,J. Luis Correa,house,TRUE
 CA,Alan Lowenthal,house,TRUE
 CA,Harley Rouda,house,TRUE
@@ -476,8 +476,8 @@ AZ,Doug Ducey,governor,TRUE
 CA,Gavin Newsom,governor,TRUE
 CO,Jared Polis,governor,TRUE
 CT,Ned Lamont,governor,TRUE
-FL,Andrew Gillum,governor,
-GA,Brian Kemp,governor,
+FL,Andrew Gillum,governor,FALSE
+GA,Brian Kemp,governor,TRUE
 HI,David Ige,governor,TRUE
 IA,Fred Hubbell,governor,FALSE
 ID,Brad Little,governor,TRUE
