@@ -1,0 +1,170 @@
+---
+output: html_fragment
+---
+
+```{r setup, include = FALSE, warning = FALSE, message = FALSE}
+library(tidyverse)
+library(knitr)
+prettify <- function(x) {
+  sapply(unlist(strsplit(x, "_")), function(y) {
+    substr(y, 1, 1) <- toupper(substr(y, 1, 1))
+    y
+  }) %>% 
+    paste(collapse = " ")
+}
+set.seed(1839)
+n <- 100000
+x <- runif(n, .501, .999)
+y <- rbinom(n, 1, x)
+simdat <- data.frame(x, y)
+
+fig_simulated <- ggplot(simdat, aes(x = x, y = y)) +
+  geom_smooth(method = "lm", se = FALSE, color = "purple") +
+  geom_smooth(method.args = list(family = binomial()), 
+              se = FALSE, color = "gold", method = "glm") +
+  theme_minimal()
+
+dat <- read_csv("fivethirtyeight_final.csv") %>% 
+  filter(win_probability < 1L)
+
+results <- with(
+  dat[!is.na(dat$won), ],
+  list(
+    mean_win_prob = mean(win_probability),
+    correct_rate = mean(won)
+  )
+) %>% 
+  lapply(function(x) paste0(round(x, 3) * 100, "%"))
+
+outstanding_races <- dat %>% 
+  filter(is.na(won)) %>% 
+  select(state, race_type, candidate, party, incumbent, win_probability)
+
+wrong_predictions <- dat %>% 
+  filter(!won & !is.na(won)) %>% 
+  arrange(desc(win_probability)) %>% 
+  select(state, race_type, candidate, party, incumbent, win_probability)
+
+figure1 <- ggplot(dat, aes(x = win_probability, y = as.numeric(won))) +
+  geom_point() +
+  geom_smooth(
+    method = "glm", 
+    method.args = list(family = binomial), 
+    se = FALSE,
+    color = "gold"
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "purple"
+  ) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dotted") +
+  labs(x = "538 Predicted Win Probability", y = "Actual Win Probability") +
+  theme_minimal() +
+  theme(text = element_text(size = 16))
+
+# what if all outstanding races are wrong?
+figure2 <- dat %>% 
+  mutate(won = ifelse(is.na(won), FALSE, won)) %>% 
+  ggplot(aes(x = win_probability, y = as.numeric(won))) +
+  geom_point() +
+  geom_smooth(
+    method = "glm", 
+    method.args = list(family = binomial),
+    se = FALSE,
+    color = "gold"
+  ) +
+  geom_smooth(
+    method = "lm",
+    se = FALSE,
+    color = "purple"
+  ) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dotted") +
+  labs(x = "538 Predicted Win Probability", y = "Actual Win Probability") +
+  theme_minimal() +
+  theme(text = element_text(size = 16))
+
+# bucketed
+results_thresholds <- dat %>% 
+  filter(win_probability <= .75 & !is.na(won)) %>% 
+  summarise(threshold = .75,
+            count = n(),
+            mean_win_probability = mean(win_probability),
+            correct_rate = mean(won)) %>% 
+  bind_rows({
+    dat %>% 
+      filter(win_probability <= .65 & !is.na(won)) %>% 
+      summarise(threshold = .65,
+                count = n(),
+                mean_win_probability = mean(win_probability),
+                correct_rate = mean(won))
+  }) %>% 
+  bind_rows({
+    dat %>% 
+      filter(win_probability <= .55 & !is.na(won)) %>% 
+      summarise(threshold = .55,
+                count = n(),
+                mean_win_probability = mean(win_probability),
+                correct_rate = mean(won))
+  })
+```
+
+The average 538 predicted probability of a correct prediction was `r results$mean_win_prob`, and the average actual correct prediction rate was `r results$correct_rate`.  
+
+The outstanding races, as of publishing, are:  
+
+<div align="center">
+```{r outstanding, echo = FALSE}
+kable(
+  outstanding_races %>% 
+    mutate_if(is.character, function(x) lapply(x, prettify)),
+  col.names = sapply(names(outstanding_races), prettify),
+  digits = 3,
+  format = "html"
+)
+```
+</div>
+
+All the incorrect 538 predictions are:  
+
+<div align="center">
+```{r wrong_predictions, echo = FALSE}
+kable(
+  wrong_predictions %>% 
+    mutate_if(is.character, function(x) lapply(x, prettify)),
+  col.names = sapply(names(wrong_predictions), prettify),
+  digits = 3,
+  format = "html"
+)
+```
+</div>
+
+If the 538 model was completely accurate in its quantification of win probability, we would expect the relationship between estimated win probability (x-axis) and actual win probability (y-axis) to look like:  
+
+```{r simulated, echo = FALSE, out.width = '70%', fig.align = 'center'}
+fig_simulated
+```
+
+And what it actually looked like:  
+
+```{r fig1, warning =  FALSE, echo = FALSE, out.width = '70%', fig.align = 'center'}
+figure1
+```
+
+If all of the outstanding predictions were *wrong* (i.e., the worst-case scenario for 538), the relationship would be:  
+
+```{r fig2, echo = FALSE, out.width = '70%', fig.align = 'center'}
+figure2
+```
+
+<div align="center">
+```{r threshold_results, echo = FALSE, results = "asis"}
+kable(
+  results_thresholds %>% 
+    mutate_if(is.character, function(x) lapply(x, prettify)),
+  col.names = sapply(names(results_thresholds), prettify),
+  digits = 3,
+  format = "html"
+)
+```
+</div>
