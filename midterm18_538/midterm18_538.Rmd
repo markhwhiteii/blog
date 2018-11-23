@@ -12,17 +12,6 @@ prettify <- function(x) {
   }) %>% 
     paste(collapse = " ")
 }
-set.seed(1839)
-n <- 100000
-x <- runif(n, .501, .999)
-y <- rbinom(n, 1, x)
-simdat <- data.frame(x, y)
-
-fig_simulated <- ggplot(simdat, aes(x = x, y = y)) +
-  geom_smooth(method = "lm", se = FALSE, color = "purple") +
-  geom_smooth(method.args = list(family = binomial()), 
-              se = FALSE, color = "gold", method = "glm") +
-  theme_minimal()
 
 dat <- read_csv("fivethirtyeight_final.csv") %>% 
   filter(win_probability < 1L)
@@ -46,7 +35,6 @@ wrong_predictions <- dat %>%
   select(state, race_type, candidate, party, incumbent, win_probability)
 
 figure1 <- ggplot(dat, aes(x = win_probability, y = as.numeric(won))) +
-  geom_point() +
   geom_smooth(
     method = "glm", 
     method.args = list(family = binomial), 
@@ -59,11 +47,9 @@ figure1 <- ggplot(dat, aes(x = win_probability, y = as.numeric(won))) +
     color = "purple"
   ) +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") +
-  labs(x = "538 Predicted Win Probability", y = "Actual Win Probability") +
-  theme_minimal() +
-  theme(text = element_text(size = 16))
+  labs(x = "538 Predicted Win Probability", y = "Observed Win Probability") +
+  theme_minimal()
 
-# what if all outstanding races are wrong?
 figure2 <- dat %>% 
   mutate(won = ifelse(is.na(won), FALSE, won)) %>% 
   ggplot(aes(x = win_probability, y = as.numeric(won))) +
@@ -81,10 +67,8 @@ figure2 <- dat %>%
   ) +
   geom_abline(slope = 1, intercept = 0, linetype = "dotted") +
   labs(x = "538 Predicted Win Probability", y = "Actual Win Probability") +
-  theme_minimal() +
-  theme(text = element_text(size = 16))
+  theme_minimal()
 
-# bucketed
 results_thresholds <- dat %>% 
   filter(win_probability <= .75 & !is.na(won)) %>% 
   summarise(threshold = .75,
@@ -109,9 +93,52 @@ results_thresholds <- dat %>%
   })
 ```
 
-The average 538 predicted probability of a correct prediction was `r results$mean_win_prob`, and the average actual correct prediction rate was `r results$correct_rate`.  
+Nate Silver and the FiveThirtyEight folks talked quite a bit this election cycle about how their model was *probabilistic.* What this means is that they don't just offer a single prediction, like "Democrats will pick up 10 seats"; instead, their prediction is a *distribution* of possible outcomes: "We expect the result to be somewhere between Republicans picking up 5 seats to Democrats picking up 35." One of the most common ways of thinking probabilistically is thinking in the long term: "If this same election were to happen a large number of times, we would expect the Democrat to win 70% of the time."  
 
-The outstanding races, as of publishing, are:  
+It is puzzling to judge one of these models, however, because we only see one realization of this estimated distribution of outcomes. So if something that was predicted with a 5% chance to happen, was it because (a) the model was wrong? or (b) the model was right, but we just observed a very rare event happening?  
+
+We need to judge the success of probabilistic models in a probabilistic way. This means that we need a large sample of predictions and actual results; unfortunately, this can only be done after the fact. However, it can help us think more about what works and who to trust in the future. Since FiveThirtyEight predicted many elections in the 2018 midterms, all using the same underlying model, we have the requisite sample size necessary to judge the model probabilistically.  
+
+How do we judge a model probabilistically? The model gives us both (a) predicted winners and (b) predicted probabilities that these predicted winners actually do win. The model can be seen as "accurate" to the extent that the *predicted* probabilities correspond to *observed* probabilities of winning. For example, we can say that the model is "probabilistically accurate" if predicted winners with a 65% chance of winning actually win 65% of the time, those with a 75% chance of winning actually win 75% of the time, etc.  
+
+I want to step away from asking if the model was "right," because—strictly speaking—no model is "right" or "correct" in the sense that of mapping onto ground truth perfectly. The FiveThirtyEight model—just like any statistical or machine learning model—will make certain assumptions that are incorrect, not measure important variables, be subject to error, etc. We should instead ask if the model is useful. In my opinion, a model that makes accurate predictions while being honest with us about the uncertainty in its predictions is useful.  
+
+So is the FiveThirtyEight 2018 midterm model probabilistically accurate? Before we get to the model, I want to show what the results would look like in a perfect situation. We can then compare the FiveThirtyEight model to this "perfect model."  
+
+I am going to simulate 100,000 races. Let's imagine that we make a model, and this model gives us winners and predicted probabilities for each winner in every single race. What we want to do is model this predicted probability *exactly.* In my simulation below, the probabilities that actually generate the winner are the same exact probabilities that we pretend we "modeled." This is called `x` below. These probabilities range from .501 to .999.  
+
+We then simulate the races with those probabilities. The results are called `y` below. The result is `1` if the predicted winner actually won, while the result is `0` if they lost.  
+
+```{r simulations1}
+set.seed(1839)
+n_races <- 100000
+x <- runif(n_races, .501, .999)
+y <- rbinom(n_races, 1, x)
+sim_dat <- data.frame(x, y)
+head(sim_dat)
+```
+
+We can now plot the predicted probabilities on the x-axis and whether or not the prediction was correct on the y-axis. Points will only appear on the y-axis at 0 or 1; we would generally use a logistic regression for this, but that imposes a slight curve to the line. We know that it should perfectly straight, so I both fit a ordinary least squares line (purple) and logistic regression line (gold) below.  
+
+If the FiveThirtyEight model were completely accurate in its win probability prediction, we would expect the relationship between predicted win probability (`x`) and observed win probability (`y`) to look like:  
+
+```{r simulations2, echo = FALSE, fig.align = 'center', out.width = '70%'}
+ggplot(sim_dat, aes(x = x, y = y)) +
+  geom_smooth(method = "lm", se = FALSE, color = "purple") +
+  geom_smooth(method.args = list(family = binomial()), 
+              se = FALSE, color = "gold", method = "glm") +
+  theme_minimal()
+```
+
+And this is what the results for the 2018 midterms (all `r sum(!is.na(dat$won))` Senate, House, and Governor races that have been decided) actually looked like:  
+
+```{r fig1, warning =  FALSE, echo = FALSE, out.width = '70%', fig.align = 'center'}
+figure1
+```
+
+The dotted line represents what would be a perfect fit. Any line that has a steeper slope and is mostly below the dotted line would mean that the model is overestimating its certainty; lines with a smaller slopw and mostly above the dotted line mean that the model is underestimating its certainty. Since the line here resides above the dotted line, this means that the FiveThirtyEight model was less certain in its predictions than it should have been. For example, a race with a predicted probability of 60% winning actually turned out to be correct about 70-75% of the time.  
+
+However, there are a few outstanding races. As of publishing, these are:  
 
 <div align="center">
 ```{r outstanding, echo = FALSE}
@@ -124,6 +151,39 @@ kable(
 )
 ```
 </div>
+
+Let's assume that all of these predictions come out to be wrong—that is, let's assume the worst case scenario for FiveThirtyEight. The results would still look quite good for their model:  
+
+```{r fig2, echo = FALSE, out.width = '70%', fig.align = 'center'}
+figure2
+```
+
+We can look at some bucketed analyses instead of drawing a fitted line, too. The average FiveThirtyEight predicted probability of a correct prediction was `r results$mean_win_prob`, and the average actual correct prediction rate was `r results$correct_rate`. However, most of the races were easy to predict, so let's limit these to ones that are below 75% sure, below 65% sure, and below 55% sure:  
+
+<div align="center">
+```{r threshold_results, echo = FALSE, results = "asis"}
+kable(
+  results_thresholds %>% 
+    mutate_if(is.character, function(x) lapply(x, prettify)),
+  col.names = sapply(names(results_thresholds), prettify),
+  digits = 3,
+  format = "html"
+)
+```
+</div>
+
+The actual correct rate is higher than the predicted probability in all cases; again, we see that FiveThirtyEight underestimated the certainty they should have had in their predictions.  
+
+
+
+
+
+
+
+
+
+
+
 
 All the incorrect 538 predictions are:  
 
@@ -139,32 +199,3 @@ kable(
 ```
 </div>
 
-If the 538 model was completely accurate in its quantification of win probability, we would expect the relationship between estimated win probability (x-axis) and actual win probability (y-axis) to look like:  
-
-```{r simulated, echo = FALSE, out.width = '70%', fig.align = 'center'}
-fig_simulated
-```
-
-And what it actually looked like:  
-
-```{r fig1, warning =  FALSE, echo = FALSE, out.width = '70%', fig.align = 'center'}
-figure1
-```
-
-If all of the outstanding predictions were *wrong* (i.e., the worst-case scenario for 538), the relationship would be:  
-
-```{r fig2, echo = FALSE, out.width = '70%', fig.align = 'center'}
-figure2
-```
-
-<div align="center">
-```{r threshold_results, echo = FALSE, results = "asis"}
-kable(
-  results_thresholds %>% 
-    mutate_if(is.character, function(x) lapply(x, prettify)),
-  col.names = sapply(names(results_thresholds), prettify),
-  digits = 3,
-  format = "html"
-)
-```
-</div>
