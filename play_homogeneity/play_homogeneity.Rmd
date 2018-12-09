@@ -2,8 +2,225 @@
 output: html_fragment
 ---
 
-```{r setup, include = FALSE}
+```{r setup, include = FALSE, message = FALSE}
+library(tidyverse)
+library(nlme)
+three <- read_csv("three_p.csv")
+three_var <- three %>% 
+  group_by(year) %>% 
+  summarise(var = var(prop))
 
+pace <- read_csv("pace.csv")
+pace_var <- pace %>% 
+  group_by(year) %>% 
+  summarise(var = var(pace))
+
+ast <- read_csv("ast_rate.csv")
+ast_var <- ast %>% 
+  group_by(year) %>% 
+  summarise(var = var(ast))
+```
+
+Gregg Popovich recently grumbled again about how strenuously he dislikes the three-point shot; he argued that everyone now fully understands that the three is a more efficient shot, so every team has adopted the same strategy—shoot a ton of threes. He bemoaned that this lacks beauty. With how nostalgia works, there is always going to be a sizable segment of people that wish some facet of culture—whether it be sports, food, arts, architecture, transportation, manners, social structure—would go back to the way it was. And NBA play styles are not exempt from nostalgic longing. I generally do not consider very seriously the complaints that "the NBA sucks now" or "players are soft now" or whatever it might be, but Gregg Popovich hinted at a testable hypothesis here about strategy homogeneity.  
+
+*The Starters* (formerly *Basketball Jones*) addressed this on their Friday podcast. The group agreed that the three-point shot is entertaining, and that games in the 90s could be boring and lack beauty, too. But Matt Osten, the *Starters* producer, captured Popovich's sentiment well in asking the group if it is a bummer that the style of play is now more "homogeneous" than in the past. This premise is what I wanted to interrogate quantitatively: Has the style of play in the NBA, particularly concerning the three-point shot, become more homogeneous?  
+
+I'm going to quantify *heterogeneity* as the variance in team statistics for a given year. If there were three teams in the league at Year 1 and the proportion of their field goals coming from three-point range were .15, .20, and .25, the mean would be .20 and the variance would be .0025. If the three teams at Year 1 had rates of .10, .20, and .30, the mean would remain the same—but the variance would now be .01. Since .01 > .0025, there is more heterogeneity in three-point shooting in Year 2.  
+
+The building block of variance is how far each observation is away from the mean; the further away estimates are from the mean, the more variance there is. This means we can use variance as a measure of heterogeneity, because it means fewer teams are sticking close to one another at the average three-point shot rate.  
+
+I pulled three statistics to examine heterogeneity of play style over time, from the 1980 season (i.e., introduction of the three-point shot) to the current 2019 season:  
+
+1. Three-point rate. This is the proportion of field goals that come from three-point range. If a team took 100 shots and 20 of them were from three-point range, their rate would be .20. I use it to measure how much teams are focusing on taking three-point shots.  
+
+2. Pace. This is an estimate of how many possessions a team has per 48 minutes. I use it as an estimate to see how quickly teams are playing—as one of the criticisms that goes along with the three-point shot is that the game is quicker, higher scoring, and players jack up bad three-point shots early in the shot clock.  
+
+3. Assist rate. This quantifies how many assists a team had per 100 possessions. I think many people consider "beautiful basketball" to be basketball that has a lot of passing, so I include assist rate as a way to examine how much passing a team does.  
+
+Each of the following sections contain two figures.  
+
+First, each point on the graph represents a team. I plot year on the x-axis and the statistic of interest (three-point rate, pace, assist rate) on the y-axis. This allows us to look at both the trend in the mean statistics themselves over time (e.g., is three-point rate increasing?) as well as the spread of the points, which is related to the variance. I plot smooth (loess) lines on the minimum and maximum observations for each year to get an idea of the range of possible values at any given year. The further apart these two lines, the more variance there will be.  
+
+In the second plot, each point represents the variance for a given year; the y-axis represents heterogeneity. The higher a point is, the more *heterogeneous* teams are in that statistic. Again, year will be represented on the x-axis. To see if there is a trend in teams becoming more or less the same over time, I fit a regression line to the points. PACF plots indicated an AR(1) structure would suffice at modeling the autocorrelation, so I fit that correlation structure using generalized least squares.  
+
+All GitHub code necessary to scrape, model, and plot the data can be found at my GitHub.  
+
+### Three-Point Rate
+
+```{r three, out.width = '70%', fig.align = 'center'}
+ggplot(three, aes(x = year, y = prop)) +
+  theme_minimal() +
+  geom_point(size = 2, color = "#17408B") +
+  geom_smooth(
+    data = {
+      three %>% 
+        group_by(year) %>% 
+        summarise(prop = min(prop))
+    }, 
+    mapping = aes(x = year, y = prop), 
+    size = 1, color = "#C9082A", linetype = 2,
+    method = "loess", se = FALSE
+  ) +
+  geom_smooth(
+    data = {
+      three %>% 
+        group_by(year) %>% 
+        summarise(prop = max(prop))
+    }, 
+    mapping = aes(x = year, y = prop), 
+    size = 1, color = "#C9082A", linetype = 2,
+    method = "loess", se = FALSE
+  ) +
+  theme(
+    text = element_text(size = 14, color = "#005858"),
+    axis.text = element_text(color = "#005858")
+  ) +
+  labs(x = "\nYear", y = "FGA / 3PA\n")
+```
+
+The most striking part about this first figure is that the three-point shot has been streadily increasing in popularity since its introduction; the 2019 team that relies least on three-point shooting is still taking more threes than any team before 1995. We also see an uptick in the mid-90s due to the league temporarily taking-in the line.  
+
+More importantly for this post, however, is the heterogeneity *increase* this figure shows: The spread of points vertically has been increasing. We can look at this spread more directly by plotting the variance of three-point rates by year:  
+
+```{r three_var, out.width = '70%', fig.align = 'center'}
+three_mod_lin <- gls(var ~ year, three_var, corAR1(form = ~ year))
+three_mod_quad <- gls(var ~ poly(year, 2), three_var, corAR1(form = ~ year))
+
+ggplot(three_var, aes(x = year, y = var)) +
+  theme_minimal() +
+  geom_point(size = 2, color = "#17408B") +
+  theme(
+    text = element_text(size = 14, color = "#005858"),
+    axis.text.y = element_text(angle = 90, hjust = .5, color = "#005858"),
+    axis.text.x = element_text(color = "#005858"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+  ) +
+  labs(x = "\nYear", y = "3P Shooting Heterogeneity") +
+  scale_y_continuous(
+    breaks = c(.00001, .0024), 
+    labels = c("Less", "More")
+  ) +
+  geom_line(
+    aes(x = year, y = predict(three_mod_lin)), 
+    size = 1, color = "#C9082A"
+  ) +
+  geom_line(
+    aes(x = year, y = predict(three_mod_quad)), 
+    size = 1, color = "#C9082A", linetype = 2
+  )
+```
+
+Both the linear (*p* < .001) and quadratic (*p* = .044) trends are significant. Regardless of the order of the polynomial, there is *more*—not less—heterogeneity in three-point shooting over time. In the very first few years of the three-point line's existence in the NBA, this might have been a statistical artifact: When the mean three-point rate is close to zero, there's only so far below the mean that low-volume three-point teams can go (i.e., a negative rate is not possible). But even when the mean rate is well above zero, there is still more heterogeneity over time. This directly refutes Popovich's claim that everyone *increasingly* has the same strategy when it comes to three-point shooting. While the average rate of three-point shooting has increased over time across the league, so has the heterogeneity in how many threes a team shoots. Even though every team shoots threes now, there has never been more variety in the rate at which a team shoots threes.  
+
+### Pace
+
+
+
+```{r pace, out.width = '70%', fig.align = 'center'}
+ggplot(pace, aes(x = year, y = pace)) +
+  theme_minimal() +
+  geom_point(size = 2, color = "#17408B") +
+  geom_smooth(
+    data = {
+      pace %>% 
+        group_by(year) %>% 
+        summarise(pace = min(pace))
+    }, 
+    mapping = aes(x = year, y = pace), 
+    size = 1, color = "#C9082A", linetype = 2,
+    method = "loess", se = FALSE
+  ) +
+  geom_smooth(
+    data = {
+      pace %>% 
+        group_by(year) %>% 
+        summarise(pace = max(pace))
+    }, 
+    mapping = aes(x = year, y = pace), 
+    size = 1, color = "#C9082A", linetype = 2,
+    method = "loess", se = FALSE
+  ) +
+  theme(
+    text = element_text(size = 14, color = "#005858"),
+    axis.text = element_text(color = "#005858")
+  ) +
+  labs(x = "\nYear", y = "Pace\n")
+```
+
+```{r pace_var, out.width = '70%', fig.align = 'center'}
+pace_mod <- gls(var ~ year, pace_var, corAR1(form = ~ year))
+
+ggplot(pace_var, aes(x = year, y = var)) +
+  theme_minimal() +
+  geom_point(size = 2, color = "#17408B") +
+  theme(
+    text = element_text(size = 14, color = "#005858"),
+    axis.text.y = element_text(angle = 90, hjust = .5, color = "#005858"),
+    axis.text.x = element_text(color = "#005858"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+  ) +
+  labs(x = "\nYear", y = "Pace Heterogeneity") +
+  scale_y_continuous(
+    breaks = c(3, 17.5), 
+    labels = c("Less", "More")
+  ) +
+  geom_line(aes(x = year, y = predict(pace_mod2)), size = 1, color = "#C9082A")
 ```
 
 
+### Assist Rate
+
+
+```{r ast, out.width = '70%', fig.align = 'center'}
+ggplot(ast, aes(x = year, y = ast)) +
+  theme_minimal() +
+  geom_point(size = 2, color = "#17408B") +
+  geom_smooth(
+    data = {
+      ast %>% 
+        group_by(year) %>% 
+        summarise(ast = min(ast))
+    }, 
+    mapping = aes(x = year, y = ast), 
+    size = 1, color = "#C9082A", linetype = 2,
+    method = "loess", se = FALSE
+  ) +
+  geom_smooth(
+    data = {
+      ast %>% 
+        group_by(year) %>% 
+        summarise(ast = max(ast))
+    }, 
+    mapping = aes(x = year, y = ast), 
+    size = 1, color = "#C9082A", linetype = 2,
+    method = "loess", se = FALSE
+  ) +
+  theme(
+    text = element_text(size = 14, color = "#005858"),
+    axis.text = element_text(color = "#005858")
+  ) +
+  labs(x = "\nYear", y = "Assists Per 100 Possessions\n")
+```
+
+```{r ast_var, out.width = '70%', fig.align = 'center'}
+ast_mod1 <- lm(var ~ poly(year, 3), ast_var)
+
+ggplot(ast_var, aes(x = year, y = var)) +
+  theme_minimal() +
+  geom_point(size = 2, color = "#17408B") +
+  theme(
+    text = element_text(size = 14, color = "#005858"),
+    axis.text.y = element_text(angle = 90, hjust = .5, color = "#005858"),
+    axis.text.x = element_text(color = "#005858"),
+    panel.grid.major.y = element_blank(),
+    panel.grid.minor.y = element_blank()
+  ) +
+  labs(x = "\nYear", y = "Assist Rate Heterogeneity") +
+  scale_y_continuous(
+    breaks = c(2, 6), 
+    labels = c("Less", "More")
+  ) +
+  geom_line(aes(x = year, y = predict(ast_mod1)), size = 1, color = "#C9082A")
+```
