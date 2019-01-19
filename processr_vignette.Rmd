@@ -1,0 +1,145 @@
+---
+title: "Using processr"
+author: "Mark White | markhwhiteii@gmail.com"
+date: "2018-01-12"
+output: html_vignette
+---
+
+```{r echo = FALSE}
+suppressMessages(library(processr))
+suppressMessages(library(knitr))
+```
+
+## Introduction
+
+The `processr` package aims to be a user-friendly way to perform moderation, mediation, and moderated mediation in R. Andrew Hayes created the famous PROCESS macro for SPSS and SAS users. As more and more people switch over to using R, a number of packages have been written to do the type of analyses that PROCESS uses. I found myself opting for creating my own scripts to do these, instead of relying on packages already out there, so I thought I would write them up as functions and put them into a package.  
+
+`processr` depends on two other packages: `broom`, which is used to tidy some results, and `lavaan`, which is what actually runs the analyses. All this package does is makes it quicker (on the *user input end*) to run these models by automating the way in which the model code is written. If you are well-versed in `lavaan`, you might not have any trouble writing this code yourself; I just found myself writing the same code over and over again, so I put it into functions.  
+
+You can download this package by installing the `devtools` package, if you don't already have it, with the code `install.packages("devtools")`. Then, you run `devtools::install_github("markhwhiteii/processr")` to actually download `processr`.  
+
+## What does this package cover?
+
+I named all functions after their [PROCESS model number](http://www.personal.psu.edu/jxb14/M554/specreg/templates.pdf). Right now, it allows for people to run Model 1 (moderation and simple slope analyses), Model 4 (simple mediation), Model 7 (first-stage moderated mediation), and Model 14 (second-stage moderated mediation). Model 1 does a simple two-way interaction; all that I have added is the automated output of simple slopes analyses. Models 4, 7, and 14 are all written based on the equations provided in [Hayes's (2015) paper introducing his index of moderated mediation](http://www.tandfonline.com/doi/full/10.1080/00273171.2014.962683). Models 7 and 14 also report conditional indirect effects.  
+
+## Preparation
+
+`lavaan` requires you to use continuous inputs. Any dichotomous variables that are as of class `factor` will have to be converted to a numeric variable where the two levels *must be coded as* 0 or 1 (note that, as of right now, `processr` does not support categorical variables with more than two levels). `processr::make_numeric` will convert a specified variable into this 0 and 1 format for you. Consider the following data frame (*all examples provide code for you to generate the data in the example on your own*):  
+
+```{r}
+df1 <- data.frame(var1 = 1:5, var2 = 51:55, gender = factor(c("M", "F", "M", "F", "F")))
+kable(df1)
+```
+
+Note that gender is a `factor` variable. To convert gender to a numeric variable where female is the reference category, we would specify:  
+
+```{r}
+df2 <- make_numeric(var = "gender", ref = "F", newvar = "gender_num", data = df1)
+kable(df2)
+```
+
+We would then use `df2` as the data in all of our analyses.  
+
+## Model 1
+
+Model 1 is a simple interaction, such as specifying `lm(dv ~ iv * mod, data)`. `processr::model1` will run this model, return the coefficients table, and run the simple slopes analyses. If you enter in a moderator variable that is just 0s and 1s, it will return the simple slopes when the moderator equals 0 and when it equals 1. If you specify a continuous variable, then it will return the simple slopes at the typical one standard deviation below the mean, at the mean, and one standard deviation above the mean of the moderator. If you want it at another value, read the documentation for `processr::simple_slope`, which allows you to specify a custom value of the moderator.  
+
+Consider a study where you think there is a relationship between `var1` and `var2`, but only in one condition, `cond`. If your data support your hypothesis, the data might look something like:  
+
+```{r}
+set.seed(1839)
+var1 <- rnorm(100)
+cond <- rbinom(100, 1, .5)
+var2 <- var1 * cond + rnorm(100)
+df3 <- data.frame(var1, var2, cond)
+kable(head(df3))
+```
+
+To test your hypothesis, you would run:  
+
+```{r}
+mod1result <- model1(iv = "var1", dv = "var2", mod = "cond", data = df3)
+kable(mod1result)
+```
+
+The first four rows give you the typical regression output: the intercept (`intercept`), the main effects (`var1` and `cond`), and the interaction you are testing between the `dv` and the `mod` (in this case, `interaction` is the interaction between `var1` and `cond`). Below, you can also see the simple slope of `var1` when `cond = 0` and `cond = 1`. This output shows us that the relationship between var1 and var2 is significant in condition 1, *b* = .92, *SE* = 0.14, *t*(96) = 6.40, *p* < .001; however, the relationship between the two in condition 0 is not, *b* = .07, *SE* = 0.16, *t*(96) = 0.45, *p* = .657.  
+
+If we make `iv = cond` and `mod = var1`, we can see the effect of condition at three levels of `var1`:  
+
+```{r}
+mod1result2 <- model1(iv = "cond", dv = "var2", mod = "var1", data = df3)
+kable(mod1result2)
+```
+
+Since the moderator isn't only 0s and 1s, it now returns the effect of the `iv` on the `dv` at -1SD, M, and +1SD of `mod`.  
+
+## Model 4
+
+Model 4 tests simple mediation. Consider a study where you think a `treatment` affects an `outcome` through some `mechanism`. Your data frame might look like this:  
+
+```{r}
+set.seed(1839)
+treatment <- rbinom(200, 1, .5)
+mechanism <- treatment + rnorm(200, 0, 2)
+outcome <- treatment + mechanism + rnorm(200, 0, 2)
+df4 <- data.frame(treatment, mechanism, outcome)
+kable(head(df4))
+```
+
+To test for mediation, one would use `processr::model4`:  
+
+```{r, warning = FALSE}
+set.seed(1839)
+mod4result <- model4(iv = "treatment", dv = "outcome", med = "mechanism", data = df4)
+```
+
+Your argument to `samples` will tell the function how many bias-corrected bootstrap resamples to do for confidence intervals. It defaults to 5000. Note also that the estimation method for `model4`, `model7`, and `model14` are all maximum likelihood; additionally, bootstrapping relies on random number generation, so to make your results reproducible, you should specify a seed with `set.seed()`. Your result looks like:  
+
+```{r}
+kable(mod4result)
+```
+
+The labels `a`, `b`, `cp`, and `c` refer to the paths in a mediation model. The a-path is from the independent variable to the mediator; the b-path is from the mediator to the dependent variable. The c-path is broken into two pieces: `cp` stands for "c-prime," often written as $c'$ and referred to as the *direct effect*. It is the effect of the independent variable on the dependent variable, after controlling for the mediator. `c` refers to the effect of the independent variable on the dependent variable alone, *not* considering the mediator. This is often referred to as the *total effect*. Lastly, `ind` refers to the indirect effect. Note that it does not have an associated standard error, test statistic, or p-value. This notation is the same as in the aforementioned Hayes (2015) paper, as well as in the [PROCESS templates](http://www.personal.psu.edu/jxb14/M554/specreg/templates.pdf). In the present example, we can see that each path is significant and so is the indirect effect (i.e., the confidence interval does not include zero).  
+
+## Model 7 and Model 14
+
+Models 7 and 14 refer to first-stage and second-stage moderated mediation, respectively. With Model 7, the interaction is on the a-path (between independent variable and mediator); with Model 14, it is on the b-path (between the mediator and the dependent variable). Neither of these models include an interaction on the c-path; these are models 8 and 15, respectively, and I hope to add them to the package soon.  
+
+Consider the hypothesis: watching a sad movie (variable named `sadmovie`, coded 1) as compared to a comedy (coded 0) increases how much people see the movie as realistic (variable named `realistic`), which in turn increases how much they liked it (variable named `likedmovie`). However, this only occurs for people who highly identify with the characters (variable named `identify`). One's data might look like:  
+
+```{r}
+set.seed(1839)
+sadmovie <- rbinom(200, 1, .5)
+identify <- rnorm(200)
+realistic <- sadmovie + identify + sadmovie * identify + rnorm(200, 0, 2)
+likedmovie <- sadmovie + realistic + rnorm(200, 0, 2)
+df5 <- data.frame(sadmovie, identify, realistic, likedmovie)
+kable(head(df5))
+```
+
+Model 7 and Model 14 would have the same inputs:  
+
+```{r warning = FALSE}
+set.seed(1839)
+mod7result <- model7(iv = "sadmovie", dv = "likedmovie", med = "realistic", mod = "identify", df5)
+
+set.seed(1839)
+mod14result <- model14(iv = "sadmovie", dv = "likedmovie", med = "realistic", mod = "identify", df5)
+```
+
+Let's look at the outputs one at a time: `model7` and then `model14`.  
+
+```{r}
+kable(mod7result)
+```
+
+Since this is first-stage moderated mediation, we have three a-paths: `a1` is often called $a_1$, which is the coefficient of regressing the mediator on the independent variable; `a2` is often called $a_2$, which is the coefficient of regressing the mediator on the moderator; lastly, `a3` (or $a_3$) is the interaction between the moderator and the independent variable on the mediator. `b` and `cp` retain the same meaning as before. `imm` is the index of moderated mediation, which tests if moderated mediation is present. `ind_lo`, `ind_mn`, and `ind_hi` refer to the indirect effect (mediation model) at -1 SD, M, and +1 SD of the moderator. As we can see, moderated mediation is present, and the indirect effect is present for people at the mean (`mn`) and one standard deviation above the mean (`hi`) on the moderator. Again, we see that there are no standard errors, test-statistics, or p-values for the indirect effects analyses; refer to the bootstrapped confidence intervals instead. I often report `a`, `b3`, the `imm`, and then the conditional indirect effects (`ind_lo`, `ind_mn`, `ind_hi`).   
+
+```{r}
+kable(mod14result)
+```
+
+Since this is second-stage moderation, now there are three b-paths: `b1` (or $b_1$) refers to the mediator on the dependent variable, `b2` (or $b_2$) refers to the moderator on the dependent variable, and `b3` (or $b_3$) is the interaction between the two on the dependent variable. The same interpretation is there for the rest of the labels. If the moderator is dichotomous, it will return conditional indirect effects when the moderator is 0 (`ind_0`) and 1 (`ind_1`).  
+<br>
+<br>
+<br>
