@@ -1,0 +1,305 @@
+---
+output: html_fragment
+---
+
+```{r prep, echo = FALSE}
+cosine_matrix <- function(tokenized_data, lower = 0, upper = 1, filt = 0) {
+  
+  if (!all(c("word", "id") %in% names(tokenized_data))) {
+    stop("tokenized_data must contain variables named word and id")
+  }
+  
+  if (lower < 0 | lower > 1 | upper < 0 | upper > 1 | filt < 0 | filt > 1) {
+    stop("lower, upper, and filt must be 0 <= x <= 1")
+  }
+  
+  docs <- length(unique(tokenized_data$id))
+  
+  out <- tokenized_data %>%
+    count(id, word) %>%
+    group_by(word) %>%
+    mutate(n_docs = n()) %>%
+    ungroup() %>%
+    filter(n_docs < (docs * upper) & n_docs > (docs * lower)) %>%
+    select(-n_docs) %>%
+    mutate(n = 1) %>%
+    spread(word, n, fill = 0) %>%
+    select(-id) %>%
+    as.matrix() %>%
+    lsa::cosine()
+  
+  filt <- quantile(out[lower.tri(out)], filt)
+  out[out < filt] <- diag(out) <- 0
+  out <- out[rowSums(out) != 0, colSums(out) != 0]
+  
+  return(out)
+}
+
+walktrap_topics <- function(g, ...) {
+  wt <- igraph::cluster_walktrap(g, ...)
+  
+  membership <- igraph::cluster_walktrap(g, ...) %>% 
+      igraph::membership() %>% 
+      as.matrix() %>% 
+      as.data.frame() %>% 
+      rownames_to_column("word") %>% 
+      arrange(V1) %>% 
+      rename(group = V1)
+  
+  dendogram <- stats::as.dendrogram(wt)
+  
+  return(list(membership = membership, dendogram = dendogram))
+}
+```
+
+One of the first questions people ask about text data is, "What is the text about?" This search for topics or themes involves reducing the complexity of the text down to a handful of meaningful categories. How much simplification one does is going to rely on the goals of the research. Qualitative researchers, for example, might do very little reduction and instead lean into the richness of the complexity. For this post, however, I'm going to explain and demonstrate how I quickly make sense of themes and topics in text data by using word similarity graphs.  
+
+# Other Approaches
+
+The impetus for this was playing with a number of platforms that promised to "use AI" to give me themes in text data. I am generally underwhelmed with these platforms: Themes hardly make much sense; the underlying algorithm is not explained, so it is hard to figure out *why* they don't make sense; and they are rigid, not letting the user tune hyperparameters or change how the text is vectorized.  
+
+I then experimented with a number of common unsupervised learning techniques. I appreciate the idea of Latent Dirichlet allocation (Blei, Ng, & Jordan, 2003), because it is a probabilistic model that is explicit about its parameters, how it is estimated, the assumptions on which it relies, etc. However, I have rarely seen results that make much sense—other than toy examples that text mining books use. Selecting an appropriate *k* has been difficult, too, as the four metrics programmed into the `ldatuning` package (Nikita, 2016) tend to disagree with one another, some frequently recommending to choose the least *k* while others indicating the most.  
+
+I also looked at vectorizing the documents, generally using tf-idf (Silge & Robinson, 2017, Ch. 3), and applying my go-to clustering algorithms, like k-NN or DBSCAN (Ester, Kriegel, Sander, & Xu, 1996). I generally wasn't satisfied with the results here, either. For example, difficulties might arise due to Zipf's law (Silge & Robinson, 2017, Ch. 3), as the *p*-dimensional space we are projecting documents into is sparse, which causes problems for k-NN (e.g., Grcar, Fortuna, Mladenic, & Grobelnik, 2006).  
+
+There are undoubtedly use-cases for each of these approaches—and text mining is not my expertise—but my experiences led me to use word similarity graphs for exploring topics.  
+
+# Word Similarity Graphs
+
+I have found word similarity graphs (or networks) to be useful. The three primary steps involved:  
+
+1. Calculate the similarities between words. This makes the word—not the document—the unit of analysis. Instead of looking for *documents* close to one another in *p*-dimensional space, we will be looking for groups of words that co-occur often. I generally focus on words that appear in at least *J*% of documents—but less than *L*% of documents—and I flatten any similarity scores between two words that fall below the *I*th percentile to zero.  
+
+2. Format these similarity scores into a symmetric matrix, where the diagonal contains zeros and the off-diagonal cells are similarities between words. Use this as an adjacency matrix to plot a network graph.  
+
+3. Cluster nodes in this graph using a community detection algorithm. I use the Walktrap algorithm, which is based on random walks that take *T* steps in the network.  
+
+I like treating words as the unit of analysis; it makes sense to me to think of topics as being made up of words being used in conjunction with one another often. This is also a naturally visual method, and plotting the network helps me understand topics better than columns of weights corresponding to latent topics. However, this approach is exploratory. I generally choose the values of the *J*, *L*, *I*, and *T* hyperparameters based on subjective decisions—not by minimizing a loss function; nonetheless, it helps me understand what is being talked about in text.  
+
+I will show how to use a few simple functions I wrote as I describe this technique in more detail. The full code for each of the functions are found at the end of this post. The text I am using is headlines from news stories and blogs in the last 6 months that mention "Star Wars" (if the sequel trilogy makes you angry—you're wrong, but I hope you still read the rest of this post). The data and all code necessary to reproduce this post can be found at my GitHub.  
+
+## Preparation
+
+The functions rely on the `tidyverse` being loaded into the current session, and it requires the `lsa` and `igraph` packages to be installed. Before running any of the similarity or clustering functions, I run:  
+
+```{r load, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(tidytext)
+library(igraph)
+library(ggraph)
+data(stop_words)
+dat <- read_csv("starwars.csv") %>% 
+  transmute(
+    id = 1:nrow(.), # headline identification number for reference
+    text = gsub("[-/]", " ", title),
+    text = tolower(gsub("[^A-Za-z ]", "", text))
+  ) %>% 
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words, by = "word") %>% 
+  filter(word != "cnet") # corpus-specific stop word
+```
+
+## Calculating Similarity
+
+Many metrics exist to quantify how similar two units are to one another; distance measures can also be inverted to measure similarity (see Cha, 2007; Choi, Cha, & Tappert, 2010; Lesot, Rifqi, & Benhadda, 2009 for reviews). I started with an assumption that words belonging to the same topic will be used in the same document (which can be a story, chapter, song, sentence, headline, and so on), so I decided the foundation of word similarities here should be co-occurrences. If the words "Darth" and "Vader" appear together in 161 headlines (see below), then their similarity score would be 161.  
+
+```{r cooccur}
+dat %>% 
+  group_by(id) %>% 
+  summarise(vader = all(c("darth", "vader") %in% word)) %>% 
+  with(sum(vader))
+```
+
+A problem arises, however, in considering how frequently each word is used. The words "Princess" and "Leia" occur 31 times together, but "Princess" is used far less frequently than "Darth" in general (see below). Does that mean the words "Princess" and "Leia" are less similar to one another than "Darth" and "Vader"? Not necessarily.  
+
+```{r cooccur2}
+dat %>% 
+  group_by(id) %>% 
+  summarise(leia = all(c("princess", "leia") %in% word)) %>% 
+  with(sum(leia))
+
+dat %>% 
+  group_by(id) %>% 
+  summarise(
+    darth = "darth" %in% word, 
+    vader = "vader" %in% word, 
+    princess = "princess" %in% word, 
+    leia = "leia" %in% word
+  ) %>% 
+  select(-id) %>% 
+  colSums()
+```
+
+We can overcome this difference in base rates by normalizing (standardizing) the co-occurrences. I use the cosine similarity for this, which is identical to the Ochiai coefficient in this situation (Zhou & Leydesdorff, 2016). The cosine similarity gets its name from being the cosine of the angle located between two vectors. In our case, each vector is a word, and the length of these vectors is the number of documents. If the word appears in a document, it is scored as "1"; if it does not, it is "0." For simplicity's sake, let's imagine we have two documents: "Darth" appears in the first, but not the second; "Vader" appears in both. Plotted on two-dimensional space, the vectors look like:  
+
+```{r cosine}
+data.frame(word = c("darth", "vader"), d1 = 1, d2 = 0:1) %>% 
+  ggplot(aes(x = d1, y = d2)) +
+  geom_point() +
+  coord_cartesian(xlim = 0:1, ylim = 0:1) +
+  geom_segment(aes(x = 0, y = 0, xend = d1, yend = d2)) +
+  theme_minimal()
+```
+
+This is a 45 degree angle. We can make sure that the cosine of 45 degrees is the same as the cosine similarity between those two vectors:  
+
+```{r cosine2}
+cos(45 * pi / 180) # this function takes radians, not degrees
+lsa::cosine(c(1, 1), c(0, 1))
+```
+
+The binary (1 or 0) scoring means that words are never projected into negative space—no numbers below zero are used. This means that negative similarities cannot occur. In the two-dimensional example above, the largest angle possible is 90 degrees, which has a cosine of zero; the smallest angle possible is 0 degrees, which has a cosine of 1. Similarities are thus normalized inside of the 0 to 1 range.  
+
+I wrote a function that takes a tokenzied data frame—where one column is named `word` and another is named `id`—and returns a symmetric cosine similarity matrix. There are three other arguments. First, what proportion of documents must a word appear in to be considered? This makes sure that words only used in one or two documents are not included. I generally tune this so that it takes the top 85 to 120 words. Second, what proportion of documents is too many to be considered? In the present example, the words "Star" and "Wars" appear in every headline. I usually set this to be about .80. Third, how large must the similarity be to be included in the word similarity graph? I define this as a percentile. If it is set at .50, for example, then it will only return the similarities that are above the median similarity. This is to cut down on spurious or inconsequential relationships in the graph. I generally set this to be somewhere between .65 and .90. There is a lot of debate in the literature about how to filter these graphs (e.g., CITE), and I still need to experiment with these different filtering methods to come ot a more principled approach than the one I currently use.  
+
+Using the function shown at the end of this post, I compute the cosine similarity matrix using the following code:  
+
+```{r get_cos}
+cos_mat <- cosine_matrix(dat, lower = .01, upper = .80, filt = .80)
+```
+
+Since 8,570 documents (headlines) are in this corpus, the only words used in this graph must appear in more than 85.7 documents and less than 6,856. I only graph the similarities that are in the uppermost quintile (i.e., similarity > 80th percentile). This leaves 83 words:  
+
+```{r dim_call}
+dim(cos_mat)
+```
+
+## Making the Graph
+
+A background on network theory and analysis is outside the scope of the post—but see Baggio, Scott, and Cooper (2010); Gorgatti and Halgin (2011); Borgatti, Mehra, Brass, and Labianca (2009); and Talesford, Simpson, Burdette, Hayasaka, and Laurienti (2011) for introductions. We can build the network from our similarity matrix by using the `igraph` function to do so and then plot it using the `ggraph` package, which I like because it employs the same grammar as `ggplot2`. A random seed is set so that the layout of the graph is reproducible.  
+
+```{r make_g}
+g <- graph_from_adjacency_matrix(cos_mat, mode = "undirected", weighted = TRUE)
+set.seed(1839)
+ggraph(g, layout = "nicely") +
+  geom_edge_link(aes(alpha = weight), show.legend = FALSE) + 
+  geom_node_label(aes(label = name)) +
+  theme_void()
+```
+
+Words used in the same headlines appear closer to one another and have darker lines connecting them. This is obvious when looking at entities described by two words: J.J. Abrams, Episode IX, Blu-Ray, Darth Vader, Millennium Falcon. Topics should already be appearing to readers familiar with *Star Wars*, but we can make this clearer by finding words that cluster together.  
+
+## Clustering the Graph
+
+"Community detection" in social networks refers to finding groups of nodes (in our case, words are the nodes, but they can represent people, proteins, webpages, and so on) that have edges (the lines between the nodes) connecting to one another more than to other nodes in the network (Fortunato & Hric, 2016).  
+
+For example, imagine looking at emails in an organization. Each node is a person, and the number of emails sent between two people is the edge between them. If this organization has a marketing department and an accounting department, we would expect people inside of the same department to email one another more frequently than they email those outside of the department. If this were the case, we would expect a community detection algorithm applied to this email network to cluster people within the same department together, given this pattern of contact. The case with words is analogous: We are looking to find "communities" of words used together more often than with other words, creating topics or themes.  
+
+The algorithm I use here is called Walktrap (Pons & Latapy, 2005). It uses random walks to operationalize distance between nodes. A random walk refers to starting at a node and following edges to another node. Each "step" is how many nodes have been visited after the starting point. The direction in which a step is taken is based on the strength of the edge between two nodes: The higher the strength (weight), the higher the probability that a step is taken to that node.  
+
+The Walktrap algorithm is based on the idea that two nodes within the same community will "visit" all other nodes in the graph in similar ways via random walks. For example, we want to know the distance between "battlefront" and "games." Do these words visit, for example, "lightsaber" in the same way? To get at this, the algorithm finds the probability that a random walk starting at "battlefront" leads to "lightsaber" in *T* steps. Then, it finds the probability that a random walk starting at "games" leads to "lightsaber" in *T* steps. The algorithm will subtract these probability to get the distance: If these probabilities are similar, the distance between "battlefront" and "games" will be small. It doesn't just look at walks to "lightsaber," though: The Walktrap will calculate this distance based on random walks to *all other* nodes in the graph.  
+
+This distance is calculated for each pair of nodes in the graph, and then hierarchical clustering is applied to these distances. I wrote a wapper—seen at the end of this post—for the `igraph` package's Walktrap function to run this algorithm. It returns a list of objects useful for finding topics in word similarity graphs. You can run the function by:  
+
+```{r clust}
+topics <- walktrap_topics(g)
+```
+
+This returns a list of two objects. One is a dendogram describing the hierarchical clustering process on the distances calculated from the random walks:  
+
+```{r dendogram}
+plot(topics$dendogram)
+```
+
+# Examing Themes
+
+The second object in the list returned by `walktrap_topics()` is a `data.frame` of two columns: `word`, which contains each word in the graph, and `group`, which contains the community to which each node belongs. I do a little bit of re-arranging of it to present the topics here:  
+
+```{r topics}
+topics$membership %>% 
+  group_by(group) %>% 
+  summarise(words = paste(word, collapse = ", ")) %>% 
+  knitr::kable()
+```
+
+We could label the 8 themes in this corpus:  
+
+1. Episode IX news  
+
+2. Darth Vader: fan film and Black Series action figure  
+
+3. *Star Wars* theme park  
+
+4. Comics and animated series  
+
+5. *Battlefront II* video game  
+
+6. Live-action television series (*Mandalorian*, Cassian Andor)  
+
+7. Toy shopping  
+
+8. *Solo: A Star Wars Story* Blu-Ray release  
+
+Wew can then assign the vector of group labels as a feature caled "cluster" to our graph object, `g`, and plot the same network graph above, but with the themes showing up as different colors:  
+
+```{r plot2}
+V(g)$cluster <- arrange(topics$membership, word)$group
+
+set.seed(1839)
+ggraph(g, layout = "nicely") +
+  geom_edge_link(aes(alpha = weight), show.legend = FALSE) + 
+  geom_node_label(
+    aes(label = name, color = factor(cluster)), 
+    show.legend = FALSE
+  ) +
+  theme_void()
+```
+
+# Conclusion
+
+
+
+# R Functions
+
+```{r functions, eval = FALSE}
+cosine_matrix <- function(tokenized_data, lower = 0, upper = 1, filt = 0) {
+  
+  if (!all(c("word", "id") %in% names(tokenized_data))) {
+    stop("tokenized_data must contain variables named word and id")
+  }
+  
+  if (lower < 0 | lower > 1 | upper < 0 | upper > 1 | filt < 0 | filt > 1) {
+    stop("lower, upper, and filt must be 0 <= x <= 1")
+  }
+  
+  docs <- length(unique(tokenized_data$id))
+  
+  out <- tokenized_data %>%
+    count(id, word) %>%
+    group_by(word) %>%
+    mutate(n_docs = n()) %>%
+    ungroup() %>%
+    filter(n_docs < (docs * upper) & n_docs > (docs * lower)) %>%
+    select(-n_docs) %>%
+    mutate(n = 1) %>%
+    spread(word, n, fill = 0) %>%
+    select(-id) %>%
+    as.matrix() %>%
+    lsa::cosine()
+  
+  filt <- quantile(out[lower.tri(out)], filt)
+  out[out < filt] <- diag(out) <- 0
+  out <- out[rowSums(out) != 0, colSums(out) != 0]
+  
+  return(out)
+}
+
+walktrap_topics <- function(g, ...) {
+  wt <- igraph::cluster_walktrap(g, ...)
+  
+  membership <- igraph::cluster_walktrap(g, ...) %>% 
+      igraph::membership() %>% 
+      as.matrix() %>% 
+      as.data.frame() %>% 
+      rownames_to_column("word") %>% 
+      arrange(V1) %>% 
+      rename(group = V1)
+  
+  dendogram <- stats::as.dendrogram(wt)
+  
+  return(list(membership = membership, dendogram = dendogram))
+}
+```
+
+# References
+
