@@ -52,13 +52,13 @@ walktrap_topics <- function(g, ...) {
 }
 ```
 
-One of the first questions people ask about text data is, "What is the text about?" This search for topics or themes involves reducing the complexity of the text down to a handful of meaningful categories. How much simplification one does is going to rely on the goals of the research. Qualitative researchers, for example, might do very little reduction and instead lean into the richness of the complexity. For this post, however, I'm going to explain and demonstrate how I quickly make sense of themes and topics in text data by using word similarity graphs.  
+One of the first questions people ask about text data is, "What is the text about?" This search for topics or themes involves reducing the complexity of the text down to a handful of meaningful categories. I have found that a lot of common approaches for this are not as useful as advertised. In this post, I'm going to explain and demonstrate how I use *word similarity graphs* to quickly explore and make sense of topcis in text data.  
 
 # Other Approaches
 
-The impetus for this was playing with a number of platforms that promised to "use AI" to give me themes in text data. I am generally underwhelmed with these platforms: Themes hardly make much sense; the underlying algorithm is not explained, so it is hard to figure out *why* they don't make sense; and they are rigid, not letting the user tune hyperparameters or change how the text is vectorized.  
+I have used a number of platforms that advertise "using AI" to examine themes in text data. I am generally underwhelmed with these platforms: Themes hardly make much sense; the underlying algorithm is not explained, so it is hard to figure out *why* things don't make sense; and they are rigid interfaces, not letting the user tune hyperparameters or change how the text is vectorized.  
 
-I then experimented with a number of common unsupervised learning techniques. I appreciate the idea of Latent Dirichlet allocation (Blei, Ng, & Jordan, 2003), because it is a probabilistic model that is explicit about its parameters, how it is estimated, the assumptions on which it relies, etc. However, I have rarely seen results that make much sense—other than toy examples that text mining books use. Selecting an appropriate *k* has been difficult, too, as the four metrics programmed into the `ldatuning` package (Nikita, 2016) tend to disagree with one another, some frequently recommending to choose the least *k* while others indicating the most.  
+I have also experimented with a number of common unsupervised learning techniques. I appreciate the idea of Latent Dirichlet allocation (Blei, Ng, & Jordan, 2003), because it is a probabilistic model that is explicit about its parameters, how it is estimated, the assumptions on which it relies, etc. However, I have rarely seen results that make much sense—other than toy examples that text mining books use. Selecting an appropriate *k* has been difficult, too, as the four metrics programmed into the `ldatuning` package (Nikita, 2016) tend to disagree with one another, some frequently recommending to choose the least *k* while others indicating the most.  
 
 I also looked at vectorizing the documents, generally using tf-idf (Silge & Robinson, 2017, Ch. 3), and applying my go-to clustering algorithms, like k-NN or DBSCAN (Ester, Kriegel, Sander, & Xu, 1996). I generally wasn't satisfied with the results here, either. For example, difficulties might arise due to Zipf's law (Silge & Robinson, 2017, Ch. 3), as the *p*-dimensional space we are projecting documents into is sparse, which causes problems for k-NN (e.g., Grcar, Fortuna, Mladenic, & Grobelnik, 2006).  
 
@@ -68,15 +68,15 @@ There are undoubtedly use-cases for each of these approaches—and text mining i
 
 I have found word similarity graphs (or networks) to be useful. The three primary steps involved:  
 
-1. Calculate the similarities between words. This makes the word—not the document—the unit of analysis. Instead of looking for *documents* close to one another in *p*-dimensional space, we will be looking for groups of words that co-occur often. I generally focus on words that appear in at least *J*% of documents—but less than *L*% of documents—and I flatten any similarity scores between two words that fall below the *I*th percentile to zero.  
+1. Calculate the similarities between words. This makes the word—not the document—the unit of analysis. Instead of looking for *documents* close to one another in *p*-dimensional space, we will be looking for groups of words that co-occur often. I generally focus on words that appear in at least *J*% of documents—but less than *L*% of documents—and I flatten any similarity scores between two words that fall below the *I*th percentile to 0.  
 
-2. Format these similarity scores into a symmetric matrix, where the diagonal contains zeros and the off-diagonal cells are similarities between words. Use this as an adjacency matrix to plot a network graph.  
+2. Format these similarity scores into a symmetric matrix, where the diagonal contains 0s and the off-diagonal cells are similarities between words. Use this as an adjacency matrix to plot a network graph.  
 
 3. Cluster nodes in this graph using a community detection algorithm. I use the Walktrap algorithm, which is based on random walks that take *T* steps in the network.  
 
-I like treating words as the unit of analysis; it makes sense to me to think of topics as being made up of words being used in conjunction with one another often. This is also a naturally visual method, and plotting the network helps me understand topics better than columns of weights corresponding to latent topics. However, this approach is exploratory. I generally choose the values of the *J*, *L*, *I*, and *T* hyperparameters based on subjective decisions—not by minimizing a loss function; nonetheless, it helps me understand what is being talked about in text.  
+I like treating words as the unit of analysis; it makes sense to me to think of topics as being made up of words often used in conjunction with one another. This is also a naturally visual method, and plotting the network helps me understand topics better than columns of weights corresponding to latent topics. However, this approach is exploratory. I generally choose the values of the *J*, *L*, *I*, and *T* hyperparameters based on subjective decisions—not by minimizing a loss function; nonetheless, it helps me understand what is being talked about in text.  
 
-I will show how to use a few simple functions I wrote as I describe this technique in more detail. The full code for each of the functions are found at the end of this post. The text I am using is headlines from news stories and blogs in the last 6 months that mention "Star Wars" (if the sequel trilogy makes you angry—you're wrong, but I hope you still read the rest of this post). The data and all code necessary to reproduce this post can be found at my GitHub.  
+I will show how to use a few simple functions I wrote as I describe this technique in more detail. The full code for each of the functions are found at the end of this post. The data I am using are headlines from news stories and blogs in the last 6 months that mention "Star Wars" (if the sequel trilogy makes you angry—you're wrong, but I hope you still read the rest of this post). The data and all code necessary to reproduce this post can be found at my [GitHub](https://github.com/markhwhiteii/blog/tree/master/word_similarity_graphs).  
 
 ## Preparation
 
@@ -138,7 +138,8 @@ data.frame(word = c("darth", "vader"), d1 = 1, d2 = 0:1) %>%
   geom_point() +
   coord_cartesian(xlim = 0:1, ylim = 0:1) +
   geom_segment(aes(x = 0, y = 0, xend = d1, yend = d2)) +
-  theme_minimal()
+  theme_minimal() +
+  theme(text = element_text(size = 18))
 ```
 
 This is a 45 degree angle. We can make sure that the cosine of 45 degrees is the same as the cosine similarity between those two vectors:  
@@ -148,9 +149,9 @@ cos(45 * pi / 180) # this function takes radians, not degrees
 lsa::cosine(c(1, 1), c(0, 1))
 ```
 
-The binary (1 or 0) scoring means that words are never projected into negative space—no numbers below zero are used. This means that negative similarities cannot occur. In the two-dimensional example above, the largest angle possible is 90 degrees, which has a cosine of zero; the smallest angle possible is 0 degrees, which has a cosine of 1. Similarities are thus normalized inside of the 0 to 1 range.  
+The binary (1 or 0) scoring means that words are never projected into negative space—no numbers below 0 are used. This means that negative similarities cannot occur. In the two-dimensional example above, the largest angle possible is 90 degrees, which has a cosine of 0; the smallest angle possible is 0 degrees, which has a cosine of 1. Similarities are thus normalized inside of the 0 (e.g., words are never used together) to 1 (e.g., words are always used together) range.  
 
-I wrote a function that takes a tokenzied data frame—where one column is named `word` and another is named `id`—and returns a symmetric cosine similarity matrix. There are three other arguments. First, what proportion of documents must a word appear in to be considered? This makes sure that words only used in one or two documents are not included. I generally tune this so that it takes the top 85 to 120 words. Second, what proportion of documents is too many to be considered? In the present example, the words "Star" and "Wars" appear in every headline. I usually set this to be about .80. Third, how large must the similarity be to be included in the word similarity graph? I define this as a percentile. If it is set at .50, for example, then it will only return the similarities that are above the median similarity. This is to cut down on spurious or inconsequential relationships in the graph. I generally set this to be somewhere between .65 and .90. There is a lot of debate in the literature about how to filter these graphs (e.g., CITE), and I still need to experiment with these different filtering methods to come ot a more principled approach than the one I currently use.  
+I wrote a function that takes a tokenzied data frame—where one column is named `word` and another is named `id`—and returns a symmetric cosine similarity matrix. There are three other arguments. First, what proportion of documents must a word appear in to be considered? This makes sure that words only used in one or two documents are not included. I generally tune this so that it takes the top 85 to 120 words. Second, what proportion of documents is too many to be considered? In the present example, the words "Star" and "Wars" appear in every headline, so they would not tell us differentiating information about topics. I usually set this to be about .80. Third, how large must the similarity be to be included in the word similarity graph? I define this as a percentile. If it is set at .50, for example, then the function will shrink the similarities that are below the median to 0. This is to cut down on spurious or inconsequential relationships in the graph. I generally set this to be somewhere between .65 and .90. There is a lot of debate in the literature about how to filter these graphs (e.g., Christensen, Kenett, Aste, Silvia, & Kwapil, 2018), and I still need to experiment with these different filtering methods to come to a more principled approach than the arbitrary one I currently use.  
 
 Using the function shown at the end of this post, I compute the cosine similarity matrix using the following code:  
 
@@ -170,6 +171,7 @@ A background on network theory and analysis is outside the scope of the post—b
 
 ```{r make_g}
 g <- graph_from_adjacency_matrix(cos_mat, mode = "undirected", weighted = TRUE)
+
 set.seed(1839)
 ggraph(g, layout = "nicely") +
   geom_edge_link(aes(alpha = weight), show.legend = FALSE) + 
@@ -183,11 +185,11 @@ Words used in the same headlines appear closer to one another and have darker li
 
 "Community detection" in social networks refers to finding groups of nodes (in our case, words are the nodes, but they can represent people, proteins, webpages, and so on) that have edges (the lines between the nodes) connecting to one another more than to other nodes in the network (Fortunato & Hric, 2016).  
 
-For example, imagine looking at emails in an organization. Each node is a person, and the number of emails sent between two people is the edge between them. If this organization has a marketing department and an accounting department, we would expect people inside of the same department to email one another more frequently than they email those outside of the department. If this were the case, we would expect a community detection algorithm applied to this email network to cluster people within the same department together, given this pattern of contact. The case with words is analogous: We are looking to find "communities" of words used together more often than with other words, creating topics or themes.  
+For example, imagine looking at emails in an organization. Each node is a person, and the number of emails sent between two people is the edge between them. If this organization has a marketing department and an accounting department, we would expect people inside of the same department to email one another more frequently than they email those outside of the department. If this were the case, a community detection algorithm applied to this email network would cluster people within the same department together. The case with words is analogous: We are looking to find "communities" of words used together more often than with other words, creating topics or themes.  
 
-The algorithm I use here is called Walktrap (Pons & Latapy, 2005). It uses random walks to operationalize distance between nodes. A random walk refers to starting at a node and following edges to another node. Each "step" is how many nodes have been visited after the starting point. The direction in which a step is taken is based on the strength of the edge between two nodes: The higher the strength (weight), the higher the probability that a step is taken to that node.  
+The algorithm I use here is called Walktrap (Pons & Latapy, 2005; also [this YouTube video](https://youtu.be/jIS5pZ8doH8?t=3166)). It uses random walks to operationalize distance between nodes. A random walk refers to starting at a node and following edges to another node. Each "step" is how many nodes have been visited after the starting point. The direction in which a step is taken is based on the strength of the edge between two nodes: The higher the strength (weight), the higher the probability that a step is taken to that node.  
 
-The Walktrap algorithm is based on the idea that two nodes within the same community will "visit" all other nodes in the graph in similar ways via random walks. For example, we want to know the distance between "battlefront" and "games." Do these words visit, for example, "lightsaber" in the same way? To get at this, the algorithm finds the probability that a random walk starting at "battlefront" leads to "lightsaber" in *T* steps. Then, it finds the probability that a random walk starting at "games" leads to "lightsaber" in *T* steps. The algorithm will subtract these probability to get the distance: If these probabilities are similar, the distance between "battlefront" and "games" will be small. It doesn't just look at walks to "lightsaber," though: The Walktrap will calculate this distance based on random walks to *all other* nodes in the graph.  
+The Walktrap algorithm is based on the idea that two nodes within the same community will "visit" all other nodes in the graph in similar ways via random walks. For example, we want to know the distance between "battlefront" and "games." Do these words visit, for example, "lightsaber" in the same way? To get at this, the algorithm finds the probability that a random walk starting at "battlefront" leads to "lightsaber" in *T* steps. Then, it finds the probability that a random walk starting at "games" leads to "lightsaber" in *T* steps. The algorithm will subtract these probabilities to get the distance: If these probabilities are similar, the distance between "battlefront" and "games" will be small. It doesn't just look at walks to "lightsaber," though: The Walktrap will calculate this distance based on random walks to *all other* nodes in the graph.  
 
 This distance is calculated for each pair of nodes in the graph, and then hierarchical clustering is applied to these distances. I wrote a wapper—seen at the end of this post—for the `igraph` package's Walktrap function to run this algorithm. It returns a list of objects useful for finding topics in word similarity graphs. You can run the function by:  
 
@@ -198,6 +200,7 @@ topics <- walktrap_topics(g)
 This returns a list of two objects. One is a dendogram describing the hierarchical clustering process on the distances calculated from the random walks:  
 
 ```{r dendogram}
+par(cex = .6)
 plot(topics$dendogram)
 ```
 
@@ -230,7 +233,7 @@ We could label the 8 themes in this corpus:
 
 8. *Solo: A Star Wars Story* Blu-Ray release  
 
-Wew can then assign the vector of group labels as a feature caled "cluster" to our graph object, `g`, and plot the same network graph above, but with the themes showing up as different colors:  
+We can then assign the vector of group labels as a feature called "cluster" to the nodes of our graph object, `g`, and plot the same network graph above, but with the themes showing up as different colors:  
 
 ```{r plot2}
 V(g)$cluster <- arrange(topics$membership, word)$group
@@ -247,7 +250,7 @@ ggraph(g, layout = "nicely") +
 
 # Conclusion
 
-
+Word similarity graphs have been useful for me as a first step to exploring topics in data. One can then follow-up on what these networks show by coding documents for given topics based on inclusion or exclusion of words in the text (e.g., any document that contains the words "live" and "action" refer to television series). This is a flexible approach, as well. Instead of cosine similarity, one could use a different metric; instead of the Walktrap, one could use a different community detection algorithm (the `igraph` package alone offers quite a few; see [this StackOverflow answer](https://stackoverflow.com/a/9478989/7903456)).  
 
 # R Functions
 
@@ -303,3 +306,18 @@ walktrap_topics <- function(g, ...) {
 
 # References
 
+Baggio, Scott, and Cooper (2010)
+Blei, Ng, & Jordan (2003)
+Borgatti, Mehra, Brass, and Labianca (2009)
+Cha, 2007; Choi, Cha, & Tappert (2010)
+Christensen, Kenett, Aste, Silvia, & Kwapil (2018)
+Ester, Kriegel, Sander, & Xu (1996)
+Fortunato & Hric (2016)
+Gorgatti and Halgin (2011)
+Grcar, Fortuna, Mladenic, & Grobelnik (2006)
+Lesot, Rifqi, & Benhadda (2009)
+Nikita (2016)
+Pons & Latapy (2005)
+Silge & Robinson (2017)
+Talesford, Simpson, Burdette, Hayasaka, and Laurienti (2011)
+Zhou & Leydesdorff (2016)
