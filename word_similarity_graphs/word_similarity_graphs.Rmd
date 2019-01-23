@@ -167,7 +167,7 @@ dim(cos_mat)
 
 ## Making the Graph
 
-A background on network theory and analysis is outside the scope of the post—but see Baggio, Scott, and Cooper (2010); Gorgatti and Halgin (2011); Borgatti, Mehra, Brass, and Labianca (2009); and Talesford, Simpson, Burdette, Hayasaka, and Laurienti (2011) for introductions. We can build the network from our similarity matrix by using the `igraph` function to do so and then plot it using the `ggraph` package, which I like because it employs the same grammar as `ggplot2`. A random seed is set so that the layout of the graph is reproducible.  
+A background on network theory and analysis is outside the scope of the post—but see Baggio, Scott, and Cooper (2010); Borgatti and Halgin (2011); Borgatti, Mehra, Brass, and Labianca (2009); and Talesford, Simpson, Burdette, Hayasaka, and Laurienti (2011) for introductions. We can build the network from our similarity matrix by using the `igraph` function to do so and then plot it using the `ggraph` package, which I like because it employs the same grammar as `ggplot2`. A random seed is set so that the layout of the graph is reproducible.  
 
 ```{r make_g}
 g <- graph_from_adjacency_matrix(cos_mat, mode = "undirected", weighted = TRUE)
@@ -306,18 +306,34 @@ walktrap_topics <- function(g, ...) {
 
 # References
 
-Baggio, Scott, and Cooper (2010)
-Blei, Ng, & Jordan (2003)
-Borgatti, Mehra, Brass, and Labianca (2009)
-Cha, 2007; Choi, Cha, & Tappert (2010)
-Christensen, Kenett, Aste, Silvia, & Kwapil (2018)
-Ester, Kriegel, Sander, & Xu (1996)
-Fortunato & Hric (2016)
-Gorgatti and Halgin (2011)
-Grcar, Fortuna, Mladenic, & Grobelnik (2006)
-Lesot, Rifqi, & Benhadda (2009)
-Nikita (2016)
-Pons & Latapy (2005)
-Silge & Robinson (2017)
-Talesford, Simpson, Burdette, Hayasaka, and Laurienti (2011)
-Zhou & Leydesdorff (2016)
+Baggio, Scott, & Cooper (2010). Network science: A review focused on tourism. *Annals of Tourism Research*. Retrieved from: https://arxiv.org/pdf/1002.4766.pdf  
+
+Blei, Ng, & Jordan (2003). Latent Dirichlet allocation. *Journal of Machine Learning Research*. Retrieved from: http://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf  
+
+Borgatti & Halgin (2011). On network theory. *Organization Science*. doi: 10.1287/orsc.1100.0641  
+
+Borgatti, Mehra, Brass, & Labianca (2009). Network analysis in the social sciences. *Science*. doi: 10.1126/science.1165821  
+
+Cha (2007). Comprehensive survey on distance/similarity measures between probability density functions. *International Journal of Mathematical Models and Methods in Applied Sciences*. Retrieved from: http://users.uom.gr/~kouiruki/sung.pdf  
+
+Choi, Cha, & Tappert (2010). A survey of binary similarity and distance measures. *Systemics, Cybernetics and Informatics*. Retrieved from: http://www.iiisci.org/journal/CV$/sci/pdfs/GS315JG.pdf  
+
+Christensen, Kenett, Aste, Silvia, & Kwapil (2018). Network structure of the Wisconsin Schizotypy Scales-Short Forms: Examining psychometric network filtering approaches. *Behavior Research Methods*. doi: 10.3758/s13428-018-1032-9  
+
+Ester, Kriegel, Sander, & Xu (1996). A density-based algorithm for discovering clusters a density-based algorithm for discovering clusters in large spatial databases with noise. *Proceedings of the Second International Conference on Knowledge Discovery and Data Mining*. Retrieved from: https://www.aaai.org/Papers/KDD/1996/KDD96-037.pdf  
+
+Fortunato & Hric (2016). Community detection in networks: A user guide. *Physics Reports*. Retrieved from: https://arxiv.org/pdf/1608.00163.pdf  
+
+Grcar, Fortuna, Mladenic, & Grobelnik (2006). Data sparsity issues in the collaborative filtering framework. *International Workshop on Knowledge Discovery on the Web: Advances in Web Mining and Web Usage Analysis*. doi: 10.1007/11891321_4  
+
+Lesot, Rifqi, & Benhadda (2009). Similarity measures for binary and numerical data: A survey. *International Journal of Knowledge Engineering and Soft Data Paradigms*. Retrieved from: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.212.6533&rep=rep1&type=pdf  
+
+Nikita (2016). ldatuning: Tuning of the Latent Dirichlet allocation models parameters. R Package version 0.2.0  
+
+Pons & Latapy (2006). Computing communities in large networks using random walks. *Journal of Graph Algorithms and Applications*. Retrieved from: http://jgaa.info/accepted/2006/PonsLatapy2006.10.2.pdf  
+
+Silge & Robinson (2017). *Text mining with R: A tidy approach*. Retrieved from: https://www.tidytextmining.com/  
+
+Talesford, Simpson, Burdette, Hayasaka, & Laurienti (2011). The brain as a complex system: Using network science as a tool for understanding the brain. *Brain Connectivity*. doi: 10.1089/brain.2011.0055  
+
+Zhou & Leydesdorff (2016). The normalization of occurrence and co-occurrence matrices in bibliometrics using cosine similarities and Ochiai coefficients. *Journal of the Association for Information Science and Technology*. Retrieved from: https://arxiv.org/pdf/1503.08944.pdf  
