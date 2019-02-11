@@ -79,7 +79,6 @@ run_iter <- function(pop, non_rand_p = c(.065, .005, .005, .005)) {
 }
 
 # get results ------------------------------------------------------------------
-library(tidyverse)
 set.seed(1839)
 iter <- 10000
 results <- lapply(seq_len(iter), function(i) {
@@ -87,26 +86,4 @@ results <- lapply(seq_len(iter), function(i) {
   as.data.frame(run_iter(sim_pop()))
 })
 results <- do.call(bind_rows, results)
-write_csv(results, "sim_results.csv")
-
-results <- read_csv("sim_results.csv")
-
-results %>% 
-  select_if(is.double) %>% 
-  colMeans()
-
-results %>% 
-  select_if(is.logical) %>% 
-  colMeans() %>% 
-  round(3)
-
-results %>% 
-  select_if(is.double) %>% 
-  gather() %>% 
-  mutate(key = gsub("_est", "", key),
-         key = factor(key, c("pop", "random", "nonrandom", 
-                             "wtdglm", "wtdsvy", "wtdrep"))) %>% 
-  ggplot(aes(x = value, fill = key)) +
-  geom_density(alpha = .5) +
-  facet_grid(key ~ .) +
-  theme(legend.position = "none")
+readr::write_csv(results, "sim_results.csv")
