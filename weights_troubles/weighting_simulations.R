@@ -33,11 +33,11 @@ get_targets <- function(pop, dat) {
 
 f <- y ~ 1
 
-boot_confint <- function(dat, wts, iter = 1000) {
-  est <- coef(glm(f, binomial, dat, wts))[[1]]
+boot_confint <- function(dat, iter = 1000) {
+  est <- suppressWarnings(coef(glm(f, binomial, dat, wts)))[[1]]
   rs <- sapply(seq_len(iter), function(zzz) {
     cases <- sample(seq_len(nrow(dat)), nrow(dat), TRUE)
-    coef(glm(f, binomial, dat[cases, ], wts))[[1]]
+    suppressWarnings(coef(glm(f, binomial, dat[cases, ], wts)))[[1]]
   })
   c(est - 1.96 * sd(rs), est + 1.96 * sd(rs))
 }
@@ -67,7 +67,9 @@ run_iter <- function(pop, non_rand_p = c(.065, .005, .005, .005)) {
       nonrandom_est = non_random$coef[[1]],
       wtdglm_coverage = is_between(pop_est, confint(wtd_glm)),
       wtdglm_est = wtd_glm$coef[[1]],
-      # wtdboo_coverage = is_between(pop_est, boot_confint(dat, wts)),
+      # uncomment below to try homemade bootstrapping function;
+      # very slow, use less iter.
+      # wtdboo_coverage = is_between(pop_est, boot_confint(dat)),
       wtdsvy_coverage = is_between(pop_est, confint(wtd_svy)),
       wtdsvy_est = wtd_svy$coef[[1]],
       wtdrep_coverage = is_between(pop_est, confint(wtd_rep)),
@@ -80,10 +82,11 @@ run_iter <- function(pop, non_rand_p = c(.065, .005, .005, .005)) {
 
 # get results ------------------------------------------------------------------
 set.seed(1839)
-iter <- 10000
+iter <- 10000 # 1000 for with my bootstrapping function included
 results <- lapply(seq_len(iter), function(i) {
   print(paste("Starting iter", i))
   as.data.frame(run_iter(sim_pop()))
 })
 results <- do.call(bind_rows, results)
+# readr::write_csv(results, "sim_results_withmybs.csv")
 readr::write_csv(results, "sim_results.csv")
