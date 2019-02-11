@@ -1,0 +1,31 @@
+---
+output: html_document
+---
+
+```{r setup, include = FALSE}
+library(tidyverse)
+results <- read_csv("sim_results.csv")
+
+```
+
+```{r}
+results %>% 
+  select_if(is.double) %>% 
+  colMeans()
+
+results %>% 
+  select_if(is.logical) %>% 
+  colMeans() %>% 
+  round(3)
+
+results %>% 
+  select_if(is.double) %>% 
+  gather() %>% 
+  mutate(key = gsub("_est", "", key),
+         key = factor(key, c("pop", "random", "nonrandom", 
+                             "wtdglm", "wtdsvy", "wtdrep"))) %>% 
+  ggplot(aes(x = value, fill = key)) +
+  geom_density(alpha = .5) +
+  facet_grid(key ~ .) +
+  theme(legend.position = "none")
+```
