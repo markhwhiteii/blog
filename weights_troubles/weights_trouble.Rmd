@@ -2,21 +2,67 @@
 output: html_document
 ---
 
+Rough outline:
+- Explain situation (surveying defined audience, finite population)  
+-- Focus on online here, non-probability opt-in sample  
+-- This situation is a time when there is a defined audience and everyone is sent a survey, so technically it is a probability sample where everyone has a probability of 1, but there is so much non-response bias that weights are critical  
+- Non-response bias, so rake weighting on characteristics to correct for this  
+- I simulate best case scenario: Perfect measurement of what predicts y and dropout  
+- Weighting is complicated ("a mess"); unclear what weights function means in different R commands, particularly glm; weights can mean lots of different things. Rake weights have uncertainty baked-in (compare sample vs. design or whatever weights—this is in Lumley book and elsewhere). Weights in glm with binomial assume it is number of trials, so no standard error adjustment for uncertainty.  
+- Explain simulation superparameters, how sampling worked, etc.  
+- Explain different techniques—they are technically for more complicated designs, but can be applied here.  
+
+survey package usually used for stratified and cluster sampling—"complex survey designs"  
+
+Types of weights:
+- Frequency, precision
+- Sampling (for design or post-stratification); post-stratification meaning *after* the sampling process is done. Important to introduce raking as iterative post-stratification, since that is what differentiates non-response weighting from other types of weights that are products of the design.  
+
+
 ```{r setup, include = FALSE}
 library(tidyverse)
 results <- read_csv("sim_results.csv")
-
 ```
+
+One has to be careful when using weights in R, however, as different modeling functions can have `weights` arguments that refer to different types of weights, so don't assume that the function's definition of `weights` matches what you are thinking of at the moment.  
+
+Lumley (2010) notes: "Most statistical software... will assume that weights are precision weights or frequency weights" and that this "will often (but not always) give correct point estimates, but will usually give seriously incorrect standard errors, confidence intervals, and *p*-values (p. XXXX)." Since we are modeling a dichotomous variable in this situation, we will want to use `glm` with the `binomial("logit")` link function. The `?glm` documentation tells us that: "For a binomial GLM prior weights are used to give the number of trials when the response is the proportion of successes..." What does this mean?  
+
+Imagine we have an experiment with 200 participants. When in the experimental condition (`x` = 1), people have a 70% probability of responding positively to our treatment (e.g., voting, donating, purchasing); when in the control (`x` = 0), people have a 30% probability of doing so. When `y` = 1, it is a positive outcome; it is not when `y` = 0. The data might look like this:  
+
+```{r glm_weights_data}
+set.seed(1839)
+n <- 200
+x <- rbinom(n, 1, .5)
+y <- rbinom(n, 1, ifelse(x == 1, .7, .3))
+tibble(x, y)
+```
+
+We can get the proportion of positive outcomes (what the `glm` documents call "proportion of successes") by grouping on `x` and calculating the mean of `y`:  
+
+```{r glm_weights_table}
+(trials_table <- tibble(x, y) %>% 
+  group_by(x) %>% 
+  summarise(n_trials = n(), prop_successes = mean(y)))
+```
+
+The `n_trials` column is what `glm` is expecting for weights—the number of trials (i.e., observations) that the proportion of successes (i.e., positive outcomes) is based on. We can see that supplying this `trials_table` with weights is equal to using the raw data of `x` and `y` to about 5 or 6 decimal places:  
+
+```{r comparing_glms}
+(t1 <- summary(glm(prop_successes ~ x, binomial, trials_table, n_trials))$coef)
+
+(t2 <- summary(glm(y ~ x, binomial))$coef)
+
+all.equal(t1, t2)
+```
+
+The post-stratification survey weights we are interested in do *not* refer to the number of trials. Lumley (2010) argues that the standard errors will be seriously wrong. I ran a simulation experiment to answer two questions: (a) Does using `glm` and giving post-stratification survey weights calculate standard errors incorrectly? and (b) If so, what R functions can we use to calculate accurate standard errors?  
 
 ```{r}
 results %>% 
   select_if(is.double) %>% 
-  colMeans()
-
-results %>% 
-  select_if(is.logical) %>% 
   colMeans() %>% 
-  round(3)
+  as.matrix()
 
 results %>% 
   select_if(is.double) %>% 
@@ -28,4 +74,9 @@ results %>%
   geom_density(alpha = .5) +
   facet_grid(key ~ .) +
   theme(legend.position = "none")
+
+results %>% 
+  select_if(is.logical) %>% 
+  colMeans() %>% 
+  as.matrix()
 ```
