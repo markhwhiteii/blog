@@ -2,22 +2,34 @@
 output: html_document
 ---
 
-Rough outline:
-- Explain situation (surveying defined audience, finite population)  
--- Focus on online here, non-probability opt-in sample  
--- This situation is a time when there is a defined audience and everyone is sent a survey, so technically it is a probability sample where everyone has a probability of 1, but there is so much non-response bias that weights are critical  
-- Non-response bias, so rake weighting on characteristics to correct for this  
-- I simulate best case scenario: Perfect measurement of what predicts y and dropout  
-- Weighting is complicated ("a mess"); unclear what weights function means in different R commands, particularly glm; weights can mean lots of different things. Rake weights have uncertainty baked-in (compare sample vs. design or whatever weights—this is in Lumley book and elsewhere). Weights in glm with binomial assume it is number of trials, so no standard error adjustment for uncertainty.  
-- Explain simulation superparameters, how sampling worked, etc.  
-- Explain different techniques—they are technically for more complicated designs, but can be applied here.  
+# Outline
+- Start with Gelman "weighting is a mess" quote  
+- Many different types of weights (survey, frequency, precision); within survey weights, they can be calculated based on different things  
+  + Design-based weights used traditionally for surveys, when people doing probability samples where people know the probability that a person was actually in the sample. Weighting is the inverse of probability of being sampled  
+- Online surveys only getting more popular, so focusing on these more opt-in non-probability type samples. Two common situations for us:  
+  + Complete opt-in sample. Posting a link in an ad or email or website to a group of people that we don't know the information about; we don't know the probability of each person in the population to take the survey  
+  + Finite population. This is having a pre-set list of people, an audience, that we want to survey. Everyone will be targeted to get a survey, such as in an ad, so everyone has a probability of 1 of being in the sample. Only issue here is that, for technical reasons, people might not get served (they don't log-on in the sampling period, they have an ad blocker, something goes wrong on the tech side we don't know about)—these are problematic, but we'll assume its random for the purpose of this paper  
+- We will focus on online surveys. Instead of design-based weights, we will be focusing on post-stratification weights to address unit non-response  
+  + Define post-stratification weights—"post" because done after the sampling process, so not products of the design  
+  + Define rake weighting (i.e., repeated post-stratification)  
+- The situation we focus on is finite population: We have a list of people we want to survey, but we want to address unit non-response by weighting on auxiliary variables that correlate with both (a) the outcomes of interest and (b) whether or not someone responses  
+- Since many different types of weights, different R functions mean different things by saying `weights`. We look at the consequences of giving the wrong types of weights on standard errors  
+  + Include quotes from Lumley and others on how point-estimates will be fine mostly, but standard errors will be wrong  
+- Background on the `weights` argument in `glm()` (already written about below, after "Start Content...")  
+- Simulation study background  
+  + Best case scenario: Perfect measurement of what predicts y and dropout, measure all variables that do  
+  + Explain simulation superparameters, how sampling worked, etc. (see powerpoint slide)  
+  + Explain different techniques—they are technically for more complicated sampling designs, but can be applied here; Lumley talks about how weights are first calculated on the design and probability of sampling, then can be adjusted more with post-stratification; we are going to just assume everyone had equal probability of appearing in sample, given our finite population (audience);  survey package usually used for stratified and cluster sampling—"complex survey designs"  
+  + Talk about comparisons: population, random sample, nonrandom, nonrandom + rake in glm, nonrandom + rake in svyglm, nonrandom + rake in svyglm with bootstrapping  
+  + Will look at point estimate accuracy as well as 95% CI coverage, which is related to the standard error obviously  
+- Go through results  
+  + Point estimates  
+  + Density plots  
+  + Confidence interval coverage  
+- Conclusions  
+  + Bootstrap!  
 
-survey package usually used for stratified and cluster sampling—"complex survey designs"  
-
-Types of weights:
-- Frequency, precision
-- Sampling (for design or post-stratification); post-stratification meaning *after* the sampling process is done. Important to introduce raking as iterative post-stratification, since that is what differentiates non-response weighting from other types of weights that are products of the design.  
-
+# Start Content...
 
 ```{r setup, include = FALSE}
 library(tidyverse)
@@ -57,6 +69,8 @@ all.equal(t1, t2)
 ```
 
 The post-stratification survey weights we are interested in do *not* refer to the number of trials. Lumley (2010) argues that the standard errors will be seriously wrong. I ran a simulation experiment to answer two questions: (a) Does using `glm` and giving post-stratification survey weights calculate standard errors incorrectly? and (b) If so, what R functions can we use to calculate accurate standard errors?  
+
+# Method
 
 ```{r}
 results %>% 
