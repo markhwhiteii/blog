@@ -73,7 +73,9 @@ The rake weights we are interested in do *not* refer to the number of trials. Lu
 
 # Simulation Methods
 
-
+```{r sim_flow, echo = FALSE}
+knitr::include_graphics("simulation_flow.jpg")
+```
 
 # Results and Conclusion
 
