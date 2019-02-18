@@ -2,23 +2,7 @@
 output: html_document
 ---
 
-# Outline
-- Start with Gelman "weighting is a mess" quote  
-- Many different types of weights (survey, frequency, precision); within survey weights, they can be calculated based on different things  
-  + Design-based weights used traditionally for surveys, when people doing probability samples where people know the probability that a person was actually in the sample. Weighting is the inverse of probability of being sampled  
-- Online surveys only getting more popular, so focusing on these more opt-in non-probability type samples. Two common situations for us:  
-  + Complete opt-in sample. Posting a link in an ad or email or website to a group of people that we don't know the information about; we don't know the probability of each person in the population to take the survey  
-  + Finite population. This is having a pre-set list of people, an audience, that we want to survey. Everyone will be targeted to get a survey, such as in an ad, so everyone has a probability of 1 of being in the sample. Only issue here is that, for technical reasons, people might not get served (they don't log-on in the sampling period, they have an ad blocker, something goes wrong on the tech side we don't know about)—these are problematic, but we'll assume its random for the purpose of this paper  
-- We will focus on online surveys. Instead of design-based weights, we will be focusing on post-stratification weights to address unit non-response  
-  + Define post-stratification weights—"post" because done after the sampling process, so not products of the design  
-  + Define rake weighting (i.e., repeated post-stratification)  
-- The situation we focus on is finite population: We have a list of people we want to survey, but we want to address unit non-response by weighting on auxiliary variables that correlate with both (a) the outcomes of interest and (b) whether or not someone responds  
-
-
-
-- Since many different types of weights, different R functions mean different things by saying `weights`. We look at the consequences of giving the wrong types of weights on standard errors  
-  + Include quotes from Lumley and others on how point-estimates will be fine mostly, but standard errors will be wrong  
-- Background on the `weights` argument in `glm()` (already written about below, after "Start Content...")  
+### Outline of still need to write: 
 - Simulation study background  
   + Best case scenario: Perfect measurement of what predicts y and dropout, measure all variables that do  
   + Explain simulation superparameters, how sampling worked, etc. (see powerpoint slide)  
@@ -32,43 +16,34 @@ output: html_document
 - Conclusions  
   + Bootstrap!  
 
-
-
 # Start Content...
 
-How do we obtain valid confidence intervals for weighted survey estimates? It is not as simple as it sounds. Andrew Gelman (2007) famously wrote that "survey weighting is a mess," and this can still feel like the case—especially given the varied use of the word "weights" in statistics. Many different types of weights exist: Frequency weights indicate how many observations have a given covariate profile, inverse variance weights are used to calculate unbiased estimates in weighted least squares, and survey weights can come in many varieties and calculations.  
+How do we obtain valid confidence intervals for weighted survey estimates? It is not as simple as it sounds. Andrew Gelman (2007) famously wrote that "survey weighting is a mess...  standard errors are tricky even with simple weighted means" (p. 153), and this can still feel like the case—especially given the varied use of the word "weights" in statistics. Many different types of weights exist: Frequency weights indicate how many observations have a given covariate profile, inverse variance weights are used to calculate unbiased estimates in weighted least squares, and survey weights can come in many varieties and calculations.  
 
-Design weights are survey weights that derive from the structure of how observations were sampled. For example, one may increase the probability of a minority group being sampled so that accurate estimates about this group can be calculated; when making inferences to the population as a whole, one would then calculate weights to shrink this group size to the proportion that they are in the population. More complex survey designs, such as two-stage cluster sampling, might weight on the probability of an observation's cluster being sampled and then on the probability of an observation within that cluster being sampled. In these cases, the weight is then the inverse of the probability that an observation was sampled (Lumley, 2010).  
+Design weights are survey weights that derive from the structure of how observations were sampled. For example, one may increase the probability of a minority group being sampled so that accurate estimates about this group can be calculated (Valliant, Dever, & Kreuter, 2013, p. 43); when making inferences to the population as a whole, one would then calculate weights to shrink this group size to the proportion that they are in the population. More complex survey designs, such as two-stage cluster sampling, might weight on the probability of an observation's cluster being sampled and then on the probability of an observation within that cluster being sampled. In these cases, the weight is then the inverse of the probability that an observation was sampled (Lumley, 2010).  
 
-The focus of this paper, however, is on the use of rake weights for online surveys where we sample everyone in a finite population. The weighting we do will be to correct for non-response, not to address the sampling design. Horvitz and Thompson (1952) define a finite universe as one where "we can identify the individual elements" (p. 663); in the current working example, imagine that we have a list of everyone in the target population of interest. This is often the case when, for example, we are trying to survey an audience list of people we think are amenable to buying our product or are open to supporting our candidate. It could also be the case when we are interested in the opinions of everyone in the directory at a given organization. It can be feasible to sample the entire finite population by sending everyone a link to the survey in an e-mail, message, or digital advertisement. The sampling design is straightforward, as everyone on the list has a sampling probability of 1: We send surveys to everyone. However, response rates for online surveys tend to be very low, opening us up to risk of non-response bias. We use Monte Carlo simulation methods in this paper to examine how to obtain valid confidence intervals for weighted estimates using rake weights.  
+The focus of this paper, however, is on the use of rake weights for online surveys where we sample everyone in a finite population. The weighting we do will be to correct for non-response, not to address the sampling design. Horvitz and Thompson (1952) define a finite universe as one where "we can identify the individual elements" (p. 663); in the current example, imagine that we have a list of everyone in the target population of interest. This is often the case when, for instance, we are trying to survey an audience list of people we think are amenable to buying our product or are open to supporting our candidate. It could also be the case when we are interested in the opinions of everyone in the directory at a given organization. It can be feasible to sample the entire finite population online by sending everyone a link to the survey in an e-mail, message, or digital advertisement. The sampling design is straightforward, as everyone on the list has a sampling probability of 1: We send surveys to everyone. However, response rates for online surveys tend to be very low, opening us up to risk of non-response bias. We use Monte Carlo simulation methods in this paper to examine how to obtain valid confidence intervals for weighted estimates using rake weights.  
 
 ## Raking
 
-Raking is also known as "iterative proportional fitting." The "proportional fitting" aspect comes from making adjustments so that the proportion of people of a given group in the respondent data matches that of the population. If the population was 50% women, but only 30% of our respondents were women, then we could upweight women so that their weights were 50% of our data when calculating estimates. An issue arises, however, if we want to look at many variables. This would include calculating proportions at every possible combination of the variables. But there may be very small amounts of people—or nobody—at, for example, each income-by-gender-by-education-by-race-by-age group. What we can do instead is make it "iterative": We start with one variable, calculate weights to make the proportions match, then move to another variable and do the same. This approach does each grouping variable one-by-one until the weights stop changing. This is one of the most common methods of addressing for non-response (Baker et al., 2010, 2013; Mercer, Lau, & Kennedy, 2018). We will be using the `rake` function from the `survey` R package (Lumley, 2004, 2008, 2010), which calls the package's `postStratify()` function repeatedly until convergence.  
+Raking is also known as "iterative proportional fitting." The "proportional fitting" aspect comes from making adjustments so that the proportion of people of a given group in the respondent data matches that of the population. If the population was 50% women but women only made up 30% of our respondents, then we could increase the weights of women respondents so that they contribute 50% calculating estimates. An issue arises, however, if we want to look at many auxiliary variables. This would require calculating proportions at every possible combination of the variables. But there may be very small amounts of people—or none—at, for example, each income-by-gender-by-education-by-race-by-age combination. What we can do instead is make the process "iterative": We start with one variable, calculate weights to make the proportions match for that variable, then move to another variable and do the same. This approach does each grouping variable one-by-one until the weights stop changing. This is one of the most common methods of addressing for non-response (Baker et al., 2010, 2013; Mercer, Lau, & Kennedy, 2018). We will be using the `rake` function from the `survey` R package (Lumley, 2004, 2008, 2010), which calls the package's `postStratify()` function repeatedly until convergence.  
 
-The goal is to weight on every auxiliary variable that is correlated with both (a) the outcome variable of interest and (b) the probability of responding. In other words, we do not need to worry about variables that are related to non-response, but completely independent of the outcome we are trying to estimate; moreover, we do not need to worry about variables related to the outcome, but do not relate to non-response. Weighting on these variables eliminate bias in the point estimate (Baker, 2013). But what about standard errors?  
+The goal is to weight on every auxiliary variable that is correlated with both (a) the outcome variable of interest and (b) the probability of responding. Imagine we are interested in the proportion of people who feel favorably toward the president. We do not need to worry about variables that are related to non-response, but completely independent of favorability (the outcome variable of interest); people who use the Safari internet browser might be less likely to respond than those who use Firefox, but this is not a problem if browser choice is unrelated to favorabiltiy. Similarly, we do not need to worry about variables related to the outcome but not to probability of responding; Republicans will feel more favorably toward the president, but if they are equally as likely to respond to our survey as Democrats and inependents, then this is not a problem. Weighting on variables related to non-response and the outcome eliminates bias in point estimates (Baker, 2013, p. 23). But what about standard errors?  
 
 ## Problems: Software, Standard Errors
 
+Point estimates are not enough for making meaningful inferences—we also need to quantify our uncertainty. A common way to do this is through 95% confidence intervals (CIs), which represent a range of plausible values around the estimate that could be the true value in the entire population. A more formal definition will be useful for our purposes, however. If we were to do the same survey an arbitrarily large number of times, then 95% of the 95% CIs would include the true population value (Kline, 2004, pp. 26-30). When we do simulation studies, we are repeating the same simulated survey thousands of times; we know that standard errors are being calculated correctly when 95% of our 95% CIs contain the actual population value.  
 
+Imagine you have just calculated rake weights or a column in a dataset given to you has a column for rake weights. You want to use R to calculate what proportion of people have a value of `1` (as opposed to `0`) for a dichotomous variable `y`, and you would like a standard error around this. What do you do?  
 
-# Simulation Methods
+One has to be careful when using weights in R, as different modeling functions can have `weights` arguments that refer to different types of weights, so don't assume that the function's definition of `weights` matches what you are thinking of at the moment.  
 
-# Results and Conclusion
+Lumley (2010) notes: "Most statistical software... will assume that weights are precision weights or frequency weights" and that this "will often (but not always) give correct point estimates, but will usually give seriously incorrect standard errors, confidence intervals, and *p*-values (p. 5)." Since we are modeling a dichotomous variable in this situation, our first thought might be to use the `glm` function with the `binomial("logit")` link. However, the `?glm` documentation tells us that: "For a binomial GLM prior weights are used to give the number of trials when the response is the proportion of successes..." What does this mean? Let's simulate some data to take a look.  
 
+Imagine we have an experiment with 200 participants. When in the experimental condition (`x == 1`), people have a 70% probability of responding positively to our treatment (e.g., voting, donating, purchasing); when in the control (`x == 0`), people have a 30% probability of doing so. When `y == 1`, it is a positive outcome; it is not when `y == 0`. The data might look like this:  
 
-```{r setup, include = FALSE}
+```{r glm_weights_data, message = FALSE, warning = FALSE}
 library(tidyverse)
-results <- read_csv("sim_results.csv")
-```
-
-One has to be careful when using weights in R, however, as different modeling functions can have `weights` arguments that refer to different types of weights, so don't assume that the function's definition of `weights` matches what you are thinking of at the moment.  
-
-Lumley (2010) notes: "Most statistical software... will assume that weights are precision weights or frequency weights" and that this "will often (but not always) give correct point estimates, but will usually give seriously incorrect standard errors, confidence intervals, and *p*-values (p. XXXX)." Since we are modeling a dichotomous variable in this situation, we will want to use `glm` with the `binomial("logit")` link function. The `?glm` documentation tells us that: "For a binomial GLM prior weights are used to give the number of trials when the response is the proportion of successes..." What does this mean?  
-
-Imagine we have an experiment with 200 participants. When in the experimental condition (`x` = 1), people have a 70% probability of responding positively to our treatment (e.g., voting, donating, purchasing); when in the control (`x` = 0), people have a 30% probability of doing so. When `y` = 1, it is a positive outcome; it is not when `y` = 0. The data might look like this:  
-
-```{r glm_weights_data}
 set.seed(1839)
 n <- 200
 x <- rbinom(n, 1, .5)
@@ -87,18 +62,24 @@ We can get the proportion of positive outcomes (what the `glm` documents call "p
 The `n_trials` column is what `glm` is expecting for weights—the number of trials (i.e., observations) that the proportion of successes (i.e., positive outcomes) is based on. We can see that supplying this `trials_table` with weights is equal to using the raw data of `x` and `y` to about 5 or 6 decimal places:  
 
 ```{r comparing_glms}
-(t1 <- summary(glm(prop_successes ~ x, binomial, trials_table, n_trials))$coef)
+(t1 <- summary(glm(prop_successes ~ x, binomial, trials_table, weights = n_trials))$coef)
 
 (t2 <- summary(glm(y ~ x, binomial))$coef)
 
 all.equal(t1, t2)
 ```
 
-The post-stratification survey weights we are interested in do *not* refer to the number of trials. Lumley (2010) argues that the standard errors will be seriously wrong. I ran a simulation experiment to answer two questions: (a) Does using `glm` and giving post-stratification survey weights calculate standard errors incorrectly? and (b) If so, what R functions can we use to calculate accurate standard errors?  
+The rake weights we are interested in do *not* refer to the number of trials. Lumley (2010) argues that the standard errors will be seriously wrong. We ran a simulation experiment to answer two questions: (a) Does using `glm` and giving rake survey weights calculate standard errors incorrectly? and (b) If so, what R functions can we use to calculate accurate standard errors?  
 
-# Method
+# Simulation Methods
 
-```{r}
+
+
+# Results and Conclusion
+
+```{r, message = FALSE}
+results <- read_csv("sim_results.csv")
+
 results %>% 
   select_if(is.double) %>% 
   colMeans() %>% 
