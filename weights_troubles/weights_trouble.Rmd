@@ -12,7 +12,10 @@ output: html_document
 - We will focus on online surveys. Instead of design-based weights, we will be focusing on post-stratification weights to address unit non-response  
   + Define post-stratification weights—"post" because done after the sampling process, so not products of the design  
   + Define rake weighting (i.e., repeated post-stratification)  
-- The situation we focus on is finite population: We have a list of people we want to survey, but we want to address unit non-response by weighting on auxiliary variables that correlate with both (a) the outcomes of interest and (b) whether or not someone responses  
+- The situation we focus on is finite population: We have a list of people we want to survey, but we want to address unit non-response by weighting on auxiliary variables that correlate with both (a) the outcomes of interest and (b) whether or not someone responds  
+
+
+
 - Since many different types of weights, different R functions mean different things by saying `weights`. We look at the consequences of giving the wrong types of weights on standard errors  
   + Include quotes from Lumley and others on how point-estimates will be fine mostly, but standard errors will be wrong  
 - Background on the `weights` argument in `glm()` (already written about below, after "Start Content...")  
@@ -29,7 +32,30 @@ output: html_document
 - Conclusions  
   + Bootstrap!  
 
+
+
 # Start Content...
+
+How do we obtain valid confidence intervals for weighted survey estimates? It is not as simple as it sounds. Andrew Gelman (2007) famously wrote that "survey weighting is a mess," and this can still feel like the case—especially given the varied use of the word "weights" in statistics. Many different types of weights exist: Frequency weights indicate how many observations have a given covariate profile, inverse variance weights are used to calculate unbiased estimates in weighted least squares, and survey weights can come in many varieties and calculations.  
+
+Design weights are survey weights that derive from the structure of how observations were sampled. For example, one may increase the probability of a minority group being sampled so that accurate estimates about this group can be calculated; when making inferences to the population as a whole, one would then calculate weights to shrink this group size to the proportion that they are in the population. More complex survey designs, such as two-stage cluster sampling, might weight on the probability of an observation's cluster being sampled and then on the probability of an observation within that cluster being sampled. In these cases, the weight is then the inverse of the probability that an observation was sampled (Lumley, 2010).  
+
+The focus of this paper, however, is on the use of rake weights for online surveys where we sample everyone in a finite population. The weighting we do will be to correct for non-response, not to address the sampling design. Horvitz and Thompson (1952) define a finite universe as one where "we can identify the individual elements" (p. 663); in the current working example, imagine that we have a list of everyone in the target population of interest. This is often the case when, for example, we are trying to survey an audience list of people we think are amenable to buying our product or are open to supporting our candidate. It could also be the case when we are interested in the opinions of everyone in the directory at a given organization. It can be feasible to sample the entire finite population by sending everyone a link to the survey in an e-mail, message, or digital advertisement. The sampling design is straightforward, as everyone on the list has a sampling probability of 1: We send surveys to everyone. However, response rates for online surveys tend to be very low, opening us up to risk of non-response bias. We use Monte Carlo simulation methods in this paper to examine how to obtain valid confidence intervals for weighted estimates using rake weights.  
+
+## Raking
+
+Raking is also known as "iterative proportional fitting." The "proportional fitting" aspect comes from making adjustments so that the proportion of people of a given group in the respondent data matches that of the population. If the population was 50% women, but only 30% of our respondents were women, then we could upweight women so that their weights were 50% of our data when calculating estimates. An issue arises, however, if we want to look at many variables. This would include calculating proportions at every possible combination of the variables. But there may be very small amounts of people—or nobody—at, for example, each income-by-gender-by-education-by-race-by-age group. What we can do instead is make it "iterative": We start with one variable, calculate weights to make the proportions match, then move to another variable and do the same. This approach does each grouping variable one-by-one until the weights stop changing. This is one of the most common methods of addressing for non-response (Baker et al., 2010, 2013; Mercer, Lau, & Kennedy, 2018). We will be using the `rake` function from the `survey` R package (Lumley, 2004, 2008, 2010), which calls the package's `postStratify()` function repeatedly until convergence.  
+
+The goal is to weight on every auxiliary variable that is correlated with both (a) the outcome variable of interest and (b) the probability of responding. In other words, we do not need to worry about variables that are related to non-response, but completely independent of the outcome we are trying to estimate; moreover, we do not need to worry about variables related to the outcome, but do not relate to non-response. Weighting on these variables eliminate bias in the point estimate (Baker, 2013). But what about standard errors?  
+
+## Problems: Software, Standard Errors
+
+
+
+# Simulation Methods
+
+# Results and Conclusion
+
 
 ```{r setup, include = FALSE}
 library(tidyverse)
