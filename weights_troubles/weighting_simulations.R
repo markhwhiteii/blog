@@ -53,10 +53,10 @@ run_iter <- function(pop, non_rand_p = c(.065, .005, .005, .005)) {
   result <- survey::rake(result, list(~V1, ~V2), get_targets(pop, dat))
   dat$wts <- weights(result)
   wtd_glm <- suppressWarnings(glm(f, binomial, dat, wts))
-  wtd_svy <- suppressWarnings(survey::svyglm(y ~ 1, result, family = binomial))
+  wtd_svy <- suppressWarnings(survey::svyglm(f, result, family = binomial))
   
   result <- survey::as.svrepdesign(result, type = "bootstrap")
-  wtd_rep <- suppressWarnings(survey::svyglm(y ~ 1, result, family = binomial))
+  wtd_rep <- suppressWarnings(survey::svyglm(f, result, family = binomial))
   
   out <- suppressWarnings(suppressMessages(
     list(
