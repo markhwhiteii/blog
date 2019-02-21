@@ -2,22 +2,6 @@
 output: html_document
 ---
 
-### Outline of still need to write: 
-- Simulation study background  
-  + Best case scenario: Perfect measurement of what predicts y and dropout, measure all variables that do  
-  + Explain simulation superparameters, how sampling worked, etc. (see powerpoint slide)  
-  + Explain different techniques—they are technically for more complicated sampling designs, but can be applied here; Lumley talks about how weights are first calculated on the design and probability of sampling, then can be adjusted more with post-stratification; we are going to just assume everyone had equal probability of appearing in sample, given our finite population (audience);  survey package usually used for stratified and cluster sampling—"complex survey designs"  
-  + Talk about comparisons: population, random sample, nonrandom, nonrandom + rake in glm, nonrandom + rake in svyglm, nonrandom + rake in svyglm with bootstrapping  
-  + Will look at point estimate accuracy as well as 95% CI coverage, which is related to the standard error obviously  
-- Go through results  
-  + Point estimates  
-  + Density plots  
-  + Confidence interval coverage  
-- Conclusions  
-  + Bootstrap!  
-
-# Start Content...
-
 How do we obtain valid confidence intervals for weighted survey estimates? It is not as simple as it sounds. Andrew Gelman (2007) famously wrote that "survey weighting is a mess...  standard errors are tricky even with simple weighted means" (p. 153), and this can still feel like the case—especially given the varied use of the word "weights" in statistics. Many different types of weights exist: Frequency weights indicate how many observations have a given covariate profile, inverse variance weights are used to calculate unbiased estimates in weighted least squares, and survey weights can come in many varieties and calculations.  
 
 Design weights are survey weights that derive from the structure of how observations were sampled. For example, one may increase the probability of a minority group being sampled so that accurate estimates about this group can be calculated (Valliant, Dever, & Kreuter, 2013, p. 43); when making inferences to the population as a whole, one would then calculate weights to shrink this group size to the proportion that they are in the population. More complex survey designs, such as two-stage cluster sampling, might weight on the probability of an observation's cluster being sampled and then on the probability of an observation within that cluster being sampled. In these cases, the weight is then the inverse of the probability that an observation was sampled (Lumley, 2010).  
@@ -71,11 +55,29 @@ all.equal(t1, t2)
 
 The rake weights we are interested in do *not* refer to the number of trials. Lumley (2010) argues that the standard errors will be seriously wrong. We ran a simulation experiment to answer two questions: (a) Does using `glm` and giving rake survey weights calculate standard errors incorrectly? and (b) If so, what R functions can we use to calculate accurate standard errors?  
 
-# Simulation Methods
+# Methods
 
-```{r sim_flow, echo = FALSE}
+## Simulation
+
+The simulation flow is pictured in the figure below. Each rectangle box represents a fit model. The finite population was set to an *N = 5,000* for each simulation. Two auxiliary variables, *X~1~* and *X~2~*, were drawn from a Bernoulli distribution with a probability of .5; that is, each variable was a dichotomous (0 or 1) variable, with each observation having an equal chance of being 0 or 1. *X~1~* and *X~2~* are always simulated as independent of one another—they are uncorrelated. Two regression coefficients, one for each *X* variable, were drawn from independent uniform distributions ranging from 0 to 1.5. The *X* variables incremented the log odds of the outcome variable of interest *Y* = 1 at the rate of their corresponding coefficient. Lastly, each realization of the *Y* variable was sampled from a Bernoulli distribution where the probabiltiy for each case was transformed from their log odds, mapping onto the assumptions of a logistic regression.  
+
+```{r sim_flow, echo = FALSE, out.width = '70%', fig.align = 'center'}
 knitr::include_graphics("simulation_flow.jpg")
 ```
+
+The first model was fit on the entire population, `glm(y ~ 1, binomial, population_data)`. In all models, an intercept-only binomial logistic regression was fit (`y ~ 1`), which calculates the proportion of cases where *Y* = 1. The population intercept coefficient served as the ground truth. Standard errors in each of the following models will be assessed by how frequently the 95% CI includes this population ground truth. According to the definition of a 95% CI, we will consider standard error calculation methods to be faithfully representing uncertainty if 95% of the CIs contain this population ground truth for a given method.  
+
+The *X* variables form four groups: *X~1~* = *X~2~* = 1; *X~1~* = *X~2~* = 0; *X~1~* = 0 and *X~2~* = 1; *X~1~* = 1 and *X~2~* = 0. A random sample was simulated from this population data, where every memeber in each of these groups had a 2% probability of responding. A model was fit using `glm(y ~ 1, binomial, random_sample)`.  
+
+A sample with non-response bias was then drawn from the population data. If *X~1~* = *X~2~* = 1, the response probabiltiy was set to 6.5%, while the rest of the groups were set to 0.5%. Since the coefficients determining the population values could not be negative, the observations sampled at 6.5% are always more likely to have *Y* = 1; we will expect the non-response to overestimate the estimate. A model was fit to this sample, `glm(y ~ 1, binomial, biased_sample)`, to demonstrate a baseline of how the estimate would be biased if no weighting were done.  
+
+These data with non-response bias were then converted to a survey design object in the `survey` package by using `dat_design <- svydesign(~ 1, data = biased_sample)`, and rake weights were calculated by passing this survey design object to `rake()`. The weighting targets were determined from the population data frame with all 5,000 cases. These weights were assigned to a variable named `wts` in the biased sample data. Three models were fit using these data.  
+
+Weights were passed to the `glm` command as a way of assessing Lumley's (2010) contention that standard errors will be incorrect, `glm(y ~ 1, binomial, biased_sample, wts)`. The `survey` package also includes its own generalized linear models function that employs a sandwich-type estimator for standard errors (see Lumley & Scott, 2017, p. 269). We fit a model using this method, `svyglm(y ~ 1, dat_design, family = binomial)`, to test if this estimator provides a valid 95% CI (note that the `dat_design` object contains the rake weights, so this was a weighted model). Lastly, we passed the `dat_design` object to the `as.svrepdesign` function with `type = "bootstrap"` specified; the resulting object was used with `svyglm()` to calculate bootstrapped standard errors. Bootstrapping involves drawing *R* resamples from the sample, with replacement, and calculating the estimates for each resample. The standard deviation of the estimates across resamples is then considered to be the standard error of the estimate. See Canty and Davison (1999) for the specific bootstrapping implementation used here, and Kline (2004, Ch. 9) for a broader introduction to resampling methods, including boostrapping.  
+
+## Analyses
+
+
 
 # Results and Conclusion
 
@@ -103,3 +105,12 @@ results %>%
   colMeans() %>% 
   as.matrix()
 ```
+
+
+## Limitations
+
+
+
+## References
+
+
