@@ -14,7 +14,7 @@ Raking is also known as "iterative proportional fitting." The "proportional fitt
 
 The goal is to weight on every auxiliary variable that is correlated with both (a) the outcome variable of interest and (b) the probability of responding. Imagine we are interested in the proportion of people who feel favorably toward the president. We do not need to worry about variables that are related to non-response, but completely independent of favorability (the outcome variable of interest); people who use the Safari internet browser might be less likely to respond than those who use Firefox, but this is not a problem if browser choice is unrelated to favorabiltiy. Similarly, we do not need to worry about variables related to the outcome but not to probability of responding; Republicans will feel more favorably toward the president, but if they are equally as likely to respond to our survey as Democrats and inependents, then this is not a problem. Weighting on variables related to non-response and the outcome eliminates bias in point estimates (Baker, 2013, p. 23). But what about standard errors?  
 
-## Problems: Software, Standard Errors
+## Problems
 
 Point estimates are not enough for making meaningful inferences—we also need to quantify our uncertainty. A common way to do this is through 95% confidence intervals (CIs), which represent a range of plausible values around the estimate that could be the true value in the entire population. A more formal definition will be useful for our purposes, however. If we were to do the same survey an arbitrarily large number of times, then 95% of the 95% CIs would include the true population value (Kline, 2004, pp. 26-30). When we do simulation studies, we are repeating the same simulated survey thousands of times; we know that standard errors are being calculated correctly when 95% of our 95% CIs contain the actual population value.  
 
@@ -59,36 +59,47 @@ The rake weights we are interested in do *not* refer to the number of trials. Lu
 
 ## Simulation
 
-The simulation flow is pictured in the figure below. Each rectangle box represents a fit model. The finite population was set to an *N = 5,000* for each simulation. Two auxiliary variables, *X~1~* and *X~2~*, were drawn from a Bernoulli distribution with a probability of .5; that is, each variable was a dichotomous (0 or 1) variable, with each observation having an equal chance of being 0 or 1. *X~1~* and *X~2~* are always simulated as independent of one another—they are uncorrelated. Two regression coefficients, one for each *X* variable, were drawn from independent uniform distributions ranging from 0 to 1.5. The *X* variables incremented the log odds of the outcome variable of interest *Y* = 1 at the rate of their corresponding coefficient. Lastly, each realization of the *Y* variable was sampled from a Bernoulli distribution where the probabiltiy for each case was transformed from their log odds, mapping onto the assumptions of a logistic regression.  
+The simulation design is pictured in the figure below. Each rectangle box represents a fit model, and this process was repeated 10,000 times. The finite population was set to an *N = 5,000* for each simulation. Two auxiliary variables, *X~1~* and *X~2~*, were drawn from a Bernoulli distribution with a probability of .5; that is, each *X* was a dichotomous variable, with each observation having an equal chance of being 0 or 1. *X~1~* and *X~2~* are always simulated as independent of one another—they are uncorrelated. Two regression coefficients, one for each *X* variable, were drawn from independent uniform distributions ranging from 0 to 1.5. The *X* variables incremented the log odds of the outcome variable of interest *Y* = 1 at the rate of their corresponding coefficient. Lastly, each realization of the *Y* variable was sampled from a Bernoulli distribution where the probabiltiy for each case was transformed from their log odds, mapping onto the assumptions of a logistic regression.  
 
 ```{r sim_flow, echo = FALSE, out.width = '70%', fig.align = 'center'}
 knitr::include_graphics("simulation_flow.jpg")
 ```
 
-The first model was fit on the entire population, `glm(y ~ 1, binomial, population_data)`. In all models, an intercept-only binomial logistic regression was fit (`y ~ 1`), which calculates the proportion of cases where *Y* = 1. The population intercept coefficient served as the ground truth. Standard errors in each of the following models will be assessed by how frequently the 95% CI includes this population ground truth. According to the definition of a 95% CI, we will consider standard error calculation methods to be faithfully representing uncertainty if 95% of the CIs contain this population ground truth for a given method.  
+The first model was fit on the entire population, `glm(y ~ 1, binomial, population_data)`. In all models, this intercept-only binomial logistic regression was fit (`y ~ 1`), which calculates (in logits) the proportion of cases where *Y* = 1. The population intercept coefficient served as ground truth. Standard errors in each of the following models will be assessed by how frequently the 95% CI includes this population ground truth. According to the definition of a 95% CI, we will consider standard error calculation methods to be faithfully representing uncertainty if 95% of the CIs contain this population estimate.  
 
-The *X* variables form four groups: *X~1~* = *X~2~* = 1; *X~1~* = *X~2~* = 0; *X~1~* = 0 and *X~2~* = 1; *X~1~* = 1 and *X~2~* = 0. A random sample was simulated from this population data, where every memeber in each of these groups had a 2% probability of responding. A model was fit using `glm(y ~ 1, binomial, random_sample)`.  
+The *X* variables form four groups: *X~1~* = *X~2~* = 1; *X~1~* = *X~2~* = 0; *X~1~* = 0 and *X~2~* = 1; *X~1~* = 1 and *X~2~* = 0. A random sample was simulated from this population data, where every case in each of these groups had a 2% probability of "responding." A model was fit using `glm(y ~ 1, binomial, random_sample)`. This simulates what occurs when non-response bias is *not* present.  
 
 A sample with non-response bias was then drawn from the population data. If *X~1~* = *X~2~* = 1, the response probabiltiy was set to 6.5%, while the rest of the groups were set to 0.5%. Since the coefficients determining the population values could not be negative, the observations sampled at 6.5% are always more likely to have *Y* = 1; we will expect the non-response to overestimate the estimate. A model was fit to this sample, `glm(y ~ 1, binomial, biased_sample)`, to demonstrate a baseline of how the estimate would be biased if no weighting were done.  
 
-These data with non-response bias were then converted to a survey design object in the `survey` package by using `dat_design <- svydesign(~ 1, data = biased_sample)`, and rake weights were calculated by passing this survey design object to `rake()`. The weighting targets were determined from the population data frame with all 5,000 cases. These weights were assigned to a variable named `wts` in the biased sample data. Three models were fit using these data.  
+These data with non-response bias were then converted to a survey design object in the `survey` package by using `dat_design <- svydesign(~ 1, data = biased_sample)`. Rake weights were calculated by passing this survey design object to `rake()`. The weighting targets were calculated from the population data frame with all 5,000 cases; this thus assumes a situation where we have marginal proportions for the entire finite universe. These weights were assigned to a variable named `wts` in the biased sample data. Three models were fit using these data.  
 
-Weights were passed to the `glm` command as a way of assessing Lumley's (2010) contention that standard errors will be incorrect, `glm(y ~ 1, binomial, biased_sample, wts)`. The `survey` package also includes its own generalized linear models function that employs a sandwich-type estimator for standard errors (see Lumley & Scott, 2017, p. 269). We fit a model using this method, `svyglm(y ~ 1, dat_design, family = binomial)`, to test if this estimator provides a valid 95% CI (note that the `dat_design` object contains the rake weights, so this was a weighted model). Lastly, we passed the `dat_design` object to the `as.svrepdesign` function with `type = "bootstrap"` specified; the resulting object was used with `svyglm()` to calculate bootstrapped standard errors. Bootstrapping involves drawing *R* resamples from the sample, with replacement, and calculating the estimates for each resample. The standard deviation of the estimates across resamples is then considered to be the standard error of the estimate. See Canty and Davison (1999) for the specific bootstrapping implementation used here, and Kline (2004, Ch. 9) for a broader introduction to resampling methods, including boostrapping.  
+Weights were passed to the `glm` command as a way of assessing Lumley's (2010) contention that standard errors will be incorrect: `glm(y ~ 1, binomial, biased_sample, wts)`. The `survey` package also includes its own generalized linear models function that employs a sandwich-type estimator for standard errors (see Lumley & Scott, 2017, p. 269). We fit a model using this method, `svyglm(y ~ 1, dat_design, family = binomial)`, to test if this estimator provides a valid 95% CI (note that the `dat_design` object contains the rake weights, so this was a weighted model).  
 
-## Analyses
+We passed the `dat_design` object to `as.svrepdesign()` with `type = "bootstrap"` specified; the resulting object was used with `svyglm()` to calculate bootstrapped standard errors. These are known as "replicate" weights in survey literature (CITE, XXXX); the method is more broadly referred to as resampling (CITE, XXXX). Bootstrapping involves drawing *R* resamples from the sample, with replacement, and calculating the estimates for each resample. The standard deviation of the estimates across resamples is then considered to be the standard error of the estimate. We employed the default *R* = 50 here. See Canty and Davison (1999) for the specific bootstrapping implementation used here, and Kline (2004, Ch. 9) for a broader introduction to resampling methods, including boostrapping.  
 
-
-
-# Results and Conclusion
+For each simulation iteration, we calculated the estimate for each model and a logical value for all models (but the population model) indicating whether or not the 95% CI for the estimate contained the population value:  
 
 ```{r, message = FALSE}
 results <- read_csv("sim_results.csv")
+head(results)
+```
 
+# Results and Conclusion
+
+The only model that did not approximate the population estimate in the long-run was the model calculated with the non-response bias and _no_ weighting (see table below), supporting Lumley's (2010) contention that weighted estimates—regardless of standard error calculation—will tend to be unbiased. All weighted models also showed the exact same estimates—these methods only differed in their standard error calculations.  
+
+```{r}
 results %>% 
   select_if(is.double) %>% 
   colMeans() %>% 
   as.matrix()
+```
 
+But we do not have the luxury of having the long-run average in applied research—we have just one of these iterations. We would like to use a method that has a narrow spread—where we rarely stray too far away from the population value. Pictured below are density plots of estimates over all 10,000 simulations. The top panel shows how much the estimate differed in the actual population values, while the panel directly below it shows what we see from a sample drawn randomly from it, with no non-response bias. The bottom three distributions are from the weighted models, and again we see that they are all the same—what will differ are their standard errors.  
+
+We can also see that the spread for the weighted estimates is wider than for the random sample, which shows us that we need a standard error calculation that appreciates this spread. If we use a standard error calculation that assumes the distribution looks like the `random` one (with no non-response bias), we will underestimate our standard errors, 95% CIs, and *p*-values.  
+
+```{r}
 results %>% 
   select_if(is.double) %>% 
   gather() %>% 
@@ -99,17 +110,37 @@ results %>%
   geom_density(alpha = .5) +
   facet_grid(key ~ .) +
   theme(legend.position = "none")
+```
 
+Are the CIs properly characterizing uncertainty? Remember: If we run an experiment a large number of times, 95% of the 95% CIs will contain the true population estimate. We can test if this is the case by testing the coverage of each model—what percentage of the time did the 95% CI cover the population estimate?  
+
+```{r}
 results %>% 
   select_if(is.logical) %>% 
   colMeans() %>% 
   as.matrix()
 ```
 
+The random sample coverage is about 95%, which is what we would expect from taking a sample from the population where the response probability does not depend on any predictors of the outcome of interest. The model calculated from the biased data and with no weighting only includes the population estimate about 36% of the time, but this is what we would expect from a model that is getting an incorrect estimate. What of the weighted models that yield unbiased estimates?  
+
+Including weights in the `glm()` function as if they were frequency weights yields what Lumley (2010) warned: Standard errors that are "seriously incorrect." There was only about 68% coverage, meaning that these 95% CIs were actually only 68% CIs. Using the `svyglm()` function increased this to 90% coverage, but this still means that the 95% CI is not correctly disclosing the uncertainty bound. Only when we used the 50 bootstrap resamples did it approach 95%, where the weighted replicate model had about 93% coverage.  
+
+From these results, our recommendation would be to calculate 95% CIs using code like:  
+
+```{r, eval = FALSE}
+dat_design <- svydesign(~ 1, data = dat) # convert data to survey design
+dat_design <- rake(
+  dat_design, 
+  sample.margins = list(~V1, ~V2), # list of formulas specifying raking variables
+  population.margins = pop_targets # list of data frames showing target counts
+)
+dat_design <- as.svrepdesign(dat_design, type = "bootstrap") # bootstrap
+model <- svyglm(y ~ 1, dat_design, family = binomial) # run model
+```
 
 ## Limitations
 
-
+Even though the confidence intervals still tended to underestimate uncertainty, these simulations were still somewhat optimistic—they represented a best case scenario for various reasons. First, there was no error in measuring the variables on which we raked on—they were perfect measurements; second, we had the exact population estimates—this is generally the case when we have a pre-defined list of people with which we want to survey, but sometimes only estimated population totals are available; and third, we were weighting on exactly the variables—and only the variables—that relate to both non-response and outcome. In applied situations, these will not hold, and thus we think that we should be even less confident that 95% CIs are valid—we should be more skeptical than usual when thinking about these bounds.  
 
 ## References
 
