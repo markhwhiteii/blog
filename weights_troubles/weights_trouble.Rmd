@@ -111,7 +111,7 @@ But we do not have the luxury of observing the long-run average in applied resea
 
 We can also see that the spread for the weighted estimates is wider than for the random sample, which shows us that we need a standard error calculation that appreciates this spread. If we use a standard error calculation that assumes the distribution looks like the random one (with no non-response bias), we will underestimate our standard errors, 95% CIs, and *p*-values.  
 
-```{r}
+```{r out.width = '70%', fig.align = 'center'}
 labs <- c("Population", "Random", "Non-Random", "Weighted glm", 
           "Weighted svyglm", "Weighted, Bootstrapped svyglm")
 levs <- c("pop", "random", "nonrandom", "wtdglm", "wtdsvy", "wtdrep")
