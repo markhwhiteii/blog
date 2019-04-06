@@ -2,6 +2,17 @@
 output: html_document
 ---
 
+# Outline
+
+* Introduction
+* Methods 
+* Results and Conclusions
+* Extension
+
+# Introduction
+
+## Survey Weighting
+
 Social science researchers cannot survey all members of populations we study; instead, researchers can survey a sample randomly taken from the population of interest, and then generalize the survey results to the population. These generalizations about a population may be incorrect if the survey sample or respondents do not accurately represent the population to which they belong. For example, this is the case when important demographics of the sample do not match the demographics of the population. Fortunately, we can use survey weighting to leverage information we have about the demographics of a sample and its population to reduce bias in our inferences. Imagine political researchers draw a sample that is 50% registered Democrats from a population that is only 25% registered Democrats. The opinions of Democrats would be over-represented in any conclusions the researchers made about the population. These researchers could correct for Democratic over-representation by reducing the weight of Democrats' opinions such that they only exert influence on 25% of the sample estimate.  
 
 As with any statistical inference, we want to quantify the uncertainty in our results. If market researchers estimate what percentage of people feel positively about Brand X based on a sample, they will want to know the range of possible values this percentage might actually be in the population. Confidence intervals are one way to supply this range of possible values. But how do we obtain valid confidence intervals for weighted survey estimates? It is not as simple as it sounds. Andrew Gelman (2007) famously wrote that "survey weighting is a mess...  standard errors are tricky even with simple weighted means" (p. 153), and this can still feel like the case—especially given the varied use of the word "weights" in statistics.  
@@ -154,11 +165,19 @@ dat_design <- as.svrepdesign(dat_design, type = "bootstrap") # bootstrap
 model <- svyglm(y ~ 1, dat_design, family = binomial) # run model
 ```
 
-The full simulation code can be found on [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations.R).  
-
 ## Limitations
 
 Even though the confidence intervals tended to underestimate uncertainty, these simulations were still quite optimistic. They represented a best case scenario. First, there was no error in measuring the variables on which we raked—they were perfect measurements. Second, we had the exact population estimates—this is generally the case when we have a pre-defined list of people we want to survey, but sometimes we only have estimated population totals available. Third, we were weighting on exactly the variables—and only the variables—that relate to both non-response and outcome. In applied situations, these assumptions (particularly the first and third) will not hold, and thus we argue people should be even less confident that 95% CIs are valid. In a weighted survey context, we should be especially skeptical when looking at CIs.  
+
+# Extension 
+
+In this extension, we explore what we can expect for confidence interval coverage when we are _not_ operating in a best case scenario. We simulate 1) error in the measurement of the variables on which we rake, and 2) error in the population estimates towards which we rake. We observe how these errors affect confidence interval coverage when the errors occur in isolation, as well as simultaneously. To illustrate when these errors might occur in an applied context, imagine researchers are trying to predict voter turnout in Florida based on a survey of Florida residents. The researchers ask survey respondents about their past voting behavior, their current voter registration status, and whether they anticipate voting in the upcoming election. They also ask several demographic questions for weighting purposes. Respondents may misreport their income due to on-the-spot estimation error or stigma associated with being in a low income bracket (https://www.nap.edu/read/10206/chapter/8#166). If enough respondents misreport their income, and researchers weight on income, they will face error #1 above (or: in the measurement of one of the variables on which they are raking). Error #2 could occur if the researchers weight towards population income estimates based on the American Community Survey (ACS) - a continuous survey by the United States Census Bureau. While the ACS follows rigorous methodology, it is still a survey, and thus has error in some of its estimates. Weighting towards income estimates from the ACS will introduce error #2 above. As seen in this example, the errors can easily occur simulataneously. 
+
+## Simulating Measurement Error
+
+... 
+
+ The full simulation code can be found on [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations.R).  
 
 ## References
 
