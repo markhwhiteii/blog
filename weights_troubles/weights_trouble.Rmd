@@ -2,13 +2,6 @@
 output: html_document
 ---
 
-# Outline
-
-* Introduction
-* Methods 
-* Results and Conclusions
-* Extension
-
 # Introduction
 
 ## Survey Weighting
@@ -25,7 +18,7 @@ Many different types of weights exist, including:
 
 Design weights are survey weights that derive from the structure of how observations were sampled. For example, a researcher might increase the probability of a minority group being sampled so that accurate estimates about this group can be calculated (Valliant, Dever, & Kreuter, 2013, p. 43); when making inferences to the population as a whole, the researcher would then calculate weights to shrink this group size to the proportion that they are in the population. In more complex survey designs, such as two-stage cluster sampling, one might weight on the probability of an observation's cluster being sampled and then on the probability of an observation within that cluster being sampled. In these cases, the weight is then the inverse of the probability that an observation was sampled (Lumley, 2010).  
 
-In this paper, however, we focus on the use of rake weights to correct for non-response bias. We simulate the specific situation we often encounter in our work: An online survey where all members of a finite population are included in the targeted sample. Horvitz and Thompson (1952) define a finite universe as one where "we can identify the individual elements" (p. 663); in the current example, imagine that we have a list of everyone in the target population of interest. This is the case when we are trying to survey a list of people we think are amenable to buying a product or are open to supporting a candidate. It could also be the case when we are interested in the opinions of everyone in the directory at a given organization. In these scenarios, it is feasible to sample the entire finite population online by sending everyone a link to the survey in an e-mail, message, or digital advertisement. The sampling design is straightforward. We send surveys to everyone, so each person has a sampling probability of 1. However, response rates for online surveys tend to be very low, raising the risk of non-response bias. We use Monte Carlo simulation methods in this paper to examine how to obtain valid confidence intervals for weighted estimates using rake weights.  
+In this paper, however, we focus on the use of rake weights to correct for non-response bias. We simulate the specific situation we often encounter in our work: An online survey where all members of a finite population are included in the targeted sample. Horvitz and Thompson (1952) define a finite universe as one where "we can identify the individual elements" (p. 663); in the current example, imagine that we have a list of everyone in the target population of interest. This is the case when we are trying to survey a list of people we think are amenable to buying a product or are open to supporting a candidate. It could also be the case when we are interested in the opinions of everyone in the directory at a given organization. In these scenarios, it is feasible to sample the entire finite population online by sending everyone a link to the survey in an e-mail, message, or digital advertisement. The sampling design is straightforward. We send surveys to everyone, so each person has a sampling probability of 1. However, response rates for online surveys tend to be very low, raising the risk of non-response bias. We use Monte Carlo simulation methods in this paper to examine how to obtain valid confidence intervals for weighted estimates using rake weights (Study 1) as well as how robust these confidence intervals are to measurement error and inaccurate targets (Study 2).  
 
 ## Raking
 
@@ -53,36 +46,35 @@ set.seed(1839) # set seed for replicability
 n <- 200 # set sample size
 x <- rbinom(n, 1, .5) # simulate treatment or control group assignment
 y <- rbinom(n, 1, ifelse(x == 1, .7, .3)) # calculate response, based on x
-tibble(x, y) # examine the data
+knitr::kable(head(data.frame(x, y))) # examine the data
 ```
 
 We can get the proportion of positive outcomes (what the `glm` documents call "proportion of successes") by grouping on `x` and calculating the mean of `y`:  
 
-```{r glm_weights_table}
-(trials_table <- tibble(x, y) %>% # take our data...
-  group_by(x) %>% # group by the x variable...
-  # calculate group size and proportion of successes:
-  summarise(n_trials = n(), prop_successes = mean(y)))
+```{r glm_weights_table, echo = FALSE}
+trials_table <- tibble(x, y) %>% 
+  group_by(x) %>% 
+  summarise(n_trials = n(), prop_successes = mean(y))
+
+knitr::kable(trials_table, digits = 3)
 ```
 
 The `n_trials` column is what `glm` is expecting for weights—the number of trials (i.e., observations) that the proportion of successes (i.e., positive outcomes) is based on. We can see that supplying this `trials_table` with weights is equal to using the raw data of `x` and `y` to about 5 or 6 decimal places:  
 
 ```{r comparing_glms}
 # model, extract coefficients from weighted model with summary table:
-(t1 <- summary(glm(prop_successes ~ x, binomial, trials_table, weights = n_trials))$coef)
+knitr::kable(summary(glm(prop_successes ~ x, binomial, trials_table, weights = n_trials))$coef)
 
-(t2 <- summary(glm(y ~ x, binomial))$coef) # do the same for model with raw data
-
-all.equal(t1, t2) # compare to see how far away from equivalent the tables are
+knitr::kable(summary(glm(y ~ x, binomial))$coef) # do the same for model with raw data
 ```
 
 The rake weights we are interested in do *not* refer to the number of trials, and Lumley (2010) argues that the standard errors will be seriously wrong. We run a simulation experiment to answer two questions: (a) Does using `glm` and giving rake survey weights calculate standard errors incorrectly? and (b) If so, what R functions can we use to calculate accurate standard errors?  
 
-# Methods
+# Study 1
 
 ## Simulation
 
-The simulation design is pictured in the figure below. Each rectangle box represents a fit model, and we repeat this process 10,000 times. We set the finite population to an *N* = 5,000 for each simulation. We draw two auxiliary variables, *X~1~* and *X~2~*, from a Bernoulli distribution with a probability of .5; that is, each *X* is a dichotomous variable, with each observation having an equal chance of being 0 or 1. *X~1~* and *X~2~* are always simulated as independent of one another—they are uncorrelated. We draw two regression coefficients, one for each *X* variable, from independent uniform distributions ranging from 0 to 1.5. The *X* variables increment the log odds of the outcome variable of interest *Y* = 1 at the rate of their corresponding coefficient. Lastly, we sample each realization of the *Y* variable from a Bernoulli distribution where the probability for each case is transformed from the log odds, mapping onto the assumptions of a logistic regression.  
+The simulation design is pictured in the figure below (and full simulation code can be found at [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations.R)). Each rectangle box represents a fit model, and we repeat this process 10,000 times. We set the finite population to an *N* = 5,000 for each simulation. We draw two auxiliary variables, *X~1~* and *X~2~*, from a Bernoulli distribution with a probability of .5; that is, each *X* is a dichotomous variable, with each observation having an equal chance of being 0 or 1. *X~1~* and *X~2~* are always simulated as independent of one another—they are uncorrelated. We draw two regression coefficients, one for each *X* variable, from independent uniform distributions ranging from 0 to 1.5. The *X* variables increment the log odds of the outcome variable of interest *Y* = 1 at the rate of their corresponding coefficient. Lastly, we sample each realization of the *Y* variable from a Bernoulli distribution where the probability for each case is transformed from the log odds, mapping onto the assumptions of a logistic regression.  
 
 ```{r sim_flow, echo = FALSE, out.width = '70%', fig.align = 'center'}
 knitr::include_graphics("simulation_flow.jpg")
@@ -100,31 +92,31 @@ We pass the weights to the `glm` command as a way of assessing Lumley's (2010) c
 
 We pass the `dat_design` object to `as.svrepdesign()` with `type = "bootstrap"` specified; we use the resulting object with `svyglm()` to calculate bootstrapped standard errors. These are known as "replicate" weights in survey literature (Groves et al., 2009, Ch. 10; Lumley, 2010, Ch. 2). Bootstrapping involves drawing *R* resamples from the sample, with replacement, and calculating the estimates for each resample. We then consider the standard deviation of the estimates across resamples to be the standard error of the estimate. We employ the `as.svrepdesign()` default *R* = 50 here. See Canty and Davison (1999) for the specific bootstrapping implementation used here, and Kline (2004, Ch. 9) for a broader introduction to resampling methods, including bootstrapping.  
 
-For each simulation iteration, we calculate the estimate for each model and a logical value for all models (save for the population model) indicating whether or not the 95% CI for the estimate contained the population value. The results look like:  
+For each simulation iteration, we calculate the estimate for each model and a logical value for all models (save for the population model) indicating whether or not the 95% CI for the estimate contained the population value.  
 
-```{r, message = FALSE}
+```{r, message = FALSE, echo = FALSE}
 results <- read_csv("sim_results.csv")
-head(results)
 ```
 
-# Results and Conclusion
+## Results and Summary
 
 The only model that did not approximate the population estimate in the long-run was the model calculated with the non-response bias and _no_ weighting (see table below), supporting Lumley's (2010) contention that weighted estimates—regardless of standard error calculation—will tend to be unbiased. All weighted models also showed the exact same estimates.  
 
-```{r}
-results %>% 
-  select_if(is.double) %>% 
-  colMeans() %>% 
-  as.matrix()
+```{r, echo = FALSE}
+knitr::kable(tibble(
+  Model = c("Population", "Unbiased Sample", "Biased Sample",
+            "glm", "svyglm (Sandwich)", "svyglm (Bootstrap)"),
+  Estimate = colMeans(select_if(results, is.double))
+), digits = 3)
 ```
 
 But we do not have the luxury of observing the long-run average in applied research—we see just one of these iterations. We would like to use a method that has a narrow spread—where we rarely stray too far away from the population value. Pictured below are density plots of estimates over all 10,000 simulations. The first panel shows how much the estimate varied in the actual population values, while the panel directly right of it shows what we see from a sample drawn randomly from it, with no non-response bias. The bottom three distributions are from the weighted models, and again we see that they are all the same—what will differ only are their calculated standard errors.  
 
 We can also see that the spread for the weighted estimates is wider than for the random sample, which shows us that we need a standard error calculation that appreciates this spread. If we use a standard error calculation that assumes the distribution looks like the random one (with no non-response bias), we will underestimate our standard errors, 95% CIs, and *p*-values.  
 
-```{r out.width = '70%', fig.align = 'center'}
-labs <- c("Population", "Random", "Non-Random", "Weighted glm", 
-          "Weighted svyglm", "Weighted, Bootstrapped svyglm")
+```{r out.width = '70%', fig.align = 'center', echo = FALSE}
+labs <- c("Population", "Unbiased Sample", "Biased Sample",
+            "glm", "svyglm (Sandwich)", "svyglm (Bootstrap)")
 levs <- c("pop", "random", "nonrandom", "wtdglm", "wtdsvy", "wtdrep")
 names(labs) <- levs
 
@@ -136,23 +128,28 @@ results %>%
   ggplot(aes(x = value, fill = key)) +
   geom_density(alpha = .5) +
   facet_wrap(~ key, labeller = as_labeller(labs), strip.position = "top") +
-  theme(legend.position = "none")
+  ggthemes::theme_fivethirtyeight() +
+  theme(legend.position = "none",
+        axis.text = element_text(),
+        axis.title = element_text()) +
+  labs(x = "Estimate", y = "Density")
 ```
 
 Are the CIs properly characterizing uncertainty? Remember: If we run a survey a large number of times, 95% of the 95% CIs should contain the true population estimate. We can test if this is the case by calculating the coverage of each model—what percentage of the time did the 95% CI cover the population estimate?  
 
-```{r}
-results %>% 
-  select_if(is.logical) %>% 
-  colMeans() %>% 
-  as.matrix()
+```{r echo = FALSE}
+knitr::kable(tibble(
+  Model = c("Unbiased Sample", "Biased Sample", "glm", 
+            "svyglm (Sandwich)", "svyglm (Bootstrap)"),
+  Estimate = colMeans(select_if(results, is.logical))
+), digits = 3)
 ```
 
 The random sample coverage is about 95%, which is what we would expect from taking a sample from the population where the response probability does not depend on any predictors of the outcome of interest. The model calculated from the biased data and with no weighting only includes the population estimate about 36% of the time, but this is what we would expect from a model that is getting an incorrect estimate. What of the weighted models that yield unbiased estimates?  
 
 Including weights in the `glm()` function as if they were frequency weights yields what Lumley (2010) warned: Standard errors that are "seriously incorrect." There was only about 68% coverage, meaning that these 95% CIs were actually only 68% CIs. Using the `svyglm()` function increased this to 90% coverage, but this still means that the 95% CI is not correctly disclosing the uncertainty at hand—it would be more accurate to call it a 90% CI. Only when we used the 50 bootstrap resamples did it approach 95%, as the weighted replicate model had about 93% coverage.  
 
-From these results, our recommendation would be to calculate 95% CIs using code like:  
+From these results, our recommendation would be to calculate 95% CIs in situations like this as:  
 
 ```{r, eval = FALSE}
 dat_design <- svydesign(~ 1, data = dat) # convert data to survey design
@@ -165,21 +162,25 @@ dat_design <- as.svrepdesign(dat_design, type = "bootstrap") # bootstrap
 model <- svyglm(y ~ 1, dat_design, family = binomial) # run model
 ```
 
-## Limitations
+Even though the confidence intervals tended to underestimate uncertainty, these simulations were still quite optimistic. They represented a best case scenario. First, there was no error in measuring the variables on which we raked—they were perfect measurements. Second, we had the exact population estimates—this is generally the case when we have a pre-defined list of people we want to survey, but sometimes we only have estimated population totals available. Third, we were weighting on exactly the variables—and only the variables—that relate to both non-response and outcome. In applied situations, these assumptions will not hold. We now turn to examining coverage when in more realistic situations.  
 
-Even though the confidence intervals tended to underestimate uncertainty, these simulations were still quite optimistic. They represented a best case scenario. First, there was no error in measuring the variables on which we raked—they were perfect measurements. Second, we had the exact population estimates—this is generally the case when we have a pre-defined list of people we want to survey, but sometimes we only have estimated population totals available. Third, we were weighting on exactly the variables—and only the variables—that relate to both non-response and outcome. In applied situations, these assumptions (particularly the first and third) will not hold, and thus we argue people should be even less confident that 95% CIs are valid. In a weighted survey context, we should be especially skeptical when looking at CIs.  
+# Study 2 
 
-# Extension 
+We now explore what to expect for confidence interval coverage when we are _not_ operating in a best case scenario. We simulate: (a) error in the measurement of the variables on which we rake, and (b) error in the population estimates towards which we rake. We observe how these errors affect confidence interval coverage when the errors occur in isolation as well as simultaneously. To illustrate when these errors might occur in an applied context, imagine researchers are trying to predict voter turnout in Florida based on a survey of Florida residents. The researchers ask survey respondents about their past voting behavior, their current voter registration status, and whether they anticipate voting in the upcoming election. They also ask several demographic questions for weighting purposes. Respondents may misreport their income due to on-the-spot estimation error or stigma associated with being in a low income bracket (Mathiowetz, Brown, & Bound, 2001). If enough respondents misreport their income, and researchers weight on income, they will face error (a) above. Error (b) could occur if the researchers weight towards population income estimates based on the American Community Survey (ACS)—a continuous survey by the United States Census Bureau. While the ACS follows rigorous methodology, it is still a survey, and thus has error in its estimates. Weighting towards income estimates from the ACS will introduce error (b) above. As seen in this example, the errors can easily occur simulataneously.  
 
-In this extension, we explore what we can expect for confidence interval coverage when we are _not_ operating in a best case scenario. We simulate 1) error in the measurement of the variables on which we rake, and 2) error in the population estimates towards which we rake. We observe how these errors affect confidence interval coverage when the errors occur in isolation, as well as simultaneously. To illustrate when these errors might occur in an applied context, imagine researchers are trying to predict voter turnout in Florida based on a survey of Florida residents. The researchers ask survey respondents about their past voting behavior, their current voter registration status, and whether they anticipate voting in the upcoming election. They also ask several demographic questions for weighting purposes. Respondents may misreport their income due to on-the-spot estimation error or stigma associated with being in a low income bracket (https://www.nap.edu/read/10206/chapter/8#166). If enough respondents misreport their income, and researchers weight on income, they will face error #1 above (or: in the measurement of one of the variables on which they are raking). Error #2 could occur if the researchers weight towards population income estimates based on the American Community Survey (ACS) - a continuous survey by the United States Census Bureau. While the ACS follows rigorous methodology, it is still a survey, and thus has error in some of its estimates. Weighting towards income estimates from the ACS will introduce error #2 above. As seen in this example, the errors can easily occur simulataneously. 
+## Simulation
 
-## Simulating Measurement Error
 
-... 
 
- The full simulation code can be found on [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations.R).  
+## Results and Summary
 
-## References
+
+
+# Conclusion
+
+
+
+# References
 
 Baker, R., et al. (2010). Research synthesis: AAPOR report on online panels. *Public Opinion Quarterly, 74*(4), 711-781.  
 
@@ -206,5 +207,7 @@ Lumley, T. (2008). Analysis of complex samples in R. *The Survey Statistician, 5
 Lumley, T. (2010). *Complex surveys: A guide to analysis using R*. Wiley.  
 
 Lumley, T. & Scott, A. (2017). Fitting regression models to survey data. *Statistical Science, 32*(2), 265-278.  
+
+Mathiowetz, N. A., Brown, C., & Bound, J. (2001). Measurement error in surveys of the low-income population. From M. Ver Ploeg, R. A. Moffitt, & C. F. Citro (Eds). *Studies of welfare populations: Data collection and research issues*. National Academy Press.  
 
 Valliant, R., Dever, J. A., & Kreuter, F. (2013). *Practical tools for designing and weighting survey samples*. Springer.  
