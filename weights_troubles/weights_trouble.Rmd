@@ -8,7 +8,7 @@ output: html_document
 
 Social science researchers cannot survey all members of populations we study; instead, researchers can survey a sample randomly taken from the population of interest, and then generalize the survey results to the population. These generalizations about a population may be incorrect if the survey sample or respondents do not accurately represent the population to which they belong. For example, this is the case when important demographics of the sample do not match the demographics of the population. Fortunately, we can use survey weighting to leverage information we have about the demographics of a sample and its population to reduce bias in our inferences. Imagine political researchers draw a sample that is 50% registered Democrats from a population that is only 25% registered Democrats. The opinions of Democrats would be over-represented in any conclusions the researchers made about the population. These researchers could correct for Democratic over-representation by reducing the weight of Democrats' opinions such that they only exert influence on 25% of the sample estimate.  
 
-As with any statistical inference, we want to quantify the uncertainty in our results. If market researchers estimate what percentage of people feel positively about Brand X based on a sample, they will want to know the range of possible values this percentage might actually be in the population. Confidence intervals are one way to supply this range of possible values. But how do we obtain valid confidence intervals for weighted survey estimates? It is not as simple as it sounds. Andrew Gelman (2007) famously wrote that "survey weighting is a mess...  standard errors are tricky even with simple weighted means" (p. 153), and this can still feel like the case—especially given the varied use of the word "weights" in statistics.  
+As with any statistical inference, we want to quantify the uncertainty in our results. If market researchers estimate what percentage of people feel positively about Brand X based on a sample, they will want to know the range of possible values this percentage might actually be in the population. Confidence intervals (CIs) are one way to supply this range of possible values. But how do we obtain valid CIs for weighted survey estimates? It is not as simple as it sounds. Andrew Gelman (2007) famously wrote that "survey weighting is a mess...  standard errors are tricky even with simple weighted means" (p. 153), and this can still feel like the case—especially given the varied use of the word "weights" in statistics.  
 
 Many different types of weights exist, including:  
 
@@ -18,7 +18,7 @@ Many different types of weights exist, including:
 
 Design weights are survey weights that derive from the structure of how observations were sampled. For example, a researcher might increase the probability of a minority group being sampled so that accurate estimates about this group can be calculated (Valliant, Dever, & Kreuter, 2013, p. 43); when making inferences to the population as a whole, the researcher would then calculate weights to shrink this group size to the proportion that they are in the population. In more complex survey designs, such as two-stage cluster sampling, one might weight on the probability of an observation's cluster being sampled and then on the probability of an observation within that cluster being sampled. In these cases, the weight is then the inverse of the probability that an observation was sampled (Lumley, 2010).  
 
-In this paper, however, we focus on the use of rake weights to correct for non-response bias. We simulate the specific situation we often encounter in our work: An online survey where all members of a finite population are included in the targeted sample. Horvitz and Thompson (1952) define a finite universe as one where "we can identify the individual elements" (p. 663); in the current example, imagine that we have a list of everyone in the target population of interest. This is the case when we are trying to survey a list of people we think are amenable to buying a product or are open to supporting a candidate. It could also be the case when we are interested in the opinions of everyone in the directory at a given organization. In these scenarios, it is feasible to sample the entire finite population online by sending everyone a link to the survey in an e-mail, message, or digital advertisement. The sampling design is straightforward. We send surveys to everyone, so each person has a sampling probability of 1. However, response rates for online surveys tend to be very low, raising the risk of non-response bias. We use Monte Carlo simulation methods in this paper to examine how to obtain valid confidence intervals for weighted estimates using rake weights (Study 1) as well as how robust these confidence intervals are to measurement error and inaccurate targets (Study 2).  
+In this paper, however, we focus on the use of rake weights to correct for non-response bias. We simulate the specific situation we often encounter in our work: An online survey where all members of a finite population are included in the targeted sample. Horvitz and Thompson (1952) define a finite universe as one where "we can identify the individual elements" (p. 663); in the current example, imagine that we have a list of everyone in the target population of interest. This is the case when we are trying to survey a list of people we think are amenable to buying a product or are open to supporting a candidate. It could also be the case when we are interested in the opinions of everyone in the directory at a given organization. In these scenarios, it is feasible to sample the entire finite population online by sending everyone a link to the survey in an e-mail, message, or digital advertisement. The sampling design is straightforward. We send surveys to everyone, so each person has a sampling probability of 1. However, response rates for online surveys tend to be very low, raising the risk of non-response bias. We use Monte Carlo simulation methods in this paper to examine how to obtain valid CIs for weighted estimates using rake weights (Study 1) as well as how robust these CIs are to measurement error and inaccurate targets (Study 2).  
 
 ## Raking
 
@@ -30,7 +30,7 @@ Weighting on variables related to non-response and the outcome eliminates bias i
 
 ## Problems
 
-Point estimates are not enough for making meaningful inferences—we also need to quantify our uncertainty. A common way to do this is through 95% confidence intervals (CIs), which represent a range of plausible values around the estimate that could be the true value in the entire population. But we need a more formal definition for confidence intervals. If we were to do the same survey an arbitrarily large number of times, then 95% of the 95% CIs would include the true population value (Kline, 2004, pp. 26-30). When we do simulation studies, we are repeating the same simulated survey thousands of times; we know that standard errors are being calculated correctly when 95% of our 95% CIs contain the actual population value.  
+Point estimates are not enough for making meaningful inferences—we also need to quantify our uncertainty. A common way to do this is through 95% CIs, which represent a range of plausible values around the estimate that could be the true value in the entire population. But we need a more formal definition for CIs. If we were to do the same survey an arbitrarily large number of times, then 95% of the 95% CIs would include the true population value (Kline, 2004, pp. 26-30). When we do simulation studies, we are repeating the same simulated survey thousands of times; we know that standard errors are being calculated correctly when 95% of our 95% CIs contain the actual population value.  
 
 Imagine you have just calculated survey weights or a column in a data set given to you contains survey weights. You want to use R to calculate what proportion of people have a value of `1` (as opposed to `0`) for a dichotomous variable `y`, and you would like a standard error around this. What do you do?  
 
@@ -162,23 +162,84 @@ dat_design <- as.svrepdesign(dat_design, type = "bootstrap") # bootstrap
 model <- svyglm(y ~ 1, dat_design, family = binomial) # run model
 ```
 
-Even though the confidence intervals tended to underestimate uncertainty, these simulations were still quite optimistic. They represented a best case scenario. First, there was no error in measuring the variables on which we raked—they were perfect measurements. Second, we had the exact population estimates—this is generally the case when we have a pre-defined list of people we want to survey, but sometimes we only have estimated population totals available. Third, we were weighting on exactly the variables—and only the variables—that relate to both non-response and outcome. In applied situations, these assumptions will not hold. We now turn to examining coverage when in more realistic situations.  
+Even though the CIs tended to underestimate uncertainty, these simulations were still quite optimistic. They represented a best case scenario. First, there was no error in measuring the variables on which we raked—they were perfect measurements. Second, we had the exact population estimates—this is generally the case when we have a pre-defined list of people we want to survey, but sometimes we only have estimated population totals available. Third, we were weighting on exactly the variables—and only the variables—that relate to both non-response and outcome. In applied situations, these assumptions will not hold. We now turn to examining coverage when in more realistic situations.  
 
 # Study 2 
 
-We now explore what to expect for confidence interval coverage when we are _not_ operating in a best case scenario. We simulate: (a) error in the measurement of the variables on which we rake, and (b) error in the population estimates towards which we rake. We observe how these errors affect confidence interval coverage when the errors occur in isolation as well as simultaneously. To illustrate when these errors might occur in an applied context, imagine researchers are trying to predict voter turnout in Florida based on a survey of Florida residents. The researchers ask survey respondents about their past voting behavior, their current voter registration status, and whether they anticipate voting in the upcoming election. They also ask several demographic questions for weighting purposes. Respondents may misreport their income due to on-the-spot estimation error or stigma associated with being in a low income bracket (Mathiowetz, Brown, & Bound, 2001). If enough respondents misreport their income, and researchers weight on income, they will face error (a) above. Error (b) could occur if the researchers weight towards population income estimates based on the American Community Survey (ACS)—a continuous survey by the United States Census Bureau. While the ACS follows rigorous methodology, it is still a survey, and thus has error in its estimates. Weighting towards income estimates from the ACS will introduce error (b) above. As seen in this example, the errors can easily occur simulataneously.  
+We now explore what to expect for CI coverage when we are _not_ operating in a best case scenario. We simulate: (a) error in the measurement of the variables on which we rake, and (b) error in the population estimates towards which we rake. We observe how these errors affect CI coverage when the errors occur in isolation as well as simultaneously. To illustrate when these errors might occur in an applied context, imagine researchers are trying to predict voter turnout in Florida based on a survey of Florida residents. The researchers ask survey respondents about their past voting behavior, their current voter registration status, and whether they anticipate voting in the upcoming election. They also ask several demographic questions for weighting purposes. Respondents may misreport their income due to on-the-spot estimation error or stigma associated with being in a low income bracket (Mathiowetz, Brown, & Bound, 2001). If enough respondents misreport their income, and researchers weight on income, they will face error (a) above. Error (b) could occur if the researchers weight towards population income estimates based on the American Community Survey (ACS)—a continuous survey by the United States Census Bureau. While the ACS follows rigorous methodology, it is still a survey, and thus has error in its estimates. Weighting towards income estimates from the ACS will introduce error (b) above. As seen in this example, the errors can easily occur simulataneously.  
 
 ## Simulation
 
-
+The Study 2 simulation was largely the same as Study 1, but only the two models calculating standard error with the `svyglm` function (i.e., sandwich and bootstrap) were fit (full simulation code can be found at [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations_2.R)). We also introduced measurement and target errors to the data. We simulated two probabilities from independent uniform distributions with limits at *0* and *.15*. One of these probabilities, *p~1~*, was used as the probability of inaccurate measurement: Both of the weighting variables in each sample *X~1~* and *X~2~* were transformed such that each *0*s flipped to *1*s and vice-versa with a probability of *p~1~*. The second of these probabilities, *p~2~*, was used as the amount of target error: This value was subtracted from the proportion of people where *X* = 0 and added to the proportion of people where *X* = 1, and this was done for both *X~1~* and *X~2~*. We ran 20,000 iterations of this simulation, and we analyzed the data by looking at the relationship between each *p* and the level of coverage for both the sandwich and bootstrap estimators.  
 
 ## Results and Summary
 
+The interactive relationship between measurement and target error is plotted below. The two panels were calculated from two logistic regressions specifying main effects and interactions between the two types of error; both interactions were significant, *p* < .0001.  
 
+First, we can examine the effect of measurement error when there is no target error by comparing the intercepts of the curves. With both measurement and target error being absent, the bootstrap estimator has about 96% coverage, while the sandwich has about 94%. The Study 1 and Study 2 estimates here likely differ due to random error; there are less accurate estimates in the present study, as well, as iterations were spread more out across the entire range of error—not just zero. The coverage drops from valid (about 95%) to an underestimate (about 90%) by the time we see about 12.5% chance of measurement error.  
+
+Next, we can examine the effect of target error when there is no measurement error by looking at the curves marked by a measurement error of zero. Even at high levels of target error (15% off in both directions), the CIs are not terribly poor in their coverage—especially for the bootstrap.  
+
+```{r out.width = '70%', fig.align = 'center', echo = FALSE, message = FALSE, warning = FALSE}
+results <- read_csv("sim_results_2.csv")
+sand <- glm(sandwich_coverage ~ p_wrong * p_error, binomial, results)
+boot <- glm(bootstrap_coverage ~ p_wrong * p_error, binomial, results)
+
+sand_preds <- data.frame(
+  p_wrong = rep(seq(0, .15, length.out = 200), 5),
+  p_error = rep(c(0, .025, .075, .125, .15), each = 200),
+  estimator = "sandwich",
+  coverage = predict(
+    sand, 
+    data.frame(
+      p_wrong = rep(seq(0, .15, length.out = 200), 5),
+      p_error = rep(c(0, .025, .075, .125, .15), each = 200)
+    ),
+    type = "response"
+  )
+)
+
+boot_preds <- data.frame(
+  p_wrong = rep(seq(0, .15, length.out = 200), 5),
+  p_error = rep(c(0, .025, .075, .125, .15), each = 200),
+  estimator = "bootstrap",
+  coverage = predict(
+    boot, 
+    data.frame(
+      p_wrong = rep(seq(0, .15, length.out = 200), 5),
+      p_error = rep(c(0, .025, .075, .125, .15), each = 200)
+    ),
+    type = "response"
+  )
+)
+
+boot_preds %>% 
+  bind_rows(sand_preds) %>%
+  ggplot(aes(x = p_wrong, y = coverage, color = factor(p_error))) +
+  geom_line(size = 1) +
+  facet_wrap(~ estimator, labeller = as_labeller(
+    c("bootstrap" = "Bootstrap", "sandwich" = "Sandwich")
+  )) +
+  theme_minimal() +
+  ggthemes::theme_fivethirtyeight() +
+  theme(legend.position = "top",
+        axis.text = element_text(),
+        axis.title = element_text(),
+        text = element_text(size = 14)) +
+  labs(x = "\nTarget Error", y = "Coverage\n") +
+  scale_color_discrete(name = "Measurement Error") +
+  scale_y_continuous(breaks = seq(.6, .95, by = .05))
+```
+
+Lastly, the interactive effect is seen by looking at the more precipitous drop in coverage when both errors are present than when they appear in isolation. For both estimation procedures, CI coverage falls under 90% when both measurement errors are in the middle of the ranges we explored; this is not true when only one is present and in this middle range.  
 
 # Conclusion
 
+These simulations suggest people should be skeptical when looking at CIs in a weighted survey context. This is not to say, however, that weighted surveys are incapable of describing uncertainty—FiveThirtyEight.com has done a great job of accurately reflecting their uncertainty (Silver, 2019). But more care should be taken into interpreting these CIs than in other contexts.  
 
+These data should also be instructive to anyone that uses a statistical package or programming language: Be careful when specifying "weights" arguments. There are many different types of weights, and supplying survey weights when the package assumes they are a different type of weight can severely harm CI coverage. We recommend using bootstrap weighting in the `survey` package, using the `svyglm()` function to calculate estimates.  
+
+We did not simulate the full range of possibilities (weighting on the wrong set variables, weights with an interaction effect on response probability, etc.); those interested in examining other possibilities can find our simuatlion code—and the entire script to reproduce all analyses—at [GitHub](https://github.com/markhwhiteii/blog/tree/master/weights_troubles).  
 
 # References
 
@@ -209,5 +270,7 @@ Lumley, T. (2010). *Complex surveys: A guide to analysis using R*. Wiley.
 Lumley, T. & Scott, A. (2017). Fitting regression models to survey data. *Statistical Science, 32*(2), 265-278.  
 
 Mathiowetz, N. A., Brown, C., & Bound, J. (2001). Measurement error in surveys of the low-income population. From M. Ver Ploeg, R. A. Moffitt, & C. F. Citro (Eds). *Studies of welfare populations: Data collection and research issues*. National Academy Press.  
+
+Silver, N. (2019). *When we say 70 percent, it really means 70 percent*. Retrieved from https://fivethirtyeight.com/features/when-we-say-70-percent-it-really-means-70-percent/  
 
 Valliant, R., Dever, J. A., & Kreuter, F. (2013). *Practical tools for designing and weighting survey samples*. Springer.  
