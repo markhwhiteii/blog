@@ -1,5 +1,5 @@
 ---
-output: html_document
+output: pdf_document
 ---
 
 # Introduction
@@ -12,9 +12,9 @@ As with any statistical inference, we want to quantify the uncertainty in our re
 
 Many different types of weights exist, including:  
 
-* frequency weights, which indicate how many observations have a given covariate profile  
-* inverse variance weights, used to calculate unbiased estimates in weighted least squares  
-* and survey weights, which can come in many varieties and calculations.  
+* Frequency weights, which indicate how many observations have a given covariate profile  
+* Inverse variance weights, used to calculate unbiased estimates in weighted least squares  
+* Survey weights, which can come in many varieties and calculations  
 
 Design weights are survey weights that derive from the structure of how observations were sampled. For example, a researcher might increase the probability of a minority group being sampled so that accurate estimates about this group can be calculated (Valliant, Dever, & Kreuter, 2013, p. 43); when making inferences to the population as a whole, the researcher would then calculate weights to shrink this group size to the proportion that they are in the population. In more complex survey designs, such as two-stage cluster sampling, one might weight on the probability of an observation's cluster being sampled and then on the probability of an observation within that cluster being sampled. In these cases, the weight is then the inverse of the probability that an observation was sampled (Lumley, 2010).  
 
@@ -76,7 +76,7 @@ The rake weights we are interested in do *not* refer to the number of trials, an
 
 The simulation design is pictured in the figure below (and full simulation code can be found at [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations.R)). Each rectangle box represents a fit model, and we repeat this process 10,000 times. We set the finite population to an *N* = 5,000 for each simulation. We draw two auxiliary variables, *X~1~* and *X~2~*, from a Bernoulli distribution with a probability of .5; that is, each *X* is a dichotomous variable, with each observation having an equal chance of being 0 or 1. *X~1~* and *X~2~* are always simulated as independent of one another—they are uncorrelated. We draw two regression coefficients, one for each *X* variable, from independent uniform distributions ranging from 0 to 1.5. The *X* variables increment the log odds of the outcome variable of interest *Y* = 1 at the rate of their corresponding coefficient. Lastly, we sample each realization of the *Y* variable from a Bernoulli distribution where the probability for each case is transformed from the log odds, mapping onto the assumptions of a logistic regression.  
 
-```{r sim_flow, echo = FALSE, out.width = '70%', fig.align = 'center'}
+```{r sim_flow, echo = FALSE, out.width = '90%', fig.align = 'center'}
 knitr::include_graphics("simulation_flow.jpg")
 ```
 
@@ -86,7 +86,7 @@ The *X* variables form four groups: *X~1~* = *X~2~* = 1; *X~1~* = *X~2~* = 0; *X
 
 Next, we draw a sample with non-response bias from the population data. We set the response probability to 6.5% when *X~1~* = *X~2~* = 1, 0.5% otherwise. Since the coefficients determining the population values cannot be negative, the observations sampled at 6.5% are always more likely to have *Y* = 1; thus, the non-response will overestimate the estimate. We fit a model to this sample, `glm(y ~ 1, binomial, biased_sample)`, to demonstrate a baseline of how the estimate is biased if we don't weight.  
 
-We then convert these data with non-response bias to a survey design object in the `survey` package using `dat_design <- svydesign(~ 1, data = biased_sample)`. We calculate rake weights by passing this survey design object to `rake()`. We determine the weighting target from the population data with all 5,000 cases, which assumes a situation where we have marginal proportions for the entire finite universe *without measurement error.* We assign these weights to a variable named `wts` in the biased sample data and then fit three models using this data.  
+We then convert these data with non-response bias to a survey design object in the `survey` package using `dat_design <- svydesign(~ 1, data = biased_sample)`. We calculate rake weights by passing this survey design object to `rake()`. We determine the weighting target from the population data with all 5,000 cases, which assumes a situation where we have marginal proportions for the entire finite universe without error. We assign these weights to a variable named `wts` in the biased sample data and then fit three models using these data.  
 
 We pass the weights to the `glm` command as a way of assessing Lumley's (2010) contention that standard errors will be incorrect: `glm(y ~ 1, binomial, biased_sample, wts)`. The `survey` package also includes its own generalized linear models function that employs a sandwich-type estimator for standard errors (see Lumley & Scott, 2017, p. 269). We fit a model using this method, `svyglm(y ~ 1, dat_design, family = binomial)`, to test if this estimator provides a valid 95% CI (note that the `dat_design` object contains the rake weights, so this was a weighted model).  
 
@@ -131,7 +131,8 @@ results %>%
   ggthemes::theme_fivethirtyeight() +
   theme(legend.position = "none",
         axis.text = element_text(),
-        axis.title = element_text()) +
+        axis.title = element_text(),
+        text = element_text(size = 14)) +
   labs(x = "Estimate", y = "Density")
 ```
 
@@ -166,11 +167,11 @@ The CIs tended to underestimate uncertainty, and these simulations were quite op
 
 # Study 2 
 
-We now explore what to expect for CI coverage when we are _not_ operating in a best case scenario. We simulate: (a) error in the measurement of the variables on which we rake, and (b) error in the population estimates towards which we rake. We observe how these errors affect CI coverage when the errors occur in isolation as well as simultaneously. To illustrate when these errors might occur in an applied context, imagine researchers are trying to predict voter turnout in Florida based on a survey of Florida residents. The researchers ask survey respondents about their past voting behavior, their current voter registration status, and whether they anticipate voting in the upcoming election. They also ask several demographic questions for weighting purposes. Respondents may misreport their income due to on-the-spot estimation error or stigma associated with being in a low income bracket (Mathiowetz, Brown, & Bound, 2001). If enough respondents misreport their income, and researchers weight on income, they will face error (a) above. Error (b) could occur if the researchers weight towards population income estimates based on the American Community Survey (ACS)—a continuous survey by the United States Census Bureau. While the ACS follows rigorous methodology, it is still a survey, and thus has error in its estimates. Weighting towards income estimates from the ACS will introduce error (b) above. As seen in this example, the errors can easily occur simulataneously.  
+We explore what to expect for CI coverage when we are _not_ operating in a best case scenario. We simulate: (a) error in the measurement of the variables on which we rake, and (b) error in the population estimates towards which we rake. We observe how these errors affect CI coverage when the errors occur in isolation as well as simultaneously. To illustrate when these errors might occur in an applied context, imagine researchers are trying to predict voter turnout in Florida based on a survey of Florida residents. The researchers ask survey respondents about their past voting behavior, their current voter registration status, and whether they anticipate voting in the upcoming election. They also ask several demographic questions for weighting purposes. Respondents may misreport their income due to on-the-spot estimation error or stigma associated with being in a low income bracket (Mathiowetz, Brown, & Bound, 2001). If enough respondents misreport their income, and researchers weight on income, they will face error (a) above. Error (b) could occur if the researchers weight towards population income estimates based on the American Community Survey (ACS)—a continuous survey by the United States Census Bureau. While the ACS follows rigorous methodology, it is still a survey, and thus has error in its estimates. Weighting towards income estimates from the ACS will introduce error (b) above. As seen in this example, the errors can easily occur simultaneously.  
 
 ## Simulation
 
-The Study 2 simulation is largely the same as Study 1, but we fit only the two models (sandwich and bootstrap) that calculate standard error with the `svyglm` function (full simulation code can be found at [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations_2.R)). We also introduce measurement and target errors to the data. We simulate two probabilities from independent uniform distributions with limits at *0* and *.15*. We use one of these probabilities, *p~1~*, as the probability of inaccurate measurement. We transform both of the weighting variables in each sample *X~1~* and *X~2~* such that *0*s are flipped to *1*s and vice-versa with a probability of *p~1~*. The second of these probabilities, *p~2~*, is used as the amount of target error. We subtract *p~2~* from the proportion of people where *X* = 0 and add *p~2~* to the proportion of people where *X* = 1, for both *X~1~* and *X~2~*. We run 20,000 iterations of this simulation, and analyze the data by looking at the relationship between each *p* and the level of coverage for both the sandwich and bootstrap estimators.  
+The Study 2 simulation is largely the same as Study 1, but we fit only the two models (sandwich and bootstrap) that calculate standard error with the `svyglm` function (full simulation code can be found at [GitHub](https://github.com/markhwhiteii/blog/blob/master/weights_troubles/weighting_simulations_2.R)). We also introduce measurement and target errors to the data. We simulate two probabilities from independent uniform distributions with limits at *0* and *.15*. We use one of these probabilities, *p~1~*, as the probability of inaccurate measurement. We transform both of the weighting variables in each sample *X~1~* and *X~2~* such that *0*s are flipped to *1*s and vice versa with a probability of *p~1~*. The second of these probabilities, *p~2~*, is used as the amount of target error. We subtract *p~2~* from the proportion of people where *X* = 0 and add *p~2~* to the proportion of people where *X* = 1, for both *X~1~* and *X~2~*. We run 20,000 iterations of this simulation, and analyze the data by looking at the relationship between each *p* and the level of coverage for both the sandwich and bootstrap estimators.  
 
 ## Results and Summary
 
