@@ -1,4 +1,8 @@
 ---
+title: "Confidence interval coverage in weighted surveys: A simulation study"
+author:
+  - "Mark H. White II"
+  - "Isaac Lello-Smith"
 output: pdf_document
 ---
 
