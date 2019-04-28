@@ -1,5 +1,5 @@
 ---
-output: html_document
+output: html_fragment
 ---
 
 Creating a `ggplot2` theme that matches your organization's colors and fonts can help your plots look slick and feel seamless with the rest of the organization's work. One extra thing that has come up with this for me has been adding a logo to plots. While I find customizing the theme by using `theme()` to be pretty straightforward, I feel like adding a logo is a little trickier. So in this post, I show how I add logos to `ggplot2` figures. The code is cobbled from [other blog posts](https://www.danielphadley.com/ggplot-logo/) and [StackOverflow questions](https://stackoverflow.com/questions/41574732/how-to-add-logo-on-ggplot2-footer), but I wanted to put it all in one place and show what was most intuitive for me.  
