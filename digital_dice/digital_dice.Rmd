@@ -1,0 +1,12 @@
+---
+output:
+  html_document:
+    self_contained: false
+---
+
+```{r setup, include = FALSE}
+library(knitr)
+```
+
+
+
