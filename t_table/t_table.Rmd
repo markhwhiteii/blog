@@ -1,0 +1,97 @@
+---
+title: "A Function for Calculating Tidy Summaries of Multiple t-tests"
+output: html_document
+---
+
+The *t*-test is one of the most often used in psychology and other social sciences. In APA format, researchers are told to report the means and standard deviations of both conditions; the *t*-statistic, its degrees of freedom, and its p-value; and an effect size with confidence interval (generally Cohen's *d* and 95%).  
+
+Researchers frequently conduct randomized experiments with not just one dependent variable, but many. And they may want to make sure that other variables, such as age, do not differ by condition.  
+
+The following function will return all the necessary information from *t*-tests. I don't have it in a package yet (and don't know where I'd put it—yet. Drop me a line if you think it fits in an existing package; I would be happy to include it in an existing package). So you'll have to copy, paste, and run the following into your script to use it.  
+
+```{r fun}
+t_table <- function(data, dvs, iv, var_equal = TRUE, p_adj = "none") {
+  
+  if (!inherits(data, "data.frame")) {
+    stop("data must be a data.frame")
+  }
+  
+  if (!all(c(dvs, iv) %in% names(data))) {
+    stop("at least one column given in dvs and iv are not in the data")
+  }
+  
+  if (!all(sapply(data[, dvs], is.numeric))) {
+    stop("all dvs must be numeric")
+  }
+  
+  if (length(unique(na.omit(data[[iv]]))) != 2) {
+    stop("independent variable must only have two unique values")
+  }
+  
+  out <- lapply(dvs, function(x) {
+    
+    tres <- t.test(data[[x]] ~ data[[iv]], var.equal = var_equal)
+    
+    mns <- tapply(data[[x]], data[[iv]], mean, na.rm = TRUE)
+    names(mns) <- paste0(names(mns), "_m")
+    
+    sds <- tapply(data[[x]], data[[iv]], sd, na.rm = TRUE)
+    names(sds) <- paste0(names(sds), "_sd")
+    
+    es <- MBESS::ci.smd(ncp = tres$statistic, 
+                        n.1 = table(data[[iv]])[[1]], 
+                        n.2 = table(data[[iv]])[[2]])
+    
+    c(
+      c(mns[1], sds[1], mns[2], sds[2]),
+      tres$statistic,
+      tres$parameter,
+      p = tres$p.value,
+      d = unname(es$smd),
+      d_lb = es$Lower,
+      d_ub = es$Upper
+    )
+  })
+  
+  out <- as.data.frame(do.call(rbind, out))
+  out <- cbind(variable = dvs, out)
+  names(out) <- gsub("[^0-9A-Za-z_]", "", names(out))
+  
+  out$p <- p.adjust(out$p, p_adj)
+  
+  return(out)
+}
+```
+
+The first argument specifies a `data.frame` where the data reside, a string vector of the names of the dependent variables, a string indicating the independent variable, a logical value on whether or not to assume variances are equal across conditions (defaults to `TRUE` for a classic *t*-test), and a string indicating what *p*-value adjustments to do. See `?p.adjust.methods` for more information on which methods are available to use. This defaults to no adjustment. (The function with full documentation in `{roxygen2}` format can be found at my [GitHub]().) Note that this function depends on the `{MBESS}` package, so make sure to have that installed first (but you don't need to call `library` on it).  
+
+What does it look like in action? Let's imagine a `ctl` and `exp` condition, with the dependent variables of `y1`, `y2`, etc., through `y10`, and a sample size of 128. I simulate that data below, where `y1` and `y2` have significant effects with a Cohen's *d* = 0.5 and 0.8, respectively.  
+
+```{r sim}
+set.seed(1839)
+cond <- rep(c("ctl", "exp"), each = 64)
+y1 <- rnorm(128, ifelse(cond == "ctl", 0, .5))
+y2 <- rnorm(128, ifelse(cond == "ctl", 0, .8))
+dat <- as.data.frame(lapply(1:8, function(zzz) rnorm(128)))
+dat <- cbind(cond, y1, y2, dat)
+names(dat)[4:11] <- paste0("y", 3:10)
+dat[1:5, 1:5]
+```
+
+We can then feed the necessary information to the `t_table` function. Note that, instead of typing out all the `y1` through `y10` columns, I use the `paste0` function to generate them in less code. I don't do any rounding for you inside of the function, but for the sake of presentation, I round to 2 decimal points here.  
+
+```{r demo1}
+result <- t_table(dat, paste0("y", 1:10), "cond")
+result[-1] <- lapply(result[-1], round, 2)
+result
+```
+
+Note that we got a few false positives here. Which leads to using *p*-value adjustments, if you wish. Let's now say I use the Holm adjustment.  
+
+```{r demo2}
+result2 <- t_table(dat, paste0("y", 1:10), "cond", p_adj = "holm")
+result2[-1] <- lapply(result2[-1], round, 2)
+result2
+```
+
+But note that the width of the confidence intervals are *not* adjusted here.  
