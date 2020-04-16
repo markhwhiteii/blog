@@ -8,7 +8,7 @@ output:
 knitr::opts_chunk$set(message = FALSE, warning = FALSE)
 ```
 
-This week was the week of April 14th, the date that shares the (French) name of Aphex Twin's most well-known work, ["Avril 14th."](https://www.youtube.com/watch?v=F6dGAZTj8xA) I have known about Aphex Twin since maybe middle school or so, but I only first really listened in earnest after hearing "Avril 14th" as the backing track to the poignant ending scene of the black comedy film "Four Lions" (2010). And then, of course, it was sampled in Kanye West's ["Blame Game."](https://www.youtube.com/watch?v=6mp72xUirfs)  
+This week was the week of April 14th, the date that shares the (French) name of Aphex Twin's most well-known work, ["Avril 14th."](https://www.youtube.com/watch?v=F6dGAZTj8xA) I have known about Aphex Twin since maybe middle school or so, but I only first really listened in earnest after hearing "Avril 14th" as the backing track to the poignant ending scene of the black comedy *Four Lions*. And then, of course, it was sampled in Kanye West's ["Blame Game."](https://www.youtube.com/watch?v=6mp72xUirfs)  
 
 His discography has always been very hit-or-miss for me. I love the pretty piano, ambient, and down-tempo works. But I'm less a fan of the glitchy, fast-paced tracks; I'm much more into the ["Flim"](https://www.youtube.com/watch?v=Yh-3bpuiBg0) side of his discography than the ["Phloam"](https://www.youtube.com/watch?v=k034En2FVoo) side.  
 
@@ -28,7 +28,7 @@ My thinking being that Aphex Twin's discography would have an exceptionally high
 
 I used the handy `{spotifyr}` package to access the Spotify API. I defined a helper function to get artists related to Aphex Twin. This function wrapped around the `spotifyr::get_related_artists()` function to do the following:  
 
- 1. Initialize a list of related artists by getting the 20 artists related most to Aphex Twin (as indicated by listener behavior)  
+ 1. Initialize a list of related artists by getting the 20 artists related most to Aphex Twin (as indicated by listener behavior).  
  
  2. For each of those 20 artists, get their 20 related artists. Bind these data to the initialized data in Step 1. Deduplicate so that no artists are listed twice.
  
@@ -55,11 +55,11 @@ Where `id` is the Spotify artist ID and `iter` is how many iterations one wants 
 
 ## Choosing a Metric
 
-My hypothesis is that Aphex Twin has an especially eclectic discography. In statistical terms, we could characterize this as *the characteristics of the discography vary more than other artists.* So we want to look at each artist's discography and see how those variables mentioned above—danceability, energy, and valence—vary. We need a measure of multivariate spread or dispersion.  
+My hypothesis is that Aphex Twin has an especially eclectic discography. In statistical terms, we could characterize this as *the characteristics of his discography vary more than other artists'.* So we want to look at each artist's discography and see how those variables mentioned above—danceability, energy, and valence—vary. We need a measure of multivariate spread or dispersion.  
 
-When looking at just one variable, the answer is straightforward: We can look at the variance for each artist to characterize how much spread there is in the distribution of songs. This will be good enough metric for our uses, since all songs are measured on the same 0 to 1 scale.  
+When looking at just one variable, the answer is straightforward: We can look at the variance for each artist to characterize how much spread there is in the distribution of songs. This would be a good enough metric for our uses, since all songs are measured on the same 0 to 1 scale.  
 
-But we want to look at *three* variables. Summing up the variances of each of the three variables sounds appealing, but there's a problem: What if two of the variables are highly correlated? Imagine two situations where two variables are plotted against one another, one situation where the variables correlate highly (left panel) and one situation where the variables are completely uncorrelated (right panel).  
+But we want to look at *three* variables. Summing up the variances of each of the three variables sounds appealing, but there's a problem: What if two of the variables are highly correlated? Imagine two situations where two variables are plotted against one another, one situation where the variables are completely uncorrelated (left panel) and one where they correlate highly (right panel).  
 
 ```{r sim}
 library(tidyverse)
@@ -76,7 +76,7 @@ rmvnorm(100, sigma = matrix(c(1, .8, .8, 1), 2)) %>%
   ggthemes::theme_fivethirtyeight(16)
 ```
 
-We can see that the points on the panel take up more space—they are more dispersed. We want a metric that appreciates this. Think of it this way: Since each of the three metrics from Spotify are on a 0 to 1 scale, think of a cube where each of the lengths are 1. In one corner of the box is a point representing a song that is high in energy, valence, and danceability. Another corner has songs where the danceability is high, valence is high, but energy is low. And so on.  
+We can see that the uncorrelated points take up more space—they are more dispersed. We want a metric that appreciates this. Think of it this way: Since each of the three metrics from Spotify are on a 0 to 1 scale, imagine a cube where each of the sides has a length of 1. In one corner of the box is a point representing a song that is high in energy, valence, and danceability. Another corner has songs where the danceability is high, valence is high, but energy is low. And so on.  
 
 I am considering an eclectic catalog of songs to be one that has points all over this cube. The determinant of the covariance matrix can do that for us, which is sometimes known as "generalized variance," see [Wilks (1932)](https://doi.org/10.1093/biomet/24.3-4.471) and [Sen Gupta (2006).](https://doi.org/10.1002/0471667196.ess6053.pub2)
 
