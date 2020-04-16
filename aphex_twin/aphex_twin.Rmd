@@ -116,7 +116,7 @@ tibble(artist_name = unique(dat$artist_name), gen_var) %>%
 
 Aphex Twin, by a wide margin, has the most varied Spotify discography in terms of danceability, energy, and valence. This is of a sample of popular, comparable artists—those that people who listen to Aphex Twin also listen to. Some other great artists are on here, as well: Boards of Canada, Four Tet, Thom Yorke, RJD2, Broken Social Scene, Flying Lotus.  
 
-You can see all the data and code for this post by going to by GitHub.
+You can see all the data and code for this post by going to my [GitHub](https://github.com/markhwhiteii/blog/tree/master/aphex_twin).
 
 ## Code for Grabbing Data
 
