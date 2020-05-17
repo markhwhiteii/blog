@@ -1,9 +1,7 @@
 library(shiny)
-library(writexl)
-library(dplyr)
 
 make_card <- function() {
-    out <- tibble(
+    out <- data.frame(
         B = sample(1:15,  5),
         I = sample(16:30, 5),
         N = sample(31:45, 5),
