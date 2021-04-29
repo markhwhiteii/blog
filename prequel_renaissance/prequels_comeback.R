@@ -69,7 +69,6 @@ cv_res %>%
   filter(.metric == "rmse")
 
 autoplot(cv_res, rank_metric = "rmse", metric = "rmse")
-autoplot(cv_res, rank_metric = "rmse", metric = "rmse", select_best = TRUE)
 
 # predict ----------------------------------------------------------------------
 best_results <- cv_res %>% 
@@ -95,3 +94,23 @@ ggplot(dat_test, aes(x = date, y = stars)) +
   geom_vline(aes(xintercept = tros)) +
   geom_count(alpha = .3) +
   geom_line(aes(x = date, y = .pred), color = "blue")
+
+# spline -----------------------------------------------------------------------
+best_results <- cv_res %>% 
+  pull_workflow_set_result("spline_linear_reg") %>% 
+  select_best(metric = "rmse")
+
+final_fit <- cv_res %>% 
+  pull_workflow("spline_linear_reg") %>% 
+  finalize_workflow(best_results) %>% 
+  fit(dat_train)
+
+dat_test$pred_spline <- predict(final_fit, dat_test)$.pred
+
+ggplot(dat_test, aes(x = date, y = stars)) +
+  facet_wrap(~ film) +
+  geom_vline(aes(xintercept = tfa)) +
+  geom_vline(aes(xintercept = tlj)) +
+  geom_vline(aes(xintercept = tros)) +
+  geom_count(alpha = .3) +
+  geom_line(aes(x = date, y = pred_spline), color = "blue")
