@@ -1,7 +1,7 @@
-# TODO: transition this to workflowsets instead of two workflows
 # prep -------------------------------------------------------------------------
 library(tidyverse)
 library(tidymodels)
+library(workflowsets)
 set.seed(1839)
 
 dat <- list.files(pattern = "^ep") %>% 
@@ -9,81 +9,79 @@ dat <- list.files(pattern = "^ep") %>%
   transmute(film, date = lubridate::mdy(date), stars) %>% 
   na.omit() %>% 
   filter(date >= "2012-04-09") %>% 
-  mutate(date = as.numeric(date - lubridate::ymd("2012-04-09")))
+  mutate(date = as.numeric(date - lubridate::ymd("2012-04-09"))) %>% 
+  initial_split()
 
 dat_train <- training(dat)
 dat_test <- testing(dat)
 
-# set model --------------------------------------------------------------------
+# set models -------------------------------------------------------------------
 lm_mod <- linear_reg() %>% 
   set_engine("lm")
 
+rf_mod <- rand_forest(
+  mode = "regression",
+  trees = 1000,
+  mtry = tune(),
+  min_n = tune()
+) %>% 
+  set_engine("ranger")
+
+nn_mod <- nearest_neighbor(
+  mode = "regression", 
+  neighbors = tune(),
+  dist_power = tune(), 
+  weight_func = tune()
+) %>% 
+  set_engine("kknn")
+
 # make recipes -----------------------------------------------------------------
-rec_bs <- recipe(stars ~ date + film, dat_train) %>% 
-  step_bs(date, deg_free = tune(), degree = tune()) %>% 
-  step_dummy(film) %>% 
-  step_interact(~ starts_with("date"):starts_with("film"))
+rec_base <- recipe(stars ~ date + film, dat_train) %>% 
+  step_dummy(film)
 
-rec_ns <- recipe(stars ~ date + film, dat_train) %>% 
+rec_ns <- rec_base %>% 
   step_ns(date, deg_free = tune()) %>% 
-  step_dummy(film) %>% 
   step_interact(~ starts_with("date"):starts_with("film"))
 
-wf_bs <- workflow() %>% 
-  add_model(lm_mod) %>% 
-  add_recipe(rec_bs)
+rec_zs <- rec_base %>% 
+  step_normalize(all_predictors())
 
-wf_ns <- workflow() %>% 
-  add_model(lm_mod) %>% 
-  add_recipe(rec_ns)
+# workflowset ------------------------------------------------------------------
+wfs <- workflow_set(
+  preproc = list(spline = rec_ns, base = rec_base, zscored = rec_zs),
+  models = list(lm_mod, rf_mod, nn_mod),
+  cross = FALSE
+)
 
 # cross validation -------------------------------------------------------------
-# param grids
-grid_bs <- tibble(deg_free = rep(4:10, 3), degree = rep(2:4, each = 7))
-grid_ns <- tibble(deg_free = 2:10)
-
-# define folds
 folds <- vfold_cv(dat_train, v = 10)
 
-# do cv
-cv_bs <- wf_bs %>% 
-  tune_grid(resamples = folds, grid = grid_bs)
+# cv_res <- wfs %>% 
+#   workflow_map("tune_grid", seed = 1839, grid = 30, resamples = folds)
+# 
+# saveRDS(cv_res, file = "cv_res.rds")
 
-cv_ns <- wf_ns %>% 
-  tune_grid(resamples = folds, grid = grid_ns)
+cv_res <- readRDS("cv_res.rds")
 
 # compare models and params ----------------------------------------------------
-ests <- cv_bs %>% 
-  collect_metrics() %>% 
-  filter(.metric == "rsq") %>% 
-  mutate(recipe = "step_bs") %>%
-  bind_rows({
-    cv_ns %>% 
-      collect_metrics() %>% 
-      filter(.metric == "rsq") %>% 
-      mutate(recipe = "step_ns")
-  }) %>% 
-  mutate(model = 1:n())
+cv_res %>% 
+  rank_results() %>% 
+  filter(.metric == "rmse")
 
-ggplot(ests, aes(x = model, y = mean, color = recipe)) +
-  geom_point() +
-  geom_errorbar(aes(ymin = mean - std_err, ymax = mean + std_err))
-
-best_bs <- select_by_one_std_err(cv_bs, deg_free, degree, metric = "rsq")
-best_ns <- select_by_one_std_err(cv_ns, deg_free, metric = "rsq")
+autoplot(cv_res, rank_metric = "rmse", metric = "rmse")
+autoplot(cv_res, rank_metric = "rmse", metric = "rmse", select_best = TRUE)
 
 # predict ----------------------------------------------------------------------
-wf_bs %>% 
-  finalize_workflow(best_bs) # erroring here
+best_results <- cv_res %>% 
+  pull_workflow_set_result("base_rand_forest") %>% 
+  select_best(metric = "rmse")
 
-fit_ns <- wf_ns %>% 
-  finalize_workflow(best_ns) %>% 
+final_fit <- cv_res %>% 
+  pull_workflow("base_rand_forest") %>% 
+  finalize_workflow(best_results) %>% 
   fit(dat_train)
 
-fit_ns %>% 
-  pluck("fit")
-  
-dat_test <- bind_cols(dat_test, predict(fit_ns, dat_test))
+dat_test <- bind_cols(dat_test, predict(final_fit, dat_test))
 
 # plotting ---------------------------------------------------------------------
 tfa <- as.numeric(lubridate::ymd("2015-12-18") - lubridate::ymd("2012-04-09"))
@@ -92,21 +90,8 @@ tros <- as.numeric(lubridate::ymd("2019-12-20") - lubridate::ymd("2012-04-09"))
 
 ggplot(dat_test, aes(x = date, y = stars)) +
   facet_wrap(~ film) +
-  geom_count(alpha = .3) +
-  geom_line(aes(x = date, y = .pred...5), color = "blue") +
   geom_vline(aes(xintercept = tfa)) +
   geom_vline(aes(xintercept = tlj)) +
-  geom_vline(aes(xintercept = tros))
-
-# plot both --------------------------------------------------------------------
-ggplot(dat_test, aes(x = date, y = stars)) +
+  geom_vline(aes(xintercept = tros)) +
   geom_count(alpha = .3) +
-  geom_smooth(se = FALSE, method = lm, formula = y ~ splines::ns(x, df = 4)) +
-  geom_smooth(
-    se = FALSE,
-    method = lm,
-    formula = y ~ splines::bs(x, df = 4, degree = 2),
-    color = "red"
-  ) +
-  movie_verticals() +
-  facet_wrap(~ film)
+  geom_line(aes(x = date, y = .pred), color = "blue")
