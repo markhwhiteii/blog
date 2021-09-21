@@ -1,0 +1,156 @@
+---
+output:
+  html_fragment:
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+One of the main assumptions of linear regression taught in statistics courses is that of "constant variance" or "homoscedasticity." Having data that do not have constant variance (i.e., are heteroscedastic) is then often treated as a problem—a nuisance that violates our assumptions and, among other things, produces inaccurate *p*-values. But I have been interested for [some](https://www.markhw.com/s/beta_hurdle.pdf) [time](https://stats.stackexchange.com/questions/322188/conditionally-heteroskedastic-linear-regression-how-can-i-model-variance-from-g) in taking a different approach. Instead of seeing this non-constant variance as a nuisance that we need to adjust for, what if we saw it as part of the actual phenomenon of interest? That is, what if the changing variance is actually telling us something important about what we are studying? In this post, I'm going to describe a situation where predicted variance is meaningful for inferences we are trying to make, how to model it, and how it differs from ordinary least squares (OLS) regression.  
+
+### The Motivating Example
+
+The use case here are my Letterboxd ratings. Letterboxd is an app that I use to log the films I've watched: It keeps track of when I watched a film, how I rated it (0.5 to 5.0 stars), and any text review I gave it on that watch. I started doing this at the beginning of the pandemic, and I been watching a lot of movies throughout this time of social distancing. Letterboxd has an amazing feature that allows you to export your data as a .csv. It also exports the year in which the film was released.  
+
+This leads to an obvious research question: Do I think movies are getting better—or worse—over time? I start my bringing in my data and regressing rating on year:  
+
+```{r eda}
+library(tidyverse)
+library(gamlss)
+
+ratings <- read_csv("ratings.csv") %>% 
+  janitor::clean_names()
+
+ggplot(ratings, aes(x = year, y = rating)) +
+  geom_count(color = "#2D2D2A", alpha = .8) +
+  geom_smooth(
+    method = "lm",
+    formula = y ~ x,
+    se = FALSE,
+    size = 1.5,
+    color = "#7D82B8"
+  ) +
+  theme_light() +
+  labs(x = "Year", y = "Rating") +
+  scale_x_continuous(breaks = seq(1930, 2020, by = 10)) +
+  theme(text = element_text(size = 16))
+
+summary(lm(rating ~ year, ratings))
+```
+
+We see a significant relationship such that, for every year that passes, we expect about a 0.1 decrease in rating. But the scatter plot shows we do not have a constant variance: As year increases, the *spread* of scores gets wider. This violates the assumption of homoscedasticity. The general advice I got when learning regression was to use some type of robust standard error estimator so that this heteroscedasticity wouldn't change Type I or Type II error rates.  
+
+But doing that ignores the real story of the data here: Scores get more extreme as time goes on. I watch many movies as they are being released, so I am much less discriminating when it comes to current movies than older movies. I watch, say, Zack Snyder's *Justice League*, which I very much did not like, but I'm not watching whatever the 1960 version of that was. This heteroscedasticity reflects a sampling bias, then: I am much less discriminating about watching a movie that comes out contemporaneously than I am when I go back to watch films from before I was born.  
+
+How do we capture this in our model? We cannot with OLS regression. Note that the summary above tells us a "residual standard error." This is constant, but we know it is not given the scatter plot and the way that the films were sampled (i.e., chosen to be watched).  
+
+### The Model
+
+To take a step back: What about OLS regression assumes constant variance? My website doesn't like me trying to use Greek letters—plus I try to stay away from them when I can—so I'll write the model out in code instead. Assume we have a predictor `x`, regression coefficients `b_0` (the intercept), `b_1` (the first predictor), an outcome `y`, and the residual `e`. We generally write it as:  
+
+```
+y_i = b_0 + b_1 * x_i + e_i    where    e ~ N(0, sigma)
+```
+
+The `e ~ N(0, sigma)` means that the errors are distributed normally with a mean of zero and a standard deviation of `sigma`. I include the `_i` as a subscript to note that the `y`, `x`, and `e` variables differ by individual. Note that `sigma` does not have a subscript: It is the same for every person. This is where the assumption of constant variance comes from. Another way to write this equation is by saying:  
+
+```
+y_i ~ N(b_0 + b_1 * x_i, sigma)
+```
+
+Which means that everyone is assumed to come from a normal distribution with the mean that is their predicted value (`b_0 + b_1 * x_i`) and a standard deviation that we calculate (`sigma`). The R package that I will be using refers to that predicted value as `mu`, so `y_i ~ N(mu_i, sigma)`. What we will do is expand the model to add a subscript of `i` to the sigma, indicating that each respondent has a different standard deviation, as well as mean: `y_i ~ N(mu_i, sigma_i)`.  
+
+We already have a regression equation predicting `mu`—the mean of the response variable. What we can do is make another regression equation predicting `sigma`—the standard deviation of the response variable. The only snag here is that a standard deviation or variance cannot be negative. What we can do is apply the log link function to our regression equation, which is generalized linear model trick to make sure all the predicted values are non-negative. (You may be familiar with the log link function from generalized linear models like Poisson regression).  
+
+This updated model then comes:
+
+```
+y_i ~ N(b_0 + b_1 * x_i, exp(b_3 + b_4 * x_i))
+```
+
+The `exp` makes sure that all of our predicted values are above zero. This shows a model where we were using just one variable `x` (e.g., a film's release year) to predict both the mean and the standard deviation. Note that the same variables or completely different variables can be used for these two submodels, which we'll call the `mu` and `sigma` submodels, respectively.  
+
+### Simulating the Model
+
+I think simulating data is a helpful tool for understanding how models work, so I do that here. First, I simulate 100,000 cases for predictor variables `x` and `z` that follow uniform distributions from 0 to 1:  
+
+```{r fakedata1}
+n <- 100000
+set.seed(1839)
+x <- runif(n)
+z <- runif(n)
+```
+
+I then make the `mu` and `sigma` submodels. Note that I use `exp()` around the `sigma` submodel to reflect the log link function that the R package will be using. I then simulate responses from a normal distribution, given everyone's `mu` and `sigma`. Note that every person has a different predicted `mu` and `sigma`, distinguishing it from OLS regression, where each person has a different `mu` but the `sigma` is the same for everyone (i.e., constant variance):  
+
+```{r fakedata2}
+mu <- 0.5 + 2 * x
+sigma <- exp(1.5 + 3 * z)
+y <- rnorm(n, mu, sigma)
+```
+
+Now we can use the `gamlss` package to estimate the model. [This package](https://www.jstatsoft.org/article/view/v023i07) is incredibly flexible in that it allows for many different error distributions, and it lets you specify a submodel for each of the parameters that define these error distributions. For now, we are going to use the normal distribution, or `NO()` in this package. The first formula we supply is by default `mu` submodel, and then we specify the `sigma.formula` afterward. Note that we are predicting each from `x` and `z`. After fitting this, we pull out the coefficients from the two different submodels:  
+
+```{r fakedata3}
+m0 <- gamlss(y ~ x + z, sigma.formula = ~ x + z, family = NO())
+round(coef(m0, "mu"), 1)
+round(coef(m0, "sigma"), 1)
+```
+
+Note that we specified above the intercept for `mu` submodel to be 0.5 and the coefficient for `x` to be 2.0. We didn't include `z`, implicitly saying that the coefficient should be zero. We see those numbers! (We are .1 off for the `z` coefficient, but that can be expected due to random sampling). Same goes for the `sigma` submodel: The intercept we set is at 1.5, and the coefficient for `z` is 3. We observe these, showing us that we understand the model. We can simulate fake data and recover those parameters. So let's apply it to my Letterboxd data.  
+
+### Back to the Letterboxd Data
+
+So now let's fit a `gamlss` model predicting both predicted mean of rating—and its standard deviation—from the year in which the film was released:  
+
+```{r gamlss}
+m1 <- gamlss(rating ~ year, ~ year, family = NO(), data = ratings)  
+summary(m1)
+```
+
+The first set of coefficients is for the `mu` submodel, or the mean. The second set is for the `sigma` submodel. We see that year is a significant predictor of each. The older the film release is, the higher the predicted average score, and the lower the predicted variance of that distribution is.  
+
+I think examining predicted values can help us understand this better, so I get the predicted mean and standard deviation for every year between 1934 (the year of the oldest movie I've watched) and 2021. Let's look at the predicted values for 1940, 1970, 2000, and 2020:  
+
+```{r preds}
+plot_data <- data.frame(year = min(ratings$year):max(ratings$year))
+# code is a little circuitous because predict.gamlss fails with new columns
+pred_mu <- predict(m1, "mu", newdata = plot_data)
+pred_sigma <- predict(m1, "sigma", newdata = plot_data, type = "response")
+plot_data$mu <- pred_mu
+plot_data$sigma <- pred_sigma
+
+plot_data %>% 
+  filter(year %in% c(1940, 1970, 2000, 2020)) %>% 
+  mutate(across(where(is.double), round, 2))
+```
+
+For movies coming out in 1970, we're predicting that they have about a 3.5 score on average, with a standard deviation of 0.88. For 2020, however, we are predicting that they have about a 3.2 average score with a standard deviation of 1.22.  
+
+This model captures the real story of the data: Scores are more varied as time goes on, due to how I select which movies to watch. The sigma submodel allows us to make inferences about these relationships, which might be phenomenon of interest to researchers and analysts.  
+
+We can also plot the predicted mean as well as a standard deviation above and below this mean. This shows how the spread increases as time goes on:  
+
+```{r plotting_preds}
+ggplot(plot_data, aes(x = year, y = mu)) +
+  geom_count(
+    data = ratings,
+    mapping = aes(x = year, y = rating),
+    color = "#2D2D2A",
+    alpha = .8
+  ) +
+  geom_line(size = 1.5, color = "#7D82B8") +
+  geom_line(aes(y = mu + sigma), linetype = 2, color = "#7D82B8", size = 1.2) +
+  geom_line(aes(y = mu - sigma), linetype = 2, color = "#7D82B8", size = 1.2) +
+  theme_light() +
+  labs(x = "Year", y = "Rating") +
+  scale_x_continuous(breaks = seq(1930, 2020, by = 10)) +
+  theme(text = element_text(size = 16)) +
+  ylim(c(0.5, 5))
+```
+
+### Conclusion
+
+We're often taught to think about modeling and predicting average values. However, a lot of important social phenomenon deal with variance. For example, if there is a strict social norm about a topic, we might expect smaller variance than when there are weak norms about a topic. Or we might observe that people who highly identify with a group that has that norm have a smaller variance than those who are weakly identified with that group. I urge folks to think about situations where modeling variance of responses—the spread of the data—might be just as or more important than averages. The `gamlss` package provides a user-friendly interface to fit and draw inferences from these models.  
