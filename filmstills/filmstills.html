@@ -1,0 +1,168 @@
+
+
+
+<p>I like visual arts, but I’m moderately colorblind and thus have never been great at making my own works. When I’m plotting data and need colors, my standard procedure is having a website generate me a color palette, or finding a visually pleasing one someone else has made and posted online.</p>
+<p>I also love film, and I started thinking about ways I could generate color palettes from films that use color beautifully. There are a <a href="https://towardsdatascience.com/generating-color-palettes-in-r-64394117a662">number of packages</a> that can generate color palettes from images in R, but I wanted to try writing the code myself.</p>
+<p>I also wanted to not just <em>generate</em> a color palette from an image, but then <em>swapping</em> it with a different color palette from a different film. This is similar to <a href="https://www.tensorflow.org/tutorials/generative/style_transfer">neural style transfer with TensorFlow</a>, but much simpler. I’m one of those people that likes to joke how <a href="https://twitter.com/mjbsp/status/1521930611052666882">OLS is undefeated</a>; I generally <a href="https://twitter.com/markhw_/status/1521455082881048576">praise the use of simpler models</a> over more complex ones. So instead of a neural network, I use k-means clustering to transfer a color palette of one still frame from a film onto another frame from a different movie.</p>
+<div id="functions" class="section level2">
+<h2>Functions</h2>
+<p>Here’s the code for the functions I’ll be using. I’ll describe them in more detail below.</p>
+<pre class="r"><code>library(imager)
+library(tidyverse)
+
+norm &lt;- function(x) (x - min(x)) / (max(x) - min(x))
+
+shuffle &lt;- function(x) x[sample(seq_along(x), length(x))]
+
+get_palette &lt;- function(filename, k, mdn = FALSE) {
+  
+  dat_pal &lt;- load.image(filename) %&gt;% 
+    as.data.frame(wide = &quot;c&quot;)
+  
+  res_pal &lt;- dat_pal %&gt;% 
+    select(starts_with(&quot;c&quot;)) %&gt;% 
+    kmeans(k, algorithm = &quot;Lloyd&quot;, iter.max = 500)
+  
+  if (!mdn) {
+    pal &lt;- res_pal$centers %&gt;% 
+      as_tibble() %&gt;% 
+      mutate(hex = rgb(c.1, c.2, c.3)) %&gt;% 
+      pull(hex)
+  } else if (mdn) {
+    pal &lt;- dat_pal %&gt;% 
+      mutate(cluster = res_pal$cluster) %&gt;% 
+      group_by(cluster) %&gt;% 
+      summarise(across(starts_with(&quot;c&quot;), median)) %&gt;% 
+      mutate(hex = rgb(c.1, c.2, c.3)) %&gt;% 
+      pull(hex)
+  }
+  
+  return(pal)
+}
+
+make_plot &lt;- function(filename_in, pal, xy = TRUE) {
+  
+  the_shot &lt;- load.image(filename_in)
+  
+  dat_shot &lt;- the_shot %&gt;% 
+    as.data.frame(wide = &quot;c&quot;)
+  
+  dat_shot_norm &lt;- dat_shot %&gt;% 
+    when(!xy ~ select(., starts_with(&quot;c&quot;)), ~ .) %&gt;% 
+    mutate(across(everything(), norm))
+  
+  res_shot &lt;- kmeans(
+    dat_shot_norm, 
+    length(pal), 
+    algorithm = &quot;Lloyd&quot;, 
+    iter.max = 500
+  )
+  
+  dat_shot$clust &lt;- factor(res_shot$cluster)
+  
+  p &lt;- ggplot(dat_shot, aes(x = x, y = y)) +
+    geom_raster(aes(fill = clust)) +
+    scale_y_reverse() +
+    theme_void() +
+    theme(legend.position = &quot;none&quot;) +
+    scale_fill_manual(values = pal)
+  
+  return(list(plot = p, dims = dim(the_shot)[1:2]))
+}</code></pre>
+<p>When I thought about transferring the color of one film onto an image from another film, two things came to mind immediately. <em>The Umbrellas of Cherbourg</em> is one of the most visually striking films I’ve ever watched; there’s such a dazzling variety of colors, and it displays a wide collection of unique wallpaper. As for what shot to impose those colors onto, one of my favorite shots is the “coffee scene” from <a href="https://www.youtube.com/watch?v=xLpnleQbsHY"><em>Chungking Express</em></a>.</p>
+<p>The function <code>get_palette()</code> reads an image in using the <code>{imager}</code> package. This package allows you to decompose the image into a data frame, where each row is a pixel. There are <code>x</code> and <code>y</code> columns, which show where at in the image the pixel is when plotted. There are three additional columns that contain the RGB values. I k-means cluster the three RGB columns, using the built-in <code>kmeans</code> function and giving it an arbitrary <code>k</code>, and extract the average RGB values from each cluster (i.e., the cluster centers) and then convert them to hex values using the built-in <code>rgb</code> function.</p>
+<p>And then <code>make_plot()</code> works similarly. It takes a file name, reads it in, and converts it to a data frame. This time, I allow the <code>x</code> and <code>y</code> columns to be used in the clustering. This means that clustering will be a mix of (a) what the original color was, and (b) where at in the frame the pixel is. All columns are normalized. I use the length of the color palette to determine <code>k</code>. I then plot it with <code>{ggplot2}</code>, using the new color palette to fill-in according to the clustering of the new pixels. It’s more or less a coloring book, where the lines are determined by k-means clustering.</p>
+<pre class="r"><code>set.seed(1839)
+
+pal1 &lt;- get_palette(&quot;umbrellas.jpeg&quot;, k = 12)
+plot1 &lt;- make_plot(&quot;chungking.jpeg&quot;, pal = pal1)
+
+ggsave(
+  &quot;chungking_k12.png&quot;, 
+  plot1$plot, 
+  width = plot1$dims[1], 
+  height = plot1$dims[2],
+  units = &quot;px&quot;
+)</code></pre>
+<p>I write the file out to the same dimensions to preserve the integrity of the aspect ratio. Here’s the two original shots, and then the one produced with <code>make_plot()</code>:</p>
+<p>[INSERT UMBRELLAS]</p>
+<p>[INSERT CHUNGKING]</p>
+<p>[INSERT BLEND]</p>
+<p>We can see that the new coloring is a blend of pixel location and the color of the original pixel.</p>
+<p>I started playing around with other ideas, and include two new parts in this next image blend. First, I get the median value, instead of the mean, of the RGB values when clustering for the palette; and second, I shuffle up the order of the palette randomly before feeding it into the plotting function.</p>
+<p>I wanted to apply a movie with warm colors to a movie with cool colors. My mind went to <em>Her</em> and <em>Blade Runner</em>, respectively.</p>
+<pre class="r"><code>set.seed(1839)
+
+pal2 &lt;- get_palette(&quot;her.jpeg&quot;, k = 3, mdn = TRUE)
+plot2 &lt;- make_plot(&quot;bladerunner.jpeg&quot;, pal = shuffle(pal2))
+
+ggsave(
+  &quot;bladerunner_k3.png&quot;, 
+  plot2$plot, 
+  width = plot2$dims[1],
+  height = plot2$dims[2],
+  units = &quot;px&quot;
+)</code></pre>
+<p>The originals:</p>
+<p>[INSERT HER]</p>
+<p>[INSERT BLADE RUNNER]</p>
+<p>And the blend:</p>
+<p>[INSERT BLEND]</p>
+<p>What I like about this is that, since we include <code>x</code> and <code>y</code> in the clustering of the second image, we get different colors on either side of Roy Batty’s face.</p>
+<p>I also wanted to see what the influence of taking out the <code>x</code> and <code>y</code> values would be. <code>xy = FALSE</code> removes any influence of where the pixel is placed in the image, so clustering is done purely on RGB values.</p>
+<pre class="r"><code>set.seed(1839)
+
+pal3 &lt;- get_palette(&quot;2001.jpeg&quot;, k = 5, mdn = TRUE)
+plot3 &lt;- make_plot(&quot;arrival.jpeg&quot;, pal = shuffle(pal3), xy = FALSE)
+
+ggsave(
+  &quot;arrival_k5.png&quot;, 
+  plot3$plot, 
+  width = plot3$dims[1],
+  height = plot3$dims[2],
+  units = &quot;px&quot;
+)</code></pre>
+<p>I wanted to combine these two shots from <em>2001: A Space Odyssey</em> and <em>Arrival</em> because they visually rhyme with one another:</p>
+<p>[INSERT 2001]</p>
+<p>[INSERT ARRIVAL]</p>
+<p>We can see in the color-blended image that colors fill in on spaces that are separated geographically from one another in the xy-plane of the image:</p>
+<p>[INSERT BLEND]</p>
+<p>Compare this to another version I made, where I allowed <code>x</code> and <code>y</code> to be included:</p>
+<p>[INSERT OTHER BLEND]</p>
+<p>We see that vertical line in the upper third of the shot forming due to the influence of <code>x</code> in the data. This also demonstrates overfitting: It’ll draw a line where two adjacent data points are functionally equivalent if you misspecify k. But for aesthetic purposes, overfitting isn’t necessarily a problem!</p>
+<p>We also see a indistinct boundaries of one color into another here. The underlying image has few distinct lines—the entire image is ink drawn onto a wispy mist. What about when we get distinct lines and contrast? The easy answer for clean lines would have been to go to Wes Anderson here, but I felt like that was too expected from a blog post written by somebody such as myself. So instead, I took colors from the animated <em>Lion King</em>, a vibrant film, and projected it onto one of Roger Deakins’ best shots from <em>Fargo</em>.</p>
+<pre class="r"><code>set.seed(1839)
+
+pal4 &lt;- get_palette(&quot;lionking.jpeg&quot;, k = 2, mdn = TRUE)
+plot4 &lt;- make_plot(&quot;fargo.jpeg&quot;, pal = rev(pal4), xy = FALSE)
+
+ggsave(
+  &quot;fargo_k2.png&quot;, 
+  plot4$plot, 
+  width = plot4$dims[1],
+  height = plot4$dims[2],
+  units = &quot;px&quot;
+)</code></pre>
+<p>[INSERT LION KING]</p>
+<p>[INSERT FARGO]</p>
+<p>[INSERT BLEND]</p>
+<p>The last thing I wanted to do was look at a shot that had two primary colors and project it onto a black-and-white film, replacing that underlying dichotomy with two other colors.</p>
+<pre class="r"><code>set.seed(1839)
+
+pal5 &lt;- get_palette(&quot;killbill.jpeg&quot;, k = 2, mdn = TRUE)
+plot5 &lt;- make_plot(&quot;strangelove.jpeg&quot;, pal = pal5, xy = FALSE)
+
+ggsave(
+  &quot;strangelove_k2.png&quot;, 
+  plot5$plot, 
+  width = plot5$dims[1],
+  height = plot5$dims[2],
+  units = &quot;px&quot;
+)</code></pre>
+<p>This shot from <em>Kill Bill Vol. 1</em> came to mind for a shot that was mostly two colors:</p>
+<p>[INSERT KILL BILL]</p>
+<p>While I went with my favorite scene from <em>Dr. Strangelove</em>, perhaps the funniest film ever made, for the black-and-white still:</p>
+<p>[INSERT STRANGELOVE]</p>
+<p>[INSERT BLEND]</p>
+<p>The functions are above and the full code is at <a href="https://github.com/markhwhiteii/blog/tree/master/filmstills">my GitHub</a>. Try playing with the functions and blending images; it’s fun, but it also a visual guide that helps you truly understand what exactly k-means clustering is doing.</p>
+</div>
