@@ -1,0 +1,154 @@
+---
+output:
+  html_fragment:
+    self_contained: false
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(message = FALSE, warning = FALSE)
+```
+
+I started [taking photos](https://twitter.com/markhw_/status/1531060810088316928?s=20&t=KfqLpeBOKKsEp0Cg-PEfKQ) earlier this year. And as someone who loves thinking about probability, statistics, chance, randomness, and R programming, I started thinking about ways to apply probabilistic programming to photography. This is my first attempt.  
+
+I'm going to be using one shot I particularly like. It's a tower on 47th between Wyandotte and Baltimore in Kansas City, Missouri—as seen from the parking garage roof above The Cheesecake Factory:  
+
+[INSERT UNEDITED PHOTO]
+
+Through futzing around for a while, I developed an, uh, "algorithm," sure, let's call it that, to perturb and abstract a photograph. At a high-level, what it is doing is changing location of pixels according to a uniform distribution and changing the colors according to a normal distribution.  
+
+The code for the following steps is found at the bottom of the page and linked to at [my GitHub]().  
+
+
+### The Steps
+
+1. Represent a picture as a five-column `data.frame`, where each row is a pixel: Two columns for the x and y location, then three columns for red, green, and blue values that determine the color of that pixel.  
+
+
+2. Pull one number from a uniform distribution bounded at .25 and .75. This is what I'll call "jumble probability."  
+
+
+3. For each pixel, draw from a Bernoulli distribution with *p* set to that "jumble probability."  
+
+
+4. Take all of the pixels that drew a 1 in Step 3 and make them their own set. Then "jumble" them: Shuffle them around, re-arranging them randomly in the x-y plane.  
+
+
+All of the red, green, and blue values in the `imager` package are normalized from 0 to 1. And we want to nudge these around a bit, so:  
+
+
+5. Take three draws from a normal distribution with a mean of 0 and a standard deviation of .1.  
+
+
+6. From this distribution: Add the first draw to the red value, the second draw to the green value, and the third draw to the blue value.  
+
+7. Wherever this leads to values greater than 1, make them 1; whenever this leads to values less than 0, make them 0. These three values make up the new color of the pixel.  
+
+
+With high-resolution images, you have a *ton* of pixels. My photograph had a `data.frame` with 24,000,000 rows. Trying to plot all of these took a lot of computing power—and frankly, I just did not want to wait that long to see the images. So, given this practical consideration, let's add another bit of abstraction:  
+
+
+8. Draw one number, let's call it "pixel count," from a uniform distribution bounded at 1,000 and 1,000,000. (Round to the nearest integer.)  
+
+
+9. Randomly filter down to a subset of "pixel count" pixels.  
+
+
+This creates some white space, so I made each pixel a square point in `ggplot2` and randomly varied the size:  
+
+
+10. Draw a number from a uniform distribution bounded at 5 and 30, again rounding to the nearest integer, and use this as the `size` parameter in `geom_point()`.  
+
+
+11. Make a scatterplot with each row represented as a square.  
+
+
+### The Result
+
+I did this 100 times and used ImageMagick in the terminal (see code below) to make a .gif that shows 10 of these images every second. This gives is an interesting look at what probability looks like when applied to an underlying image:  
+
+
+[INSERT GIF]
+
+
+This is where I talk about how memory is reconstructive and abstract and how time distorts our memories. So every time we recall a memory, it's slightly different in random ways. And this piece shows that. We never get the full image back, just fractured bits. Or, maybe this is where I talk about how we lay out all of our life plans but life is chaos and random and stochastic, so this piece represents how even if the general shape of where we're pushing our life goes, we see the randomness inherent in human existence. Or this is where I say I just thought it was a fun .gif to make; read into it as much as you will.  
+
+
+### R Code
+
+```{r eval=FALSE}
+library(imager)
+library(tidyverse)
+
+plot_point = function(img, n, ...) {
+  ggplot(slice_sample(img, n = n), aes(x, y)) + 
+    geom_point(aes(color = hex), ...) +
+    scale_color_identity() +
+    scale_y_reverse() +
+    theme_void()
+}
+
+img <- load.image("20221112_DSC_0068_TP.JPG") # load image in
+
+dims <- dim(img)[1:2] # get dimensions for exporting
+
+# change to data frame
+img_dat <- img %>% 
+  as.data.frame(wide = "c") %>% 
+  mutate(hex = rgb(c.1, c.2, c.3), xy = paste(x, y, sep = "_"))
+
+# make up an "algorithm", do it like 100 times
+set.seed(1839)
+for (i in seq_len(100)) {
+  cat("starting", i, "\n")
+  
+  # jumble with probability
+  p_jumble <- runif(1, .25, .75)
+  
+  # figure out which points to jumble
+  to_jumble <- as.logical(rbinom(nrow(img_dat), 1, p_jumble))
+  
+  # make a jumbled order, brb
+  jumbled <- order(runif(sum(to_jumble)))
+  
+  # add some error to each color column
+  # then turn to hex value
+  c_err <- rnorm(3, 0, .1)
+  img_dat_edit <- img_dat %>% 
+    mutate(
+      # need to make between 0 and 1
+      c.1 = c.1 + c_err[1], 
+      c.1 = ifelse(c.1 > 1, 1, c.1),
+      c.1 = ifelse(c.1 < 0, 0, c.1),
+      c.2 = c.2 + c_err[2], 
+      c.2 = ifelse(c.2 > 1, 1, c.2),
+      c.2 = ifelse(c.2 < 0, 0, c.2),
+      c.3 = c.3 + c_err[3],
+      c.3 = ifelse(c.3 > 1, 1, c.3),
+      c.3 = ifelse(c.3 < 0, 0, c.3),
+      hex = rgb(c.1, c.2, c.3)
+    )
+  
+  # then use jumble to jumble the colors
+  img_dat_edit$hex[to_jumble] <- img_dat_edit$hex[jumbled]
+  
+  # select n random pixels of random size
+  n <- round(runif(1, 1000, 1000000))
+  size = round(runif(1, 5, 30))
+  
+  # plot and save
+  p <- plot_point(img_dat_edit, n, shape = "square", size = size)
+  ggsave(
+    paste0("plaza/plaza_iter_", i, ".png"),
+    p,
+    width = dims[1], 
+    height = dims[2], 
+    units = "px"
+  )
+}
+```
+
+There's a way to make a .gif using the `magick` package for R, but it was creating a truly massive file and taking forever, so I used the underlying ImageMagick package in the command line. Also, I found that the files were slightly different sizes, despite giving the specific dimensions to export to, so I resized all of them first.  
+
+```
+convert -resize 20% -delay 10 -loop 0 -dispose previous plaza/*.png plaza.gif
+```
