@@ -16,7 +16,7 @@ I'm going to be using one shot I particularly like. It's a tower on 47th between
 
 Through futzing around for a while, I developed an, uh, "algorithm," sure, let's call it that, to perturb and abstract a photograph. At a high-level, what it is doing is changing location of pixels according to a uniform distribution and changing the colors according to a normal distribution.  
 
-The code for the following steps is found at the bottom of the page and linked to at [my GitHub]().  
+The code for the following steps is found at the bottom of the page and linked to at [my GitHub](https://github.com/markhwhiteii/blog/tree/master/prob_photo).  
 
 
 ### The Steps
