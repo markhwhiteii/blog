@@ -1,0 +1,298 @@
+---
+output:
+  html_fragment:
+    self_contained: false
+---
+
+I wrote a [post](https://www.markhw.com/blog/supervisedtext) in July 2023 describing my process for building a supervised text classification pipeline. In short, the process first involves reading the text, writing a thematic content coding guide, and having humans label text. Then, I define a variety of ways to pre-process text (e.g., word vs. word-and-bigram tokenizing, stemming vs. not, stop words vs. not, filtering on the number of times a word had to appear in the corpus) in a `{tidymodels}` workflowset. Then, I run these different pre-processors through different standard models: elastic net, XGBoost, random forest, etc. Each class of text has its own model, so I would run this pipeline five times if there were five topics in the text. Importantly, this is not natural language processing (NLP), as it was a bag-of-words approach.  
+
+The idea was to leverage the domain knowledge of the experts on my team through content coding, and then scaling it up using a machine learning pipeline. In the post, I bemoaned how most of the "NLP" or "AI-driven" tools I had tested did not do very well. The tools I was thinking of were all web-based, point-and-click applications that I had tried out since about 2018, and they usually were unsupervised.  
+
+We are in a wildly different environment now when it comes to analyzing text than we were even a few years ago. I am revisiting that post to explore alternate routes to classifying text. I will use the same data as I did in that post: 720 Letterboxd reviews of Wes Anderson's film *Asteroid City.* There is only one code: Did the review discuss Wes Anderson's unique visual style (1) or not (0)? I hand-labeled all of these on one afternoon to give me a supervised dataset to play with.  
+
+The use case I had in mind was from a previous job, where the goal was not to predict if an *individual* discussed a topic or not. Instead, the focus was on, "What percentage of people mentioned this topic this month?" in a tracking survey. The primary way I'll judge these approaches is by seeing how far away the predicted percent of reviews discussing visual style is from the actual percent of reviews discussing visual style. That is: I am interested in estimates of the *aggregate*.  
+
+For a baseline, my bag-of-words supervised classification pipeline predicted 19% when it was actually 26% in the testing set, for an absolute error of 7 points.  
+
+## ModernBERT
+
+Two days ago, researchers at Answer.AI and LightOn introduced [ModernBERT](https://huggingface.co/blog/modernbert). I am excited about this, as [BERT](https://huggingface.co/blog/bert-101) is one of my favorite foundation large language models (LLMs). While most of the hype machine focuses on *generative* AI, the tools like ChatGPT that can create text, I think one of the most useful applications of LLMs are the *encoder-only* models whose job it is to instead *represent* text. As a data scientist and survey researcher, I've found this genre of model to be much more useful to the work I do. The upshot is that the transformer model architecture with attention allows the model to transform text into a series of numeric columns that represent it. The text isn't just fed into the model, but also the position of each piece of text. Additionally, the "B" in "BERT" is "bidirectional," allowing it to learn from context—it can look at words *before* and *after* each word to help in building a numerical representation. What this all means is that it can figure out things like synonyms and homonyms. Related to the current example of Wes Anderson's visual style, consider a review that contains the phrase: "The film's color palette is bright and warm." Consider another that might say: "The screenplay isn't as bright as he thinks it is." A bag-of-words approach is going to have a difficult time here with the word "bright": It is used both in the context of discussing the visuals of the film and in a review that doesn't discuss the visuals of the film. ModernBERT—the exciting "replacement" (we'll see if that proves true) to the existing BERT model variants—*can* tell the difference. That difference will be represented in different word embeddings.  
+
+There are two ways I experimented with ModernBERT to see if it could outperform my previous approach: fill-masking and embeddings.  
+
+### Fill-Masking
+
+One of the steps of training BERT is through masking. I'm butchering the process, but the idea is to take a sentence, mask a token (which could be a word or sub-word), and train it to predict the correct token. For example, in the code below, I load in ModernBERT and have it predict a masked token from a very obvious example: 
+
+```
+from transformers import pipeline
+
+pipe = pipeline('fill-mask', model='answerdotai/ModernBERT-base')
+
+pipe('The dog DNA test said my dog is almost half American pit[MASK] terrier.')
+```
+
+This returns the token `' bull'` with 81% probability, to finish the sentence as: "The dog DNA test said my dog is almost half American pit bull terrier." Right behind it, at about 19% probably, is `'bull'`, which would finish the sentence as: "The dog DNA test said my dog is almost half American pitbull terrier."  
+
+We can use this to our advantage by creating a prompt that adds a `[MASK]` where we want the coding of the text to be. First, let's prep our script and define an empty column where we're going to put the classifications in:
+
+```
+# prep -------------------------------------------------------------------------
+from transformers import pipeline
+import pandas as pd
+
+dat = pd.read_csv('ratings_coded.csv')
+dat = dat[dat['visual_style'] != 9]
+dat['masked_class'] = ''
+```
+
+Then we loop all of the reviews through a fill-mask prompt, get the predicted tokens, and save the result back out to a .csv (even though LLMs require Python scripting, I still very much prefer to do interactive analysis in R):  
+
+```
+# fill mask --------------------------------------------------------------------
+pipe = pipeline('fill-mask', model='answerdotai/ModernBERT-base')
+
+for i in dat.index:
+  review = dat['text'][i].lower()
+  
+  prompt = f'''this is a movie review: {review}
+  question: did the review discuss the visual style of the film, yes or no?
+  answer:[MASK]'''
+  
+  out = pipe(prompt)
+  
+  tmp = out[0]['token_str'].strip().lower()
+  
+  if tmp not in ['yes', 'no']:
+      tmp = out[1]['token_str'].strip().lower()
+  
+  dat.loc[i, 'masked_class'] = tmp
+
+dat.to_csv('ratings_masked.csv')
+```
+
+I prompt it with a format of three lines, each defining something by a colon. I give it the movie review, I ask if the movie review discussed the visual style of the film, and then I ask for an answer and `[MASK]` after the last colon. (There's a little `if` statement in there because one of the reviews did not return "yes" or "no" as the top predicted result.)  
+
+The benefit here is that this requires no hand-coding of the data beforehand. The downside is that we haven't told it about what makes Wes Anderson's style distinct, which would help improve classification. (We'll see how to do that with a chat model below.)  
+
+### Embeddings
+
+While we can hack around the encoding-only model's inability to generate text by asking it to produce the next token in a mask, what is really powerful here are the text embeddings. I am using the `base` version of the model, which will take a sentence and transform it into 768 numbers (see Table 4 at [the arxiv paper](https://arxiv.org/pdf/2412.13663)). What we're going to do is create a matrix where there are 720 rows (one for each review) and 768 numbers (the dimensionality of the numeric embeddings, which will take into consideration how language is naturally structured):  
+
+```
+# prep -------------------------------------------------------------------------
+import pandas as pd
+from sentence_transformers import SentenceTransformer
+
+dat = pd.read_csv('ratings_coded.csv')
+text = dat['text']
+
+# get embeddings ---------------------------------------------------------------
+model = SentenceTransformer('answerdotai/ModernBERT-base')
+embeddings = model.encode(text)
+
+dat_embeddings = pd.DataFrame(embeddings).add_prefix('embed_')
+dat_out = pd.concat([dat, dat_embeddings], axis=1)
+
+dat_out.to_csv('ratings_embedded.csv', index=False)
+```
+
+If you go back to the bottom of my [original post](https://www.markhw.com/blog/supervisedtext), this is MUCH less code than the different pre-processors I had defined.  
+
+## Generative Modeling
+
+I sang the praises of encoding models above, but we could use a generative model here, too. One of the reasons I like ModernBERT is that you can download it onto your own machine or server. You don't have to send a third-party your data, which could be proprietary or contain sensitive information. This is something that any organization should have a policy for; the tools are easy enough to access now that it is too easy to mindlessly feed massive amounts of data into a server that is not yours. (You can certainly also download generative instruct or chat models from [HuggingFace](https://huggingface.co/spaces/open-llm-leaderboard/open_llm_leaderboard#/), as well, but the state-of-the-art models tend to be not open source or too large or require too much computational power to run on a MacBook Air like I'm working on now.)  
+
+In this case, the reviews are already public. I wanted to try zero-shot learning, where we do not have to label any cases ahead of time or give the model any examples. I also wanted to be extra lazy and not even come up with the coding criteria on my own, either. In my original post, I defined the coding scheme as such:
+
+> This visual style, by my eye, was solidified by the time of The Grand Budapest Hotel. Symmetrical framing, meticulously organized sets, the use of miniatures, a pastel color palette contrasted with saturated primary colors, distinctive costumes, straight lines, lateral tracking shots, whip pans, and so on. However, I did not consider aspects of Anderson’s style that are unrelated to the visual sense. This is where defining the themes with a clear line matters—and often there will be ambiguities, but one must do their best, because the process we’re doing is fundamentally a simplification of the rich diversity of the text. Thus, I did not consider the following to be in Anderson’s visual style: stories involving precocious children, fraught familial relations, uncommon friendships, dry humor, monotonous dialogue, soundtracks usually involving The Kinks, a fascination with stage productions, nesting doll narratives, or a decidedly twee yet bittersweet tone.
+
+After prepping my session, I ask GPT-4o mini to give me a brief description of Wes Anderson's visual style:  
+
+```
+# prep -------------------------------------------------------------------------
+import re
+import pandas as pd
+from openai import OpenAI
+
+API_KEY='<your_api_key>'
+model='gpt-4o-mini'
+client = OpenAI(api_key=API_KEY)
+
+# get description --------------------------------------------------------------
+description = client.chat.completions.create(
+  model=model, 
+  messages=[
+    {
+      'role': 'user', 
+      'content': 'Provide a brief description of director Wes Anderson\'s visual style.'
+    }
+  ],
+  temperature=0
+)
+
+description = description.choices[0].message.content
+
+with open('description.txt', 'w') as file:
+  file.write(description)
+
+with open('description.txt', 'r') as file:
+  description = file.read()
+```
+
+Here is what `description.txt` says:  
+
+> Wes Anderson's visual style is characterized by its meticulous symmetry, vibrant color palettes, and whimsical, storybook-like aesthetics. He often employs a distinctive use of wide-angle lenses, which creates a flat, two-dimensional look that enhances the surreal quality of his films. Anderson's compositions are carefully arranged, with a focus on geometric shapes and patterns, often featuring centered framing and balanced scenes. His sets are richly detailed, filled with quirky props and vintage elements that contribute to a nostalgic atmosphere. Additionally, he frequently uses stop-motion animation and unique transitions, further emphasizing his playful and imaginative storytelling approach. Overall, Anderson's style is instantly recognizable and evokes a sense of charm and artistry.
+
+It reads generic, but it'll work for instructing GPT. Now, let's add that description into a prompt:
+
+```
+# define coding fn -------------------------------------------------------------
+job = '''You are a helpful research assistant who is classifying movie reviews.
+Your job is to determine if a movie review discusses Wes Anderson's unique visual style.
+'''
+
+directions = '''
+The user will provide a review, and you are to respond with one number only.
+If the review discusses Wes Anderson's visual style at all, reply 1. If it does not, reply 0.
+Do not give any commentary.'''
+
+def get_code(review):
+  messages = [
+      {
+          'role': 'system',
+          'content': job + description + directions
+      },
+      {   
+          'role': 'user',
+          'content': review
+      },
+  ]
+  
+  response = client.chat.completions.create(
+    model=model, 
+    messages=messages,
+    temperature=0
+  )
+    
+  return(response.choices[0].message.content)
+```
+
+Note that the `content` we're giving as a static instruction to the system is the job it is supposed to do, the description of Wes Anderson's style, and then directions for formatting. We now load the data in and again run all the pieces of text through the coding function we just defined:  
+
+```
+# code text --------------------------------------------------------------------
+dat = pd.read_csv('ratings_coded.csv')
+dat['gen_class'] = ''
+
+for i in dat.index:
+  dat.loc[i, 'gen_class'] = get_code(dat['text'][i])
+
+dat.to_csv('ratings_generative.csv')
+```
+
+Note that the use of GPT-4o mini via OpenAI's API cost me $0.03. I do believe that [enshittification](https://www.wired.com/story/tiktok-platforms-cory-doctorow/) comes for all platforms eventually, so I don't expect it to always be this cheap, regardless of what OpenAI says now. That is why open source models found on brilliant websites like HuggingFace are vital.  
+
+## Results
+
+How did each approach do? Let's bring the results into R and check it out. First, let's prep the session:  
+
+```{r message=FALSE}
+# prep -------------------------------------------------------------------------
+library(rsample)
+library(yardstick)
+library(glmnet)
+library(tidyverse)
+
+ms <- metric_set(accuracy, sensitivity, specificity, precision)
+```
+
+And let's take a look at fill-mask:  
+
+```{r message=FALSE}
+# fill mask --------------------------------------------------------------------
+dat_mask <- read_csv("ratings_masked.csv") %>% 
+  select(-1) %>% # I always forget to set index=False
+  filter(visual_style != 9) %>% # not in English
+  mutate(
+    visual_style = factor(visual_style),
+    masked_class = factor(ifelse(masked_class == "yes", 1, 0))
+  )
+
+ms(dat_mask, truth = visual_style, estimate = masked_class)
+with(dat_mask, prop.table(table(visual_style)))
+with(dat_mask, prop.table(table(masked_class)))
+```
+
+Not great, but we tried zero-shot (i.e., no examples or supervised learning) prompting without giving it a definition of Wes Anderson's style. What we really care about is how we predicted 42% of the reviews said something about Anderson's visual style, when in reality only 26% did. This is much worse than the 7-point error I found in my original post with bag-of-words supervised modeling.  
+
+What I'm really excited about are the embeddings. Theoretically, I could define an entire cross-validation pipeline to try a variety of models and hyper-parameters to find the best way to model the numeric embeddings from ModernBERT. Instead, I'm just going to do a LASSO using `{glmnet}` because that method and that package are both fantastic. Note, though, that this is a strictly additive model; no interactions are specified.  
+
+```{r message=FALSE}
+# embeddings -------------------------------------------------------------------
+dat_embed <- read_csv("ratings_embedded.csv") %>% 
+  filter(visual_style != 9) # not in English
+
+set.seed(1839)
+dat_embed <- dat_embed %>%
+  initial_split(.5, strata = visual_style)
+
+X <- dat_embed %>% 
+  training() %>% 
+  select(starts_with("embed_")) %>% 
+  as.matrix()
+
+y <- dat_embed %>% 
+  training() %>% 
+  pull(visual_style)
+
+mod <- cv.glmnet(X, y, family = "binomial")
+
+X_test <- dat_embed %>% 
+  testing() %>% 
+  select(starts_with("embed_")) %>% 
+  as.matrix()
+
+preds <- predict(mod, X_test, s = mod$lambda.min, type = "response")
+
+preds <- tibble(
+  y = factor(testing(dat_embed)$visual_style),
+  y_hat_prob = c(preds),
+  y_hat_class = factor(as.numeric(y_hat_prob > .5))
+)
+
+ms(preds, truth = y, estimate = y_hat_class)
+with(preds, prop.table(table(y)))
+mean(preds$y_hat_prob)
+```
+
+Since this is supervised learning, I had to cut it up into training and testing. I just did half: 50% reviews for training, 50% reviews for testing. And I stratified on the outcome variable so that they'd be equally distributed across training and testing.  
+
+A very simple model gave us incredible results. If we get the mean of the probabilities, we're at 25% predicted and 26% actual. This is a one-point error, much better than a way more computationally intensive and way lengthier script from my original post. **This is a simplified version of how I would start to set up a text classification pipeline, if I still managed one**.  
+
+What about the generative model, which didn't require any people to hand-code data, and it didn't even require any people to define the coding criteria?  
+
+```{r message=FALSE}
+# generative -------------------------------------------------------------------
+dat_gen <- read_csv("ratings_generative.csv") %>% 
+  select(-1) %>% # I always forget to set index=False
+  filter(visual_style != 9) %>% # not in English
+  mutate(
+    visual_style = factor(visual_style),
+    gen_class = factor(gen_class)
+  )
+
+ms(dat_gen, truth = visual_style, estimate = gen_class)
+with(dat_gen, prop.table(table(visual_style)))
+with(dat_gen, prop.table(table(gen_class)))
+```
+
+This result is also impressive, with 29% predicted to be about the visual style when it was 26% in reality, for a three-point error. Is the reduced human effort of no longer needing to hand-code text worth a little bit worse error than the embeddings in a LASSO? And is it worth the money it could cost to do this at a large scale using OpenAI?  
+
+## Closing Thoughts
+
+This was a very quick look at ModernBERT especially, because I'm excited about the quality of these embeddings. And my thinking about how to process text has changed in the last year or two. There's so much else one could do here, such as fine-tuning ModernBERT or GPT-4o mini for movie review classification. (I imagine there will be many fine-tuned ModernBERT models uploaded to HuggingFace shortly for a number of use-cases.)  
+
+Classifying text without hand-coded labels is going to be more challenging in environments where the domain is not as widely discussed on the internet as movie reviews, cinematography, and Wes Anderson. Your customers or users could have specific concerns and use specific language, and even providing a lengthy coding scheme to a generative model might not cut it. At any rate, you would want to hand-label a test set anyways. It's important that you, as a researcher, actually read the text and that there is always a human in the loop.  
+
+What I'm most excited about here is being able to take survey responses *plus text embeddings from open-ended questions* and using them together in a machine learning model to predict attitudes or behaviors.  
